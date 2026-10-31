@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#07171f">
+<title>Flic en Flac Life · Admin</title>
+<style>
+:root { --bg: #07171f; --panel: #0e2633; --line: #24485a; --ink: #eaf7f4; --muted: #9cc0c6; --mango: #ffa733; --mango-ink: #2b1700; --red: #e23b3b; --green: #35c48b; color-scheme: dark; }
+* { box-sizing: border-box; } [hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+#tabs { position: sticky; top: 0; z-index: 20; display: flex; gap: 6px; overflow-x: auto; padding: 8px 2px; background: var(--bg); border-bottom: 1px solid var(--line); scrollbar-width: none; } #tabs::-webkit-scrollbar { display: none; } #tabs button { flex: 0 0 auto; background: #0e2633; border: 1px solid var(--line); } #tabs button.on { background: var(--mango); color: var(--mango-ink); border-color: var(--mango); }
+main[data-tab="players"] .card[data-tab]:not([data-tab="players"]), main[data-tab="money"] .card[data-tab]:not([data-tab="money"]), main[data-tab="safety"] .card[data-tab]:not([data-tab="safety"]), main[data-tab="game"] .card[data-tab]:not([data-tab="game"]), main[data-tab="talk"] .card[data-tab]:not([data-tab="talk"]), main[data-tab="stats"] .card[data-tab]:not([data-tab="stats"]) { display: none; }
+.asr { display: grid; gap: 4px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #0a202b; } .asr.bad { border-color: #e08a00; } .asr .chk { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; }
+main { max-width: 760px; margin: 0 auto; padding: 18px 16px 60px; display: grid; gap: 14px; }
+h1 { font-size: 1.25rem; margin: 4px 0 0; } h2 { font-size: 1rem; margin: 0; }
+.muted { color: var(--muted); font-size: 0.85rem; margin: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+input[type=password], input[type=search] { flex: 1 1 220px; min-width: 0; background: #071c26; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
+button { border: 0; border-radius: 999px; padding: 9px 15px; font: 700 0.9rem system-ui, sans-serif; cursor: pointer; background: #173444; color: var(--ink); }
+button.primary { background: var(--mango); color: var(--mango-ink); } button.danger { background: var(--red); color: #fff; } button:disabled { opacity: 0.5; cursor: default; }
+.err { color: #ff8a80; font-weight: 600; margin: 0; } .ok { color: var(--green); font-weight: 600; margin: 0; }
+.list { display: grid; gap: 8px; }
+.p { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; background: #0a202b; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.p b { font-size: 1rem; overflow-wrap: anywhere; } .p .meta { grid-column: 1; color: var(--muted); font-size: 0.8rem; overflow-wrap: anywhere; } .p > button, .p > .acts { grid-row: 1 / span 2; grid-column: 2; }
+h3 { margin: 6px 0 0; font-size: 1rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; } .tile { background: #0a202b; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; } .tile small { color: var(--muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; } .tile b { font-size: 1.5rem; } .tile span { color: var(--muted); font-size: 0.78rem; }
+.tscroll { overflow-x: auto; } table.st { border-collapse: collapse; width: 100%; font-size: 0.85rem; font-variant-numeric: tabular-nums; } table.st th, table.st td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; } table.st th { color: var(--muted); font-weight: 700; font-size: 0.75rem; }
+.hours { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; height: 140px; align-items: end; border-bottom: 1px solid var(--line); } .hb { height: 100%; display: flex; align-items: flex-end; cursor: default; } .hb i { display: block; width: 100%; min-height: 1px; background: #4a8fa3; border-radius: 4px 4px 0 0; } .hb.top i { background: var(--mango); } .hb:hover i { filter: brightness(1.3); }
+.hlab { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; font-size: 0.7rem; color: var(--muted); } .hlab span { white-space: nowrap; overflow: visible; }
+code { background: #071c26; padding: 1px 5px; border-radius: 6px; }
+.gform { grid-column: 1 / -1; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.hist { grid-column: 1 / -1; display: grid; gap: 8px; margin-top: 6px; overflow-x: auto; } .hist table { border-collapse: collapse; font-size: 0.82rem; width: 100%; } .hist th, .hist td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); white-space: nowrap; } .hist th { color: var(--muted); font-weight: 600; }
+.hist input { flex: 1 1 140px; min-width: 0; background: #071c26; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; font: inherit; } .hist button { padding: 6px 12px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-left: 6px; vertical-align: middle; }
+dialog { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; padding: 18px; max-width: min(420px, calc(100% - 32px)); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+dialog ul { margin: 6px 0 12px; padding-left: 20px; color: var(--muted); font-size: 0.88rem; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; } .grid2 label { display: grid; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.grid2 textarea { width: 100%; min-width: 0; box-sizing: border-box; background: #071c26; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit; resize: vertical; } .grid2 label.check { display: flex; align-items: center; gap: 8px; } .grid2 label.check input { width: auto; }
+.grid2 input, .grid2 select { width: 100%; min-width: 0; background: #071c26; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; font: inherit; }
+label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem; margin: 6px 0 14px; } label.chk input { margin-top: 3px; }
+</style>
+</head>
+<body>
+<main>
+  <div><h1>🌴 Flic en Flac Life · Admin</h1><p class="muted">Find a player and remove them from the game.</p></div>
+
+  <nav id="tabs" hidden><button type="button" data-t="players">👥 Players</button><button type="button" data-t="money">💰 Money</button><button type="button" data-t="safety">🛡️ Safety &amp; recovery</button><button type="button" data-t="game">🎮 Game</button><button type="button" data-t="talk">💬 Community</button><button type="button" data-t="stats">📊 Stats</button></nav>
+  <section class="card" id="keyCard">
+    <h2>Admin key</h2>
+    <p class="muted">The ADMIN_KEY set on your server. It's kept only in this browser tab.</p>
+    <form class="row" id="keyForm"><input type="password" id="key" autocomplete="current-password" placeholder="Admin key" aria-label="Admin key"><button class="primary" type="submit">Unlock</button></form>
+    <p class="err" id="keyErr" hidden></p>
+  </section>
+
+  <section class="card" id="findCard" data-tab="players" hidden>
+    <div class="row"><h2 style="margin-right:auto">Players</h2><span class="muted" id="total"></span><button type="button" id="lock">Lock</button></div>
+    <form class="row" id="findForm"><input type="search" id="q" placeholder="Search by name, login or id" aria-label="Search players"><button class="primary" type="submit">Search</button></form>
+    <p class="ok" id="msg" hidden></p><p class="err" id="err" hidden></p>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="card" id="giftCard" data-tab="players" hidden>
+    <h2>Gift money</h2>
+    <p class="muted">Sends money to random players. They get a notification as if another player sent it. Online players get it at once; offline players when they next play.</p>
+    <form class="grid2" id="giftForm">
+      <label>From (player name)<input type="text" id="gFrom" value="Alex" maxlength="16"></label>
+      <label>Amount (Rs)<input type="number" id="gAmt" value="400000" min="1" max="10000000"></label>
+      <label>Random online players<input type="number" id="gOn" value="5" min="0" max="50"></label>
+      <label>Online players must be<select id="gRole"><option value="student">Students</option><option value="">Anyone</option><option value="resident">Residents</option><option value="tourist">Tourists</option></select></label>
+      <label>Plus random players (anyone)<input type="number" id="gAny" value="3" min="0" max="50"></label>
+      <div class="row" style="align-self:end"><button class="primary" type="submit" id="gGo">Send gifts</button></div>
+    </form>
+    <p class="ok" id="gMsg" hidden></p><p class="err" id="gErr" hidden></p>
+    <div class="list" id="gList"></div>
+  </section>
+
+  <section class="card" id="teamCard" data-tab="talk" hidden>
+    <div class="row"><h2 style="margin-right:auto">💬 Flic en Flac Team inbox</h2><button type="button" id="teamRe">Refresh</button></div>
+    <p class="muted">Messages players send to the Flic en Flac Team chat in their phone. Open one to read it and reply. Your reply appears in their Messages straight away.</p>
+    <div id="teamList"></div>
+  </section>
+  <section class="card" id="czCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">✂️ A* Cutz bookings</h2><button type="button" id="czRe">Refresh</button></div>
+    <p class="muted">Haircut bookings made in the game (Tamarin barber shop). Confirm or decline them and the player is told in the game. Booked guests also get the discount in the game from half an hour before to two hours after their time, and the A* Cutz Regular medal on their first booking.</p>
+    <div class="row" style="margin-top:6px"><label>Discount (Rs) <input id="czDisc" type="number" min="0" max="2000" style="width:80px"></label> <label>WhatsApp (digits, with country code) <input id="czWa" type="text" style="width:150px"></label> <button type="button" id="czSave">Save</button></div>
+    <div id="czList"></div>
+  </section>
+  <section class="card" id="bzCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">💬 Business chats</h2><button type="button" id="bzRe">Refresh</button></div>
+    <p class="muted">Send a message from a business (Belle's Kitchen, A* Cutz) to every player. It lands in their Messages as a chat from that business, never in public chat. Players can write back and get an automatic reply with the WhatsApp number.</p>
+    <div class="row"><select id="bzWho"></select> <input id="bzText" type="text" maxlength="300" placeholder="Message to every player" style="flex:1;min-width:200px"> <button type="button" id="bzSend">Send to everyone</button></div>
+    <div id="bzList"></div>
+  </section>
+  <section class="card" id="hwCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🎃 Halloween Night</h2><button type="button" id="hwRe">Refresh</button></div>
+    <p class="muted">Trick or treat candy, the costume contest and the ghost hunt. Prizes are paid automatically when it ends: costume contest Rs 50,000 / 25,000 / 10,000 and candy leaderboard Rs 30,000 / 15,000 / 5,000. A message from "Halloween Night" goes to every player's Messages when it starts and when it ends.</p>
+    <div class="row" style="margin-top:6px"><label><input type="checkbox" id="hwOn"> On</label> <label>Starts <input id="hwFrom" type="datetime-local"></label> <label>Ends <input id="hwTo" type="datetime-local"></label> <button type="button" id="hwSave">Save</button></div>
+    <div id="hwList"></div>
+  </section>
+  <section class="card" id="huCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🗺️ Treasure hunt</h2><button type="button" id="huRe">Refresh</button></div>
+    <p class="muted">The Rs 15,000,000 Halloween treasure hunt (5 clues). It runs while Halloween Night runs. The first player to dig up the chest wins and the prize is sent to their mail. If you turn auto-pay off, the winner waits here until you press Pay the winner.</p>
+    <div class="row" style="margin-top:6px"><label><input type="checkbox" id="huOn"> On</label> <label><input type="checkbox" id="huAuto"> Pay the winner automatically</label> <button type="button" id="huSave">Save</button> <button type="button" id="huPay" hidden>Pay the winner now</button> <button type="button" id="huReset">Restart the hunt</button></div>
+    <div id="huList"></div>
+  </section>
+  <section class="card" id="plCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">📊 Polls</h2><button type="button" id="plRe">Refresh</button></div>
+    <p class="muted">Send a question to the whole game. Players see it as a card when they log in (once, until they vote), under Settings → Poll, and get a team announcement. One vote each. After voting they see the results.</p>
+    <div id="plCur"></div>
+    <div style="margin-top:8px"><input id="plQ" type="text" placeholder="Question" style="width:100%;margin:4px 0"><textarea id="plD" rows="3" placeholder="A short explanation (optional)" style="width:100%;margin:4px 0"></textarea><textarea id="plO" rows="5" placeholder="One answer per line (2 to 6)" style="width:100%;margin:4px 0"></textarea></div>
+    <div class="row" style="gap:8px"><button type="button" id="plFill">Fill in the real life trips poll</button> <button type="button" class="primary" id="plSend">Send poll to the game</button> <button type="button" class="danger" id="plClose">Close current poll</button></div>
+  </section>
+  <section class="card" id="trCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🚗 Student driver trips</h2><button type="button" id="trRe">Refresh</button></div>
+    <p class="muted">Hidden from all players until you switch it on. Add testers by player name to try it first. Drivers must be verified here before passengers can see them. Check their licence or learner permit before you verify.</p>
+    <div class="row" style="margin-top:6px"><label><input type="checkbox" id="trOn"> <b>Open to everyone</b></label></div>
+    <div class="row" style="margin-top:6px"><input id="trTest" type="text" placeholder="Player name" style="width:160px"> <button type="button" id="trTestGo">Add tester</button></div>
+    <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><label><input type="checkbox" id="trRw"> Pay in-game money for finished trips</label> <label>Passenger <input id="trRp" type="number" style="width:80px"></label> <label>First trip <input id="trRf" type="number" style="width:80px"></label> <label>Driver <input id="trRd" type="number" style="width:80px"></label> <label>5-star bonus <input id="trRb" type="number" style="width:80px"></label> <label>Daily cap <input id="trRc" type="number" style="width:60px"></label> <label>Min minutes <input id="trRm" type="number" style="width:60px"></label> <button type="button" id="trRsave">Save rewards</button></div>
+    <div id="trInfo"></div>
+  </section>
+  <section class="card" id="blCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🍛 Belle's Kitchen bookings</h2><button type="button" id="blRe">Refresh</button></div>
+    <p class="muted">Table bookings made in the game. Confirm or decline them, and the player is told in the game. Booked guests get the discount from half an hour before their table until two hours after.</p>
+    <div class="row" style="margin-top:6px"><label>Discount % <input id="blPct" type="number" min="0" max="60" style="width:70px"></label> <label>WhatsApp (digits, with country code) <input id="blWa" type="text" style="width:150px"></label> <button type="button" id="blSave">Save</button></div>
+    <div id="blList"></div>
+  </section>
+  <section class="card" id="disCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🌀 Natural disasters</h2><button type="button" id="disRe">Refresh</button></div>
+    <p class="muted">Players get a two minute warning, then screen shake, rain or water, a rumble and a repair bill that grows with wealth (nothing under Rs 500k; 1% / 3% / 6% of each band above that, 30% goes to the town treasuries). Automatic disasters start once Season 2 is live, one every 24 to 48 hours.</p>
+    <div id="disInfo"></div>
+    <div class="row" style="margin-top:8px"><label><input type="checkbox" id="disAuto"> Automatic disasters on</label></div>
+    <div class="row" style="margin-top:8px"><button type="button" class="danger" data-dis="cyclone">🌀 Cyclone now</button> <button type="button" class="danger" data-dis="flood">🌊 Flood now</button> <button type="button" class="danger" data-dis="quake">🌋 Earthquake now</button> <button type="button" id="disCancel">Cancel current</button></div>
+  </section>
+  <section class="card" id="seaCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🏁 Seasons</h2><button type="button" id="seaRe">Refresh</button></div>
+    <p class="muted">Season 2 starts by itself at the time below: the Season 1 Hall of Fame and badges are saved, Heists open, and (if switched on) the wealth levy starts. A full backup is saved first. Flagged (cheat-watch) accounts are left out of the Hall of Fame. Cash is only reset if you tick the box below.</p>
+    <div id="seaInfo"></div>
+    <div class="row" style="margin-top:8px"><input id="seaAt" type="datetime-local" aria-label="Season 2 start"> <small class="muted">your local time</small> <button type="button" id="seaAtGo">Set start time</button></div>
+    <div class="row" style="margin-top:8px"><input id="seaCash" type="number" min="1000" max="5000000" step="1000" aria-label="Starting cash"> <button type="button" id="seaCashGo">Set starting cash</button></div>
+    <div class="row" style="margin-top:8px"><label><input type="checkbox" id="seaWipe"> Also reset everyone's cash, savings, fund and crypto when Season 2 starts</label></div>
+    <div class="row" style="margin-top:8px"><label><input type="checkbox" id="seaLevy"> Wealth levy on (cash and savings above Rs 1M, 0.5% / 1.5% / 3% a day, goes to the town treasuries)</label></div>
+    <div class="row" style="margin-top:8px"><input id="seaMult" type="number" min="0" max="5" step="0.1" aria-label="Levy strength"> <small class="muted">levy strength (1 = normal, 2 = double, 0 = off)</small> <button type="button" id="seaLevyGo">Save levy settings</button></div>
+    <div class="row" style="margin-top:8px"><button type="button" class="danger" id="seaFire">Start Season 2 now</button></div>
+  </section>
+  <section class="card" id="adCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">📣 Ads</h2><button type="button" id="adRe">Refresh</button></div>
+    <p class="muted">How the clients' ads in the game are doing. Seen = a player came near it, Opened = they tapped the billboard or opened the app, Clicked = they pressed the button to the client's site.</p>
+    <div id="adList"></div>
+  </section>
+  <section class="card" id="rqCard" data-tab="safety" hidden>
+    <div class="row"><h2 style="margin-right:auto">⚖️ Seizure requests <span id="rqN"></span></h2><button type="button" id="rqRe">Refresh</button></div>
+    <p class="muted">The cheat watch never takes money by itself. When it sees cash with no recorded source it adds a request here, and nothing happens until you decide. Approve takes the money (it leaves their cash the next time they play, never below zero) and can send it to a town treasury. Decline leaves their money alone. Look at their Money sources first if you are not sure.</p>
+    <div id="rqList"></div>
+  </section>
+  <section class="card" id="lpCard" data-tab="money" hidden>
+    <div class="row"><h2 style="margin-right:auto">💸 Transfers that never arrived</h2><button type="button" id="lpRe">Refresh</button></div>
+    <p class="muted">Until now the game threw away any single transfer over Rs 10,000,000 when it arrived. They are listed here from the players' private chats. Press Pay to send the money to the player who never got it (it arrives in their mail). Transfers from now on are cut into parts the game accepts, so this cannot happen again.</p>
+    <div id="lpList"></div>
+  </section>
+  <section class="card" id="szCard" data-tab="safety" hidden>
+    <div class="row"><h2 style="margin-right:auto">🕵️ Seized money</h2><button type="button" id="szRe">Refresh</button></div>
+    <p class="muted">Every seizure, by you or by the cheat watch, newest first. Press Return to give all of it back to the player (it arrives in their mail), or Return part to choose an amount. For admin seizures the town treasury gives back what it still has. Search by player name to see only theirs.</p>
+    <form class="row" id="szForm"><input id="szQ" placeholder="Player name (leave empty for everyone)" autocomplete="off"><button type="submit" class="primary">Show</button></form>
+    <p class="muted" id="szSum"></p>
+    <div id="szList"></div>
+  </section>
+  <section class="card" id="asCard" data-tab="safety" hidden>
+    <div class="row"><h2 style="margin-right:auto">🏢 Businesses and investments</h2><button type="button" id="asRe">Refresh</button></div>
+    <p class="muted">The game keeps a history of every player's businesses, investments, jet, cars and home. Below are the players who recently lost something, so you can find them fast. Open a player (or press "Assets" on their row in Players) to see every snapshot and restore their businesses, investments or other assets, without touching their cash. Their game loads the restore by itself.</p>
+    <form class="row" id="asForm"><input id="asQ" placeholder="Find a player by name" autocomplete="off"><button type="submit" class="primary">Open</button></form>
+    <div id="asDrops"></div>
+    <div id="asBox"></div>
+  </section>
+  <section class="card" id="susCard" data-tab="safety" hidden>
+    <div class="row"><h2 style="margin-right:auto">🕵️ Suspected players</h2><button type="button" class="primary" id="susGo">Scan players</button></div>
+    <p class="muted">Checks every player's history: money with no recorded source, big jumps in net worth, income that is mostly crime, gambling or gifts, and huge single lines. Each one gets a score and the reasons. Open Money sources to look closer.</p>
+    <div id="susList"></div>
+  </section>
+  <section class="card" id="ledCard" data-tab="money" hidden>
+    <div class="row"><h2 style="margin-right:auto">💳 Transactions</h2><button type="button" id="ledRe">Refresh</button><button type="button" id="ledCsv">Download CSV</button></div>
+    <p class="muted">Every money line the players' games report: wages, purchases, transfers, rent, taxes, fines, winnings, and anything else that changes a balance. Search by player name, username or what it was for. Click a player's name to see only theirs.</p>
+    <form class="row" id="ledForm"><input id="ledQ" placeholder="Player or what for (e.g. rent, gift, casino)" autocomplete="off"><select id="ledLim"><option>100</option><option selected>300</option><option>1000</option><option>2000</option></select><button type="submit" class="primary">Show</button></form>
+    <p class="muted" id="ledSum"></p>
+    <div id="ledList"></div>
+  </section>
+  <section class="card" id="fbCard" data-tab="talk" hidden>
+    <div class="row"><h2 style="margin-right:auto">📝 Feedback and ratings</h2><select id="fbKind"><option value="">All</option><option value="bug">🐞 Bugs</option><option value="idea">💡 Ideas</option><option value="problem">😤 Problems</option><option value="praise">❤️ Praise</option></select><label class="check"><input type="checkbox" id="fbOpen"> Open only</label><button type="button" id="fbRe">Refresh</button></div>
+    <p class="muted" id="fbSum"></p>
+    <div id="fbList"></div>
+  </section>
+  <section class="card" id="hlCard" data-tab="safety" hidden>
+    <div class="row"><h2 style="margin-right:auto">💾 Data health</h2><button class="btn" type="button" id="hlRefresh">Refresh</button></div>
+    <div id="hlBody" class="muted">Loading…</div>
+  </section>
+  <section class="card" id="slCard" data-tab="game" hidden>
+    <h2>💅 Clawed by Taps salon</h2>
+    <p class="muted">Bookings, settings and the owner's access. Players book one-hour slots. The owner key opens the owner screen in the game's Clawed by Taps app.</p>
+    <div id="slStats" class="muted"></div>
+    <form id="slForm" style="display:grid;gap:8px">
+      <label>WhatsApp number (digits with country code, e.g. 2305xxxxxxx) <input id="slWa" type="text"></label>
+      <label>Short description <textarea id="slBio" rows="3" maxlength="500"></textarea></label>
+      <label>Price list (JSON: sections with items; main = pick one, add = add-ons, combo = gets the launch price) <textarea id="slSvc" rows="8" style="font-family:monospace;font-size:12px"></textarea></label>
+      <div class="row"><label>Opens (hour) <input id="slFrom" type="number" min="0" max="22" style="width:70px"></label><label>Closes (hour) <input id="slTo" type="number" min="1" max="24" style="width:70px"></label><label>Open days (0=Sun … 6=Sat) <input id="slDays" type="text" style="width:130px"></label></div>
+      <div class="row"><label>Combo launch price (Rs, 0 = off) <input id="slCombo" type="number" min="0" style="width:90px"></label><label>Launch deal ends (date) <input id="slUntil" type="date"></label><label>Reward (Rs, first booking) <input id="slRew" type="number" min="0" style="width:100px"></label></div>
+      <label>Photo captions, one per line (same order as the photos) <textarea id="slCaps" rows="5"></textarea></label>
+      <div class="row"><button class="btn" type="submit">Save</button></div>
+    </form>
+    <p class="ok" id="slMsg" hidden></p>
+    <h3>Rewards and ad numbers</h3>
+    <div id="slTrack" class="muted"></div>
+    <h3>Who can see it</h3>
+    <p class="muted">Off by default: only the people you permit (and the owner) can see the booking app. <label class="check"><input type="checkbox" id="slOpen"> Open to everyone</label></p>
+    <div class="row"><label>Permit a player by login or name <input id="slAllow" type="text"></label><button class="btn" type="button" id="slAllowGo">Permit</button></div>
+    <p class="muted" id="slAllowed"></p>
+    <h3>Owner access</h3>
+    <p class="muted">Owner key (give it to Taps privately): <code id="slKey"></code> <button class="btn" type="button" id="slRegen">New key</button></p>
+    <div class="row"><label>Link the owner by login or name (e.g. clawedbytaps) <input id="slOwner" type="text"></label><button class="btn" type="button" id="slLink">Link</button></div>
+    <p class="muted" id="slOwners"></p>
+    <h3>Bookings</h3><div id="slList" class="muted"></div>
+  </section>
+  <section class="card" id="rdCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🏴‍☠️ Raids</h2><label class="check"><input type="checkbox" id="rdOn"> Raids on</label></div>
+    <p class="muted">Players worth over the limit, offline, with enough cash can be raided for 3%, 6% or 10% of their net worth. The tax, crew fees, search fees and defense upgrades all go to the town treasury.</p>
+    <form class="row" id="rdForm"><label>Min net worth Rs <input id="rdMin" type="number" min="100000" style="width:120px"></label><label>Tax % <input id="rdTax" type="number" min="0" max="90" style="width:60px"></label><label>Raids a day <input id="rdDay" type="number" min="1" max="50" style="width:60px"></label><label>Shield hours <input id="rdSh" type="number" min="0" max="168" style="width:60px"></label><label>Search fee Rs <input id="rdFee" type="number" min="0" style="width:80px"></label><label>Revenge hours <input id="rdRev" type="number" min="0" max="168" style="width:60px"></label><button type="submit" class="primary">Save</button></form>
+    <p class="muted" id="rdStat"></p>
+  </section>
+  <section class="card" id="wtCard" data-tab="money" hidden>
+    <div class="row"><h2 style="margin-right:auto">💰 Wealth tax</h2><label class="check"><input type="checkbox" id="wtOn"> Tax on</label></div>
+    <p class="muted">Every Monday, players pay this share of their net worth above each line: from cash first, then savings. The money goes to the town treasury where they are. Rates are percentages (0 to 20).</p>
+    <form class="row" id="wtForm"><label>Above Rs 500,000 <input id="wt0" type="number" step="0.1" min="0" max="20" style="width:90px"> %</label><label>Above Rs 3,000,000 <input id="wt1" type="number" step="0.1" min="0" max="20" style="width:90px"> %</label><label>Above Rs 20,000,000 <input id="wt2" type="number" step="0.1" min="0" max="20" style="width:90px"> %</label><button type="submit" class="primary">Save</button></form>
+    <p class="ok" id="wtMsg" hidden></p>
+  </section>
+  <dialog id="seizeDlg">
+    <h2 id="seizeTitle">Seize money</h2>
+    <p class="muted">Takes cash from this player the next time they play (never below zero) and puts it in a town treasury. It is based on their last saved cash.</p>
+    <label>Take <select id="seizeMode"><option value="pct">a share of their cash</option><option value="amt">a fixed amount</option></select></label>
+    <label id="seizePctL">Share <select id="seizePct"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100">All of it</option></select></label>
+    <label id="seizeAmtL" hidden>Amount Rs <input id="seizeAmt" type="number" min="1" placeholder="1000000"></label>
+    <label>Send to <select id="seizeTown"><option value="fef">Flic en Flac treasury</option><option value="tam">Tamarin treasury</option><option value="tri">Trianon treasury</option></select></label>
+    <label>Reason <input id="seizeNote" maxlength="80" value="Back taxes collected by the Financial Crimes agent."></label>
+    <label class="check"><input type="checkbox" id="seizeAnn"> Announce it to the town</label>
+    <p class="err" id="seizeErr"></p>
+    <div class="row"><button type="button" id="seizeCancel">Cancel</button><button type="button" class="danger" id="seizeGo">Seize</button></div>
+  </dialog>
+  <dialog id="invDlg">
+    <h2 id="invTitle">Investigate player</h2>
+    <p class="muted">Opens a Financial Crimes case and freezes part of their money until the court rules. The whole town sees the announcement. They can defend themselves in the Court app, or you can rule on it below.</p>
+    <label>Reason <input id="invReason" maxlength="80" value="Admin investigation"></label>
+    <label>Freeze <select id="invPct"><option value="50">50% of their cash</option><option value="90" selected>90% of their cash</option><option value="100">All of their cash</option></select></label>
+    <p class="err" id="invErr"></p>
+    <div class="row"><button type="button" id="invCancel">Cancel</button><button type="button" class="danger" id="invGo">Freeze and investigate</button></div>
+  </dialog>
+  <section class="card" id="agCard" data-tab="safety" hidden>
+    <div class="row"><h2 style="margin-right:auto">🕵️ Financial Crimes agent</h2><label class="check"><input type="checkbox" id="agOn"> Agent on</label><button type="button" id="agRefAll">Refund all fines</button><button type="button" id="agRe">Refresh</button></div>
+    <p class="muted">Watches how players get rich (theft, winnings, transfers) and audits the richest player every few hours. Assets are frozen until the court rules. Release a player here if a case looks wrong.</p>
+    <div id="agList"></div>
+    <h3 style="margin:14px 0 4px">🎗️ Political parties</h3><p class="muted">Players found these. Disband one with an offensive name.</p><div id="ptyList"></div>
+  </section>
+  <section class="card" id="promoCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">📣 Community post</h2><button type="button" id="prRe">Refresh</button></div>
+    <p class="muted">Shows a post to every player when they log in or refresh (until they claim). They tap Join (which opens your link and is counted), come back, and press Claim to get the bonus. One bonus each, paid to their wallet.</p>
+    <div class="tiles" id="prTiles"></div>
+    <form id="prForm" class="grid2">
+      <label class="check"><input type="checkbox" id="prOn"> Show the post to players</label>
+      <label>Group link<input id="prLink" type="url" placeholder="https://chat.whatsapp.com/…" autocomplete="off"></label>
+      <label>Headline<input id="prTitle" maxlength="60"></label>
+      <label>Message<textarea id="prText" rows="2" maxlength="300"></textarea></label>
+      <label>Bonus (Rs)<input id="prReward" type="number" min="0" max="1000000" step="1"></label>
+      <div class="row"><button class="primary" type="submit">Save</button><button type="button" id="prNew">Start a new post</button></div>
+    </form>
+    <p class="ok" id="prMsg" hidden></p><p class="err" id="prErr" hidden></p>
+    <h3>Who tapped and who claimed</h3>
+    <div class="tscroll"><table class="st" id="prList"></table></div>
+  </section>
+
+  <section class="card" id="statsCard" data-tab="stats" hidden>
+    <div class="row"><h2 style="margin-right:auto">📊 Stats</h2><span class="muted" id="stSince"></span><button type="button" id="stRe">Refresh</button></div>
+    <div class="tiles" id="stTiles"></div>
+    <h3>Site visits</h3>
+    <p class="muted">Everyone who opens the site, even if they never start playing. A visitor is one browser a day. Bots and link previews are left out. Counting started <span id="siteSince">today</span>; older days show 0.</p>
+    <div class="tiles" id="siteTiles"></div>
+    <div class="tscroll"><table class="st" id="siteDays"></table></div>
+    <h3>Where visitors come from</h3>
+    <p class="muted">Page views in the last 30 days, by the <code>?ref=</code> tag or the website that linked here. “direct” means typed in, a bookmark or an app that hides the source.</p>
+    <div class="tscroll"><table class="st" id="siteSrc"></table></div>
+    <h3>Coming back</h3>
+    <p class="muted">Of the players active on a day, how many played again the next day, exactly 7 days later, or on any of the next 7 days. Days are Mauritius time.</p>
+    <div class="tscroll"><table class="st" id="stDays"></table></div>
+    <h3>Busiest times</h3>
+    <p class="muted">Most players online at once in each hour, averaged over the last 7 days. Hover a bar for details. Schedule events in the tallest hours.</p>
+    <div class="hours" id="stHours" role="img"></div><div class="hlab" id="stHlab"></div>
+    <h3>Where players come from</h3>
+    <p class="muted">New players by the <code>?ref=</code> tag on the link they first opened. “direct” means no tag. Visits count every time someone opens a tagged link (last 30 days).</p>
+    <div class="tscroll"><table class="st" id="stRefs"></table></div>
+    <h3>Links to share</h3>
+    <p class="muted">Use a different link in each place, so you can see which one works. Tap to copy.</p>
+    <div class="row" id="stLinks"></div>
+  </section>
+
+  <section class="card" id="wallCard" data-tab="talk" hidden>
+    <div class="row"><h2 style="margin-right:auto">💌 Heart Garden</h2><button type="button" id="wallRe">Refresh</button></div>
+    <p class="muted">Anonymous to players. Only you can see who wrote each note. Notes reported by 3 players are hidden until you decide.</p>
+    <div class="list" id="wallList"></div>
+  </section>
+
+  <section class="card" id="banCard" data-tab="players" hidden>
+    <h2>Banned</h2>
+    <div class="list" id="banList"></div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <h2 id="dlgTitle">Delete player?</h2>
+  <p class="muted" id="dlgWho"></p>
+  <p style="margin:10px 0 0">This permanently removes:</p>
+  <ul><li>their character, money and progress</li><li>their login (username and password)</li><li>their house plot and home invites</li><li>money transfers waiting for them, and gossip about them</li></ul>
+  <p class="muted">If they're online they're kicked out now. Next time their browser opens the game it starts a new character. A backup of all data is saved first.</p>
+  <label class="chk"><input type="text" id="banWhy" maxlength="140" placeholder="Reason for the ban (the player will see it)" style="width:100%"></label>
+  <label class="chk"><input type="checkbox" id="ban"> <span>Also <b>ban</b> this browser, so it can't come back</span></label>
+  <div class="row"><button type="button" id="cancel">Cancel</button><button type="button" class="danger" id="confirm">Delete player</button></div>
+</dialog>
+
+<dialog id="pwDlg">
+  <h2 id="pwTitle">New password</h2>
+  <p class="muted" id="pwWho"></p>
+  <label id="pwUserRow" hidden>Username for this player<input id="pwUser" autocomplete="off" maxlength="20" placeholder="3-20 letters, numbers or _"></label>
+  <label>New password (8+ characters)<input id="pwNew" autocomplete="off" maxlength="200"></label>
+  <p class="muted">Tell the player this password in private. They log in with their username and this password. Any old password stops working.</p>
+  <p class="err" id="pwErr"></p>
+  <div class="row"><button type="button" id="pwGen">Make one for me</button><button type="button" id="pwCancel">Cancel</button><button type="button" class="primary" id="pwSave">Set password</button></div>
+</dialog>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let key = ""; try { key = sessionStorage.getItem("fefAdminKey") || ""; } catch (e) {}
+  let target = null;
+  const show = (el, text) => { el.textContent = text || ""; el.hidden = !text; };
+  const money = (n) => "Rs " + Math.round(n).toLocaleString("en");
+  const when = (t) => t ? new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—";
+  async function api(path, body) { // one admin request
+    const r = await fetch(path, { method: body ? "POST" : "GET", headers: Object.assign({ authorization: "Bearer " + key }, body ? { "content-type": "application/json" } : {}), body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    let d = {}; try { d = await r.json(); } catch (e) {} if (!r.ok || !d.ok) { const e = new Error(d.error || "Request failed (" + r.status + ")."); e.status = r.status; throw e; } return d;
+  }
+  async function publishCase(pl) { // open an anonymous court case (assets frozen) and tell the town: team notice, court docket and gossip
+    const text = prompt("Public notice (no name is shown). Opens a court case for " + pl.name + " and freezes their assets:", "A player collected business earnings many times over by changing their phone clock. Financial Crimes has frozen their assets and the court will rule. The loophole is now fixed."); if (!text) return;
+    try { await api("/api/admin/agent", { investigate: pl.uid, anon: true, reason: "Repeated business earnings via phone clock", pct: 90, publish: { text } }); alert("Case opened and published."); } catch (e) { alert(e.message || "Failed"); }
+  }
+  const MSG_TPL = { // ready-made notes to a player, edited before sending
+    clock: "Hi {n}, we reviewed your account. Your businesses paid out the same earnings many times in seconds, which only happens when the phone clock is moved forward. The extra money was removed. Please play fair. Think we got it wrong? Reply here. Support: WhatsApp +230 5933 0011 or the Team chat in the game.",
+    edit: "Hi {n}, we reviewed your account. Your cash jumped to an exact round number that normal play cannot produce, so the save looks edited. The extra money was removed. Please do not edit the game. Think we got it wrong? Reply here. Support: WhatsApp +230 5933 0011 or the Team chat in the game.",
+    farm: "Hi {n}, we reviewed your account. It restarted new characters many times to collect starting cash and send it on. That money was removed. Restarting to farm cash is not allowed. Think we got it wrong? Reply here. Support: WhatsApp +230 5933 0011 or the Team chat in the game.",
+    recv: "Hi {n}, you received a lot of money from an account that used an exploit. We are reviewing those transfers and may take that money back. Reply here if you have anything to tell us. Support: WhatsApp +230 5933 0011 or the Team chat in the game.",
+    free: "Support: WhatsApp +230 5933 0011 or the Team chat in the game."
+  };
+  async function msgTo(pl) { // a message from the game team to one player
+    const box = document.createElement("dialog"); box.style.cssText = "max-width:460px;width:92%;border-radius:12px;padding:14px;"; const sel = document.createElement("select"), ta = document.createElement("textarea"), info = document.createElement("p"), go = document.createElement("button"), cl = document.createElement("button");
+    for (const [k, l] of [["clock", "Clock trick"], ["edit", "Edited cash"], ["farm", "Restart farming"], ["recv", "Received tainted money"], ["free", "Write your own"]]) { const o = document.createElement("option"); o.value = k; o.textContent = l; sel.append(o); }
+    const fill = () => { ta.value = MSG_TPL[sel.value].replace("{n}", pl.name); }; sel.onchange = fill; fill(); ta.rows = 7; ta.maxLength = 400; ta.style.cssText = "width:100%;margin:8px 0;"; info.className = "muted"; info.textContent = "To " + pl.name + " · it shows up in their Messages from the Flic en Flac Team (max 400 characters).";
+    go.type = "button"; go.textContent = "Send"; cl.type = "button"; cl.textContent = "Cancel"; cl.style.marginLeft = "8px"; cl.onclick = () => { box.close(); box.remove(); };
+    go.onclick = async () => { go.disabled = true; try { await api("/api/admin/team", { uid: pl.uid, text: ta.value.slice(0, 400) }); alert("Sent to " + pl.name); box.close(); box.remove(); } catch (e) { alert(e.message || "Failed"); go.disabled = false; } };
+    box.append(info, sel, ta, go, cl); document.body.append(box); box.showModal();
+  }
+  async function dossier(pl) { // download everything on one player as a file
+    try { const j = await api("/api/admin/dossier?uid=" + encodeURIComponent(pl.uid)), l = document.createElement("a"); l.href = URL.createObjectURL(new Blob([JSON.stringify(j, null, 1)], { type: "application/json" })); l.download = "dossier-" + String(pl.name).replace(/\W+/g, "_") + ".json"; l.click(); } catch (e) { alert(e.message || "Export failed"); }
+  }
+  function locked(text) { key = ""; try { sessionStorage.removeItem("fefAdminKey"); } catch (e) {} $("findCard").hidden = $("banCard").hidden = $("giftCard").hidden = $("wallCard").hidden = $("statsCard").hidden = $("promoCard").hidden = $("agCard").hidden = $("szCard").hidden = $("asCard").hidden = $("rqCard").hidden = $("lpCard").hidden = $("tabs").hidden = true; $("keyCard").hidden = false; show($("keyErr"), text); }
+  let pwTarget = null;
+  function pwAsk(pl) { pwTarget = pl; $("pwTitle").textContent = "New password for " + pl.name; $("pwWho").textContent = (pl.login ? "@" + pl.login : "No login yet") + " · id " + pl.uid; $("pwUserRow").hidden = !!pl.login; $("pwUser").value = ""; $("pwNew").value = ""; $("pwErr").textContent = ""; $("pwSave").disabled = false; $("pwDlg").showModal(); }
+  $("pwGen").onclick = () => { const a = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789", r = crypto.getRandomValues(new Uint32Array(10)); $("pwNew").value = Array.from(r, (n) => a[n % a.length]).join(""); };
+  $("pwCancel").onclick = () => $("pwDlg").close();
+  $("pwSave").onclick = async () => { if (!pwTarget) return; $("pwSave").disabled = true; $("pwErr").textContent = "";
+    try { const pw = $("pwNew").value, d = await api("/api/admin/password", { uid: pwTarget.uid, password: pw, username: $("pwUser").value }); $("pwDlg").close(); show($("msg"), "Password set for @" + d.login + ". Tell " + pwTarget.name + " their new password: " + pw); search(); }
+    catch (e) { $("pwErr").textContent = e.message; $("pwSave").disabled = false; } };
+  async function search() { // list players matching the search box
+    show($("err"), ""); const q = $("q").value.trim();
+    try { const d = await api("/api/admin/players?q=" + encodeURIComponent(q)); $("total").textContent = d.total + " players"; const list = $("list"); list.innerHTML = "";
+      if (!d.players.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = q ? "No player matches “" + q + "”." : "No players yet."; list.append(p); }
+      for (const pl of d.players) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = pl.name; if (pl.online) { const dot = document.createElement("span"); dot.className = "dot"; dot.title = "Online now"; b.append(dot); }
+        const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = [pl.login ? "@" + pl.login : "no login", money(pl.money), pl.role || "", pl.cheat ? "⚠️ " + pl.cheat + " cheat flag" + (pl.cheat > 1 ? "s" : "") : "", "joined " + when(pl.joined), "id " + pl.uid].filter(Boolean).join(" · ");
+        const del = document.createElement("button"); del.type = "button"; del.className = "danger"; del.textContent = "Delete"; del.onclick = () => ask(pl);
+        const his = document.createElement("button"); his.type = "button"; his.textContent = "History"; his.onclick = () => history(pl, row);
+        const gv = document.createElement("button"); gv.type = "button"; gv.className = "primary"; gv.textContent = "Send / Gift"; gv.onclick = () => giftForm(pl, row);
+        const pwb = document.createElement("button"); pwb.type = "button"; pwb.textContent = "Reset password"; pwb.onclick = () => pwAsk(pl);
+        const inv = document.createElement("button"); inv.type = "button"; inv.textContent = "Investigate / freeze"; inv.onclick = () => invAsk(pl); const sz = document.createElement("button"); sz.type = "button"; sz.textContent = "Seize money"; sz.onclick = () => seizeAsk(pl);
+        const inc = document.createElement("button"); inc.type = "button"; inc.textContent = "Money sources"; inc.onclick = () => incomeOf(pl, row);
+        const acts = document.createElement("div"); acts.className = "row acts"; const asb = document.createElement("button"); asb.type = "button"; asb.textContent = "Assets"; asb.onclick = () => assetsOf(pl); const exb = document.createElement("button"); exb.type = "button"; exb.textContent = "Export data"; exb.onclick = () => dossier(pl); const pcb = document.createElement("button"); pcb.type = "button"; pcb.textContent = "Publish case"; pcb.onclick = () => publishCase(pl); const mgb = document.createElement("button"); mgb.type = "button"; mgb.textContent = "Message"; mgb.onclick = () => msgTo(pl); acts.append(inc, gv, inv, sz, pwb, his, asb, exb, pcb, mgb, del); row.append(b, acts, meta); list.append(row); }
+      if (d.count > d.players.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "Showing 200 of " + d.count + ". Search to narrow it down."; list.append(p); }
+      $("keyCard").hidden = true; $("findCard").hidden = $("banCard").hidden = $("giftCard").hidden = $("wallCard").hidden = $("statsCard").hidden = $("promoCard").hidden = $("agCard").hidden = $("teamCard").hidden = $("czCard").hidden = $("bzCard").hidden = $("hwCard").hidden = $("huCard").hidden = $("plCard").hidden = $("trCard").hidden = $("blCard").hidden = $("disCard").hidden = $("seaCard").hidden = $("adCard").hidden = $("susCard").hidden = $("ledCard").hidden = $("wtCard").hidden = $("rdCard").hidden = $("fbCard").hidden = $("slCard").hidden = $("hlCard").hidden = $("szCard").hidden = $("asCard").hidden = $("rqCard").hidden = $("lpCard").hidden = false; $("tabs").hidden = false; tabOn(); teamLoad(); szLoad(); asLoad(); rqLoad(); lpLoad(); adLoad(); seaLoad(); disLoad(); blLoad(); trLoad(); plLoad(); czLoad(); bzLoad(); hwLoad(); huLoad(); hlLoad(); slLoad(); ledLoad(); wtLoad(); rdLoad(); fbLoad(); bans(); wallNotes(); stats(); promoLoad(); agLoad();
+    } catch (e) { if (e.status === 401 || e.status === 404 || e.status === 429) locked(e.message); else show($("err"), e.message); }
+  }
+  async function wallNotes() { // every Heart Wall note, with who wrote it, and buttons to take it down or put it back
+    try { const d = await api("/api/admin/wall"), list = $("wallList"); list.innerHTML = "";
+      if (!d.notes.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "No notes yet."; list.append(p); return; }
+      for (const n of d.notes) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = (n.hidden ? "🚩 HIDDEN · " : "") + n.text; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = "by " + n.name + " · " + when(n.at) + " · ❤️ " + n.hearts + " · 🚩 " + n.reports + " · id " + n.uid;
+        const acts = document.createElement("div"); acts.className = "row acts"; const del = document.createElement("button"); del.type = "button"; del.className = "danger"; del.textContent = "Take down"; del.onclick = async () => { if (!confirm("Take this note down for everyone?")) return; try { await api("/api/admin/wall/delete", { id: n.id }); wallNotes(); } catch (e) { show($("err"), e.message); } }; acts.append(del);
+        if (n.hidden) { const sh = document.createElement("button"); sh.type = "button"; sh.textContent = "Put back up"; sh.onclick = async () => { try { await api("/api/admin/wall/show", { id: n.id }); wallNotes(); } catch (e) { show($("err"), e.message); } }; acts.append(sh); }
+        row.append(b, acts, meta); list.append(row); }
+    } catch (e) {}
+  }
+  $("wallRe").onclick = wallNotes;
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const pct = (n, of) => (n === null || n === undefined ? "—" : of ? n + " · " + Math.round(n / of * 100) + "%" : "0");
+  const hh = (h) => String(h).padStart(2, "0") + ":00";
+  async function stats() { // retention, visit length, busy hours and link sources
+    let d; try { d = await api("/api/admin/stats"); } catch (e) { return; }
+    $("stSince").textContent = "Tracking since " + d.since;
+    const done = d.rows.find((r) => r.d1 !== null), wk = d.rows.find((r) => r.w7 !== null && r.d7 !== null) || done, top = d.hours.reduce((a, b) => (b.avg > a.avg ? b : a), d.hours[0]), today = d.rows[0] || {};
+    const tiles = $("stTiles"); tiles.innerHTML = "";
+    for (const [label, val, sub] of [["Active today", String(today.active || 0), (today.fresh || 0) + " new"], ["Back next day", done ? Math.round(done.d1 / Math.max(1, done.active) * 100) + "%" : "—", done ? done.d1 + " of " + done.active + " from " + done.day : "Needs a full day of data"], ["Back within 7 days", wk && wk.w7 !== null ? Math.round(wk.w7 / Math.max(1, wk.active) * 100) + "%" : "—", wk ? "of players from " + wk.day : ""], ["Time per visit", d.week.avgMin + " min", "average · median " + d.week.medMin + " min (7 days)"], ["Busiest hour", top && top.avg ? hh(top.h) : "—", top && top.avg ? "about " + top.avg + " online at once" : "Not enough data yet"]]) { const c = mk("div", "tile"); c.append(mk("small", "", label), mk("b", "", val), mk("span", "", sub)); tiles.append(c); }
+    const S = d.site || {}, st = $("siteTiles"); st.innerHTML = ""; $("siteSince").textContent = S.since || "today";
+    for (const [label, val, sub] of [["Visitors today", String(S.todayVisitors || 0), (S.todayViews || 0) + " page views"], ["Visitors, 7 days", String(S.weekVisitors || 0), (S.weekNew || 0) + " first-time"], ["Page views, 30 days", String(S.monthViews || 0), (S.allViews || 0) + " all time"], ["Visited → played", today.uv ? Math.round((today.fresh || 0) / today.uv * 100) + "%" : "—", (today.fresh || 0) + " new players of " + (today.uv || 0) + " visitors today"]]) { const c = mk("div", "tile"); c.append(mk("small", "", label), mk("b", "", val), mk("span", "", sub)); st.append(c); }
+    const SD = $("siteDays"); SD.innerHTML = ""; const sh = mk("tr"); for (const h of ["Day", "Visitors", "Page views", "First-time visitors", "New players", "Bots skipped"]) sh.append(mk("th", "", h)); SD.append(sh);
+    for (const r of d.rows) { const tr = mk("tr"); for (const v of [r.day, r.uv || 0, r.pv || 0, r.nv || 0, r.fresh, r.bots || 0]) tr.append(mk("td", "", String(v))); SD.append(tr); }
+    const SS = $("siteSrc"); SS.innerHTML = ""; const ssh = mk("tr"); for (const h of ["Source", "Page views", "Share"]) ssh.append(mk("th", "", h)); SS.append(ssh); const tot = (S.sources || []).reduce((x, y) => x + y.views, 0) || 1;
+    for (const r of S.sources || []) { const tr = mk("tr"); for (const v of [r.src, r.views, Math.round(r.views / tot * 100) + "%"]) tr.append(mk("td", "", String(v))); SS.append(tr); }
+    if (!(S.sources || []).length) { const tr = mk("tr"); const td = mk("td", "muted", "No visits counted yet."); td.colSpan = 3; tr.append(td); SS.append(tr); }
+    const T = $("stDays"); T.innerHTML = ""; const hd = mk("tr"); for (const h of ["Day", "Active", "New", "Back next day", "Back on day 7", "Back within 7 days", "Visits", "Avg visit", "Peak online"]) hd.append(mk("th", "", h)); T.append(hd);
+    for (const r of d.rows) { const tr = mk("tr"); for (const v of [r.day, r.active, r.fresh, pct(r.d1, r.active), pct(r.d7, r.active), pct(r.w7, r.active) + (r.w7 !== null && !r.w7full ? " so far" : ""), r.visits, r.visits ? r.avgMin + " min (median " + r.medMin + ")" : "—", r.peak ? r.peak + " at " + hh(r.peakHour) : "—"]) tr.append(mk("td", "", String(v))); T.append(tr); }
+    if (!d.rows.length) { const tr = mk("tr"); const td = mk("td", "muted", "No data yet. It fills in as players play."); td.colSpan = 9; tr.append(td); T.append(tr); }
+    const H = $("stHours"), L = $("stHlab"); H.innerHTML = L.innerHTML = ""; const mx = Math.max(1, ...d.hours.map((x) => x.avg)); H.setAttribute("aria-label", "Average peak players online by hour"); for (const x of d.hours) { const b = mk("div", "hb" + (x === top && x.avg ? " top" : "")); const f = mk("i"); f.style.height = (x.avg / mx * 100) + "%"; b.append(f); b.title = hh(x.h) + "–" + hh((x.h + 1) % 24) + ": " + x.avg + " online on average at the peak, " + x.max + " at most"; H.append(b); L.append(mk("span", "", x.h % 3 === 0 ? hh(x.h) : "")); }
+    const R = $("stRefs"); R.innerHTML = ""; const rh = mk("tr"); for (const h of ["Source", "New players", "Back next day", "Link visits (30 days)"]) rh.append(mk("th", "", h)); R.append(rh);
+    for (const r of d.refs) { const tr = mk("tr"); for (const v of [r.ref, r.players, r.d1base ? r.d1 + " of " + r.d1base + " · " + Math.round(r.d1 / r.d1base * 100) + "%" : "—", r.visits]) tr.append(mk("td", "", String(v))); R.append(tr); }
+    if (!d.refs.length) { const tr = mk("tr"); const td = mk("td", "muted", "No new players since tracking started."); td.colSpan = 4; tr.append(td); R.append(tr); }
+    const LK = $("stLinks"); LK.innerHTML = ""; for (const s of ["whatsapp", "instagram", "tiktok", "snapchat", "twitter", "friend"]) { const u = location.origin + "/?ref=" + s, b = mk("button", "", s); b.type = "button"; b.title = u; b.onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => show($("msg"), "Copied " + u), () => prompt("Copy this link", u)); }; LK.append(b); }
+  }
+  $("stRe").onclick = stats;
+  function promoDraw(d) { // the community post card: numbers, settings and the list
+    const P = d.promo, S = d.stats, tiles = $("prTiles"); tiles.innerHTML = ""; $("prOn").checked = !!P.on; if (document.activeElement !== $("prLink")) $("prLink").value = P.link || ""; if (document.activeElement !== $("prTitle")) $("prTitle").value = P.title || ""; if (document.activeElement !== $("prText")) $("prText").value = P.text || ""; if (document.activeElement !== $("prReward")) $("prReward").value = P.reward;
+    for (const [label, val, sub] of [["Status", d.live ? "Live" : "Off", d.live ? "Players see it on login" : P.on ? "Add a link to start" : "Switched off"], ["Saw the post", String(S.shown), "of " + S.players + " players"], ["Tapped Join", String(S.tapped), S.shown ? Math.round(S.tapped / S.shown * 100) + "% of those who saw it" : ""], ["Claimed", String(S.claimed), S.tapped ? Math.round(S.claimed / S.tapped * 100) + "% of those who tapped" : ""], ["Paid out", money(S.paid), "post #" + P.id]]) { const c = mk("div", "tile"); c.append(mk("small", "", label), mk("b", "", val), mk("span", "", sub)); tiles.append(c); }
+    const T = $("prList"); T.innerHTML = ""; const hd = mk("tr"); for (const h2 of ["Player", "Saw it", "Tapped Join", "Claimed", "Paid"]) hd.append(mk("th", "", h2)); T.append(hd); const dt = (x) => (x ? new Date(x).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
+    for (const r of d.list) { const tr = mk("tr"); for (const v of [r.name + " · " + r.uid.slice(0, 6), dt(r.shown), dt(r.tap) + (r.taps > 1 ? " (" + r.taps + "×)" : ""), r.claim ? "✅ " + dt(r.claim) : "—", r.paid ? money(r.paid) : "—"]) tr.append(mk("td", "", String(v))); T.append(tr); }
+    if (!d.list.length) { const tr = mk("tr"); const td = mk("td", "muted", "Nobody has seen it yet. Turn it on and they will."); td.colSpan = 5; tr.append(td); T.append(tr); }
+  }
+  function agDraw(r) { $("agOn").checked = !!r.on; const box = $("agList"); box.innerHTML = ""; if (!r.cases.length) { box.textContent = "No cases yet."; return; }
+    for (const c of r.cases) { const row = document.createElement("div"); row.className = "row"; const tx = document.createElement("span"); tx.style.marginRight = "auto"; tx.textContent = c.name + " · " + c.kind + " · " + c.reason + " · " + c.status + (c.fine ? " · fine Rs " + c.fine : "") + (c.refunded ? " · refunded" : "") + (c.status === "frozen" ? " · frozen Rs " + (c.frozenAmt || 0) : ""); row.append(tx); if ((c.status === "taxed" || c.status === "convicted") && c.fine > 0 && !c.refunded) { const rf = document.createElement("button"); rf.type = "button"; rf.textContent = "Refund fine"; rf.onclick = async () => { if (!confirm("Give " + c.name + " back Rs " + c.fine + "?")) return; agDraw(await api("/api/admin/agent", { refund: c.id })); }; row.append(rf); } if (c.status === "frozen") { const b = document.createElement("button"); b.type = "button"; b.textContent = "Release"; b.onclick = async () => { agDraw(await api("/api/admin/agent", { release: c.uid })); }; row.append(b); const cv = document.createElement("button"); cv.type = "button"; cv.className = "danger"; cv.textContent = "Convict…"; cv.onclick = async () => { const fine = prompt("Fine for " + c.name + " (Rs)?", "50000"); if (fine === null) return; const jail = confirm("Also send them to a cell for a while?") ? 360 : 0; agDraw(await api("/api/admin/agent", { rule: { uid: c.uid, verdict: "convicted", fine: +fine || 0, jail, note: "Convicted after an administrator's investigation." } })); }; row.append(cv); } box.append(row); } }
+  async function fbLoad() { try { const d = await api("/api/admin/feedback?kind=" + encodeURIComponent($("fbKind").value) + ($("fbOpen").checked ? "&open=1" : "")); fbDraw(d); } catch (e) {} }
+  function fbDraw(d) { const star = (n) => "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n);
+    $("fbSum").textContent = d.ratings ? "Average " + d.avg + " ★ from " + d.ratings + " ratings (" + d.dist.map((n, i) => (i + 1) + "★ " + n).join(" · ") + ") · " + d.total + " messages, " + d.openCount + " open · bugs " + d.counts.bug + ", ideas " + d.counts.idea + ", problems " + d.counts.problem + ", praise " + d.counts.praise : d.total + " messages, " + d.openCount + " open";
+    const L = $("fbList"); L.innerHTML = ""; if (!d.rows.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "Nothing here yet."; L.append(p); }
+    for (const r of d.rows) { const row = document.createElement("div"); row.className = "p"; if (r.done) row.style.opacity = "0.55"; const b = document.createElement("b"); b.textContent = ({ bug: "🐞", idea: "💡", problem: "😤", praise: "❤️" }[r.kind] || "") + " " + r.n + (r.rating ? " · " + star(r.rating) : ""); const tx = document.createElement("div"); tx.textContent = r.text || "(rating only)"; tx.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0"; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = new Date(r.t).toLocaleString() + " · id " + r.u;
+      row.append(b, tx, meta); if (r.ctx && r.ctx !== "{}") { const det = document.createElement("details"), sm = document.createElement("summary"); sm.textContent = "Game info"; const pre = document.createElement("pre"); pre.textContent = r.ctx; pre.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;font-size:0.75rem"; det.append(sm, pre); row.append(det); }
+      const acts = document.createElement("div"); acts.className = "row acts"; const ok = document.createElement("button"); ok.type = "button"; ok.textContent = r.done ? "Reopen" : "Mark done"; ok.onclick = async () => { await api("/api/admin/feedback", { done: r.id }); fbLoad(); }; const del = document.createElement("button"); del.type = "button"; del.className = "danger"; del.textContent = "Delete"; del.onclick = async () => { if (confirm("Delete this message?")) { await api("/api/admin/feedback", { delete: r.id }); fbLoad(); } }; acts.append(ok, del); row.append(acts); L.append(row); } }
+  $("fbRe").onclick = fbLoad; $("fbKind").onchange = fbLoad; $("fbOpen").onchange = fbLoad;
+  let seizeTarget = null;
+  function seizeAsk(pl) { seizeTarget = pl; $("seizeTitle").textContent = "Seize money from " + pl.name; $("seizeErr").textContent = ""; $("seizeGo").disabled = false; $("seizeDlg").showModal(); }
+  $("seizeMode").onchange = () => { const pct = $("seizeMode").value === "pct"; $("seizePctL").hidden = !pct; $("seizeAmtL").hidden = pct; };
+  $("seizeCancel").onclick = () => $("seizeDlg").close();
+  $("seizeGo").onclick = async () => { if (!seizeTarget) return; $("seizeGo").disabled = true; try { const pct = $("seizeMode").value === "pct"; await api("/api/admin/agent", { seize: { uid: seizeTarget.uid, pct: pct ? +$("seizePct").value : 0, amt: pct ? 0 : +$("seizeAmt").value, town: $("seizeTown").value, note: $("seizeNote").value, announce: $("seizeAnn").checked } }); $("seizeDlg").close(); show($("msg"), "Money seized from " + seizeTarget.name + " and sent to the treasury."); agLoad(); } catch (er) { $("seizeErr").textContent = er.message; $("seizeGo").disabled = false; } };
+  let invTarget = null;
+  function invAsk(pl) { invTarget = pl; $("invTitle").textContent = "Investigate " + pl.name; $("invErr").textContent = ""; $("invGo").disabled = false; $("invDlg").showModal(); }
+  $("invCancel").onclick = () => $("invDlg").close();
+  $("invGo").onclick = async () => { if (!invTarget) return; $("invGo").disabled = true; try { agDraw(await api("/api/admin/agent", { investigate: invTarget.uid, reason: $("invReason").value, pct: +$("invPct").value })); $("invDlg").close(); show($("msg"), invTarget.name + " is under investigation. Their assets are frozen."); } catch (e) { $("invErr").textContent = e.message; $("invGo").disabled = false; } };
+  function slFill(d) { const c = d.cfg; $("slWa").value = c.whatsapp; $("slBio").value = c.bio; $("slSvc").value = JSON.stringify(c.menu, null, 1); $("slFrom").value = c.from; $("slTo").value = c.to; $("slDays").value = c.days.join(","); $("slCombo").value = c.comboPrice; $("slUntil").value = c.discUntil ? new Date(c.discUntil + 4 * 3600000).toISOString().slice(0, 10) : ""; $("slRew").value = c.reward; $("slCaps").value = (c.caps || []).join("\n"); const n2 = (v) => (v || 0).toLocaleString("en"), tk = d.track, T = tk.total, U = tk.uniq, rw = tk.rewards, rate = (a, b) => (b ? Math.round(a / b * 1000) / 10 + "%" : "–");
+    $("slTrack").innerHTML = "<p><b>Reward paid for first bookings:</b> Rs " + n2(rw.total) + " to " + rw.n + " player" + (rw.n === 1 ? "" : "s") + " (Rs " + n2(rw.perBooking) + " each now)</p>" + (rw.byDay.length ? "<p>By day: " + rw.byDay.map((x) => x.d.slice(5) + ": " + x.n + " · Rs " + n2(x.amt)).join(" · ") + "</p>" : "") + (rw.recent.length ? "<p>Latest: " + rw.recent.map((x) => x.name.replace(/[<>&]/g, "") + " Rs " + n2(x.amt)).join(", ") + "</p>" : "")
+      + "<table style='border-collapse:collapse;font-size:13px'><tr><th align=left>What</th><th>Taps</th><th>People</th></tr>" + [["ad_seen", "👀 Saw the big ad"], ["poster", "👆 Tapped the poster"], ["poster_book", "📅 Poster → Book"], ["poster_prices", "💰 Poster → Prices"], ["poster_visit", "🚶 Poster → Visit"], ["card_shown", "📣 Daily card shown"], ["card_book", "💅 Card → Book now"], ["card_gallery", "📸 Card → See her work"], ["app_open", "📱 Opened the app"]].map(([k, n]) => "<tr><td>" + n + "</td><td align=center>" + n2(T[k]) + "</td><td align=center>" + n2(U[k]) + "</td></tr>").join("") + "</table>"
+      + "<p>Poster tap rate: " + rate(U.poster, U.ad_seen) + " of people who saw it · Bookings: " + tk.bookings + " from " + tk.bookedPlayers + " players (" + rate(tk.bookedPlayers, U.app_open) + " of people who opened the app)</p>"
+      + (tk.days.length ? "<p>Last days (taps / app opens / daily card shown): " + tk.days.map((x) => x.d.slice(5) + ": " + (x.ev.poster || 0) + " / " + (x.ev.app_open || 0) + " / " + (x.ev.card_shown || 0)).join(" · ") + "</p>" : "");
+    $("slKey").textContent = c.ownerKey; $("slOpen").checked = !!c.open; $("slAllowed").innerHTML = d.allowNames.length ? d.allowNames.map((x) => x.n.replace(/[<>&]/g, "") + " <a href=\"#\" data-rm=\"" + x.u + "\">remove</a>").join(" · ") : "Nobody permitted yet."; $("slAllowed").querySelectorAll("a").forEach((a) => { a.onclick = (e) => { e.preventDefault(); slSave({ removeAllow: a.dataset.rm }); }; }); $("slOwners").innerHTML = "Linked owner accounts: " + (d.ownerNames.length ? d.ownerNames.map((x) => (x.login ? "@" + x.login.replace(/[<>&]/g, "") + " · " : "") + x.n.replace(/[<>&]/g, "") + " <a href=\"#\" data-ro=\"" + x.u + "\">remove</a>").join(" · ") : "none yet (they link when the owner enters the key in the game)"); $("slOwners").querySelectorAll("a").forEach((a) => { a.onclick = (e) => { e.preventDefault(); slSave({ removeOwner: a.dataset.ro }); }; });
+    const s = d.stats; $("slStats").textContent = s.total + " bookings · " + s.upcoming + " upcoming · " + (s.counts.pending || 0) + " waiting · " + s.customers + " customers · done " + (s.counts.done || 0);
+    $("slList").innerHTML = d.bookings.map((b) => "<div>" + b.date + " " + String(b.hour).padStart(2, "0") + ":00 · " + b.name.replace(/[<>&]/g, "") + " · " + b.svcName.replace(/[<>&]/g, "") + " · Rs " + b.price + " · <b>" + b.code + "</b> · " + b.status + (b.phone ? " · " + b.phone.replace(/[<>&]/g, "") : "") + "</div>").join("") || "No bookings yet."; }
+  async function hlLoad() { try { const d = await api("/api/admin/health"), P = d.persist, ago = (t) => (t ? Math.round((Date.now() - t) / 1000) + "s ago" : "never"), mb = (n) => (n / 1048576).toFixed(2) + " MB";
+      const warn = []; if (!d.volume) warn.push("⚠️ The save file is not on a /data volume or DATA_FILE is not set: a redeploy can wipe everyone's progress. Add a Railway volume mounted at /data."); if (P.fails) warn.push("⚠️ " + P.fails + " save failure(s). Last: " + P.lastErr + " (" + ago(P.lastErrAt) + ")"); if (d.biggestSave > d.maxDoc * 0.7) warn.push("⚠️ The biggest player save is " + Math.round(d.biggestSave / 1024) + " KB of " + Math.round(d.maxDoc / 1024) + " KB allowed.");
+      $("hlBody").innerHTML = (warn.length ? "<p style='color:#ff9a8a'>" + warn.map((w) => w.replace(/[<>&]/g, "")).join("<br>") + "</p>" : "<p style='color:#6fe3a1'>✅ Saving looks healthy.</p>") + "<div>File: <code>" + d.file.replace(/[<>&]/g, "") + "</code> · " + (d.file_stat ? mb(d.file_stat.size) + ", written " + ago(d.file_stat.mtime) : "not written yet") + "</div><div>Last good save: " + ago(P.lastOkAt) + " · " + P.writes + " saves · " + P.ms + " ms · " + mb(P.bytes) + "</div><div>" + d.players + " players · " + d.ledgerRows + " ledger lines · " + d.feedback + " reports · biggest save " + Math.round(d.biggestSave / 1024) + " KB · memory " + d.mem + " MB · up " + Math.round(d.uptime / 60) + " min</div><div>Backups: " + (d.backups.length ? d.backups.map((b) => b.n.replace(/^data-|\.json$/g, "")).join(", ") : "none yet") + "</div>"
+        + (d.diag.length ? "<h3>Odd save events</h3>" + d.diag.map((x) => "<div>" + new Date(x.t).toLocaleString() + " · <b>" + x.k + "</b> · " + (x.n || x.u).replace(/[<>&]/g, "") + " · " + x.i.replace(/[<>&]/g, "") + "</div>").join("") : ""); } catch (e) { $("hlBody").textContent = "Couldn't load."; } }
+  $("hlRefresh").onclick = hlLoad;
+  async function slLoad() { try { slFill(await api("/api/admin/salon")); } catch (e) {} }
+  async function slSave(extra) { try { const body = Object.assign({ whatsapp: $("slWa").value, bio: $("slBio").value, menu: JSON.parse($("slSvc").value || "[]"), from: $("slFrom").value, to: $("slTo").value, days: $("slDays").value.split(",").map((x) => x.trim()).filter(Boolean), comboPrice: $("slCombo").value, discUntil: $("slUntil").value, reward: $("slRew").value, caps: $("slCaps").value.split("\n").filter(Boolean) }, extra || {}); slFill(await api("/api/admin/salon", body)); show($("slMsg"), "Saved."); setTimeout(() => { $("slMsg").hidden = true; }, 2500); } catch (er) { show($("err"), er.message); } }
+  $("slForm").onsubmit = (e) => { e.preventDefault(); slSave(); }; $("slRegen").onclick = () => { if (confirm("Make a new owner key? The old one stops working for new devices.")) slSave({ regenKey: 1 }); }; $("slOpen").onchange = () => slSave({ open: $("slOpen").checked }); $("slAllowGo").onclick = () => { const n = $("slAllow").value.trim(); if (n) slSave({ allowName: n }); $("slAllow").value = ""; }; $("slLink").onclick = () => { const n = $("slOwner").value.trim(); if (n) slSave({ ownerName: n }); };
+  async function rdLoad(body) { try { const d = await api("/api/admin/raids", body); const c = d.cfg; $("rdOn").checked = !!c.on; $("rdMin").value = c.minNw; $("rdTax").value = c.tax; $("rdDay").value = c.perDay; $("rdSh").value = c.shieldH; $("rdFee").value = c.searchFee; $("rdRev").value = c.revengeH; $("rdStat").textContent = d.stats.n + " raids · Rs " + Math.round(d.stats.stolen).toLocaleString("en") + " stolen · Rs " + Math.round(d.stats.tax).toLocaleString("en") + " raid tax · Rs " + Math.round(d.stats.fees).toLocaleString("en") + " fees to the treasury · " + d.targets + " players can be raided now · " + d.shielded + " shielded · " + d.pending + " debits waiting"; } catch (er) { show($("err"), er.message); } }
+  $("rdForm").onsubmit = (e) => { e.preventDefault(); rdLoad({ minNw: $("rdMin").value, tax: $("rdTax").value, perDay: $("rdDay").value, shieldH: $("rdSh").value, searchFee: $("rdFee").value, revengeH: $("rdRev").value }); };
+  $("rdOn").onchange = () => rdLoad({ on: $("rdOn").checked });
+  async function wtLoad() { try { const d = await api("/api/admin/wealthtax"); $("wtOn").checked = !!d.wealth.on; d.wealth.b.forEach((x, i) => { $("wt" + i).value = +(x[1] * 100).toFixed(2); }); } catch (e) {} }
+  $("wtForm").onsubmit = async (e) => { e.preventDefault(); try { await api("/api/admin/wealthtax", { on: $("wtOn").checked, rates: [$("wt0").value, $("wt1").value, $("wt2").value] }); show($("wtMsg"), "Saved. Everyone's game picks it up now."); setTimeout(() => show($("wtMsg"), ""), 3000); } catch (er) { show($("err"), er.message); } };
+  $("wtOn").onchange = async () => { try { await api("/api/admin/wealthtax", { on: $("wtOn").checked }); } catch (er) { show($("err"), er.message); } };
+  let ledRows = [], ledUid = "";
+  async function ledLoad() { try { const d = await api("/api/admin/ledger?q=" + encodeURIComponent($("ledQ").value.trim()) + "&uid=" + encodeURIComponent(ledUid) + "&limit=" + $("ledLim").value); ledRows = d.rows; const L = $("ledList"); L.innerHTML = "";
+      $("ledSum").textContent = d.count + " lines · in " + money(d.totalIn) + " · out " + money(d.totalOut) + " · " + d.players + " players have reported" + (ledUid ? " · showing one player (click Show with an empty search to see everyone)" : "");
+      if (!d.rows.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "No transactions yet. They appear here shortly after players earn or spend."; L.append(p); }
+      for (const r of d.rows) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"), who = document.createElement("a"); who.href = "#"; who.textContent = r.n || r.u; who.onclick = (e) => { e.preventDefault(); ledUid = r.u; $("ledQ").value = ""; ledLoad(); }; who.style.color = "inherit"; b.append(who, document.createTextNode(" · " + r.l));
+        const amt = document.createElement("span"); amt.textContent = " " + (r.a > 0 ? "+" : "−") + money(Math.abs(r.a)); amt.style.cssText = "float:right;font-weight:700;color:" + (r.a > 0 ? "#5dd39e" : "#ff8a80"); b.append(amt);
+        const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = new Date(r.t).toLocaleString() + " · balance " + money(r.b) + (r.w ? " · " + r.w : ""); row.append(b, meta); L.append(row); }
+    } catch (e) { show($("err"), e.message); } }
+  $("ledRe").onclick = ledLoad; $("ledForm").onsubmit = (e) => { e.preventDefault(); ledUid = ""; ledLoad(); };
+  $("ledCsv").onclick = () => { const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"', lines = ["time,player,player_id,what,amount,balance_after,place"].concat(ledRows.map((r) => [new Date(r.t).toISOString(), esc(r.n), r.u, esc(r.l), r.a, r.b, esc(r.w || "")].join(","))), a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" })); a.download = "transactions.csv"; a.click(); };
+  function ptyDraw(r) { const box = $("ptyList"); box.innerHTML = ""; if (!r.parties.length) { box.textContent = "No parties yet."; return; } for (const q of r.parties) { const row = document.createElement("div"); row.className = "row"; const tx = document.createElement("span"); tx.style.marginRight = "auto"; tx.textContent = q.icon + " " + q.name + " [" + q.tag + "] · " + q.n + " member" + (q.n === 1 ? "" : "s") + " · led by " + q.leader + " · fund Rs " + q.funds + " · " + q.wins + " win" + (q.wins === 1 ? "" : "s"); const b = document.createElement("button"); b.type = "button"; b.className = "danger"; b.textContent = "Disband"; b.onclick = async () => { if (!confirm("Disband " + q.name + "? Its members are free to join another party.")) return; ptyDraw(await api("/api/admin/parties", { delete: q.id })); }; row.append(tx, b); box.append(row); } }
+  async function ptyLoad() { try { ptyDraw(await api("/api/admin/parties")); } catch (e) {} }
+  async function agLoad() { try { agDraw(await api("/api/admin/agent")); } catch (e) {} ptyLoad(); }
+  $("agRefAll").onclick = async () => { if (!confirm("Give back every court fine the agent has taken that is still on record? Players get it in their mail.")) return; agDraw(await api("/api/admin/agent", { refund: "all" })); }; $("agRe").onclick = agLoad; $("agOn").onchange = async () => { agDraw(await api("/api/admin/agent", { on: $("agOn").checked })); };
+  async function promoLoad() { try { promoDraw(await api("/api/admin/promo")); } catch (e) {} }
+  $("prRe").onclick = promoLoad;
+  $("prForm").onsubmit = async (e) => { e.preventDefault(); show($("prMsg"), ""); show($("prErr"), ""); try { const d = await api("/api/admin/promo", { on: $("prOn").checked, link: $("prLink").value.trim(), title: $("prTitle").value, text: $("prText").value, reward: Number($("prReward").value) }); promoDraw(d); show($("prMsg"), d.live ? "Saved. Players now see the post." : "Saved."); } catch (err) { show($("prErr"), err.message); } };
+  $("prNew").onclick = async () => { if (!confirm("Start a new post? Everyone can claim again, and the numbers start from zero. The old list is kept on the server.")) return; try { promoDraw(await api("/api/admin/promo/new", {})); show($("prMsg"), "New post started."); } catch (err) { show($("prErr"), err.message); } };
+  async function bans() { // the ban list, with unban buttons
+    try { const d = await api("/api/admin/banned"), list = $("banList"); list.innerHTML = "";
+      if (!d.banned.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "Nobody is banned."; list.append(p); return; }
+      for (const r of d.banned) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = r.name || "(no name)"; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = "banned " + when(r.at) + " · id " + r.uid;
+        const un = document.createElement("button"); un.type = "button"; un.textContent = "Unban and restore progress"; un.onclick = async () => { if (!confirm("Unban " + (r.name || "this player") + " and give back their character, money and house?")) return; un.disabled = true; try { const o = await api("/api/admin/unban", { uid: r.uid }); show($("msg"), (r.name || "That player") + " is back with their progress" + (o.login ? ". They log in as @" + o.login + "." : ".") + (o.home ? "" : " Their old house address was taken, so they will get a new one.")); bans(); } catch (e) { show($("err"), e.message); un.disabled = false; } };
+        const un2 = document.createElement("button"); un2.type = "button"; un2.textContent = "Unban only (new character)"; un2.onclick = async () => { un2.disabled = true; try { await api("/api/admin/unban", { uid: r.uid, restore: false }); show($("msg"), (r.name || "That player") + " is unbanned. They can start a new character."); bans(); } catch (e) { show($("err"), e.message); un2.disabled = false; } };
+        meta.textContent += (r.reason ? " · " + r.reason : "") + (r.saved ? "" : " · no saved copy (will try backups)");
+        row.append(b, un, un2, meta); list.append(row); }
+    } catch (e) {}
+  }
+  function giftForm(pl, row) { // send one player money and/or a gift, from any name, with a note
+    const old = row.querySelector(".gform"); if (old) { old.remove(); return; } const f = document.createElement("form"); f.className = "gform grid2";
+    f.innerHTML = "<label>From<input name='from' value='Game team' maxlength='16'></label><label>Money (Rs)<input name='amt' type='number' min='0' max='10000000' placeholder='0'></label>" +
+      "<label>Gift<select name='item'><option value=''>No gift</option><option value='buddy::7'>💳 Buddy Card · 7 days</option><option value='buddy::30'>💳 Buddy Card · 30 days</option>" +
+      ["housekeeper:🧹 Housekeeper", "chef:👨‍🍳 Personal chef", "chauffeur:🚘 Chauffeur", "trainer:🏋️ Personal trainer", "assistant:💼 Personal assistant", "bodyguard:🕶️ Bodyguard"].map((x) => { const [k, n] = x.split(":"); return "<option value='staff:" + k + ":7'>" + n + " · 7 days paid</option><option value='staff:" + k + ":30'>" + n + " · 30 days paid</option>"; }).join("") + "</select></label>" +
+      "<label>Note (optional)<input name='note' maxlength='140' placeholder='e.g. Sorry about the bug!'></label><div class='row' style='align-self:end'><button class='primary' type='submit'>Send to " + pl.name.replace(/[<>&'\"]/g, "") + "</button></div>";
+    f.onsubmit = async (e) => { e.preventDefault(); const amt = +f.amt.value || 0, item = f.item.value, what = [amt ? money(amt) : "", item ? f.item.options[f.item.selectedIndex].text : ""].filter(Boolean).join(" + ");
+      if (!what) { show($("err"), "Enter an amount or pick a gift."); return; } if (!confirm("Send " + what + " to " + pl.name + " from \"" + f.from.value + "\"?")) return;
+      try { await api("/api/admin/give", { uid: pl.uid, amount: amt, item, note: f.note.value, from: f.from.value }); show($("msg"), "Sent " + what + " to " + pl.name + ". They get it at once if online, or next time they play."); f.remove(); } catch (er) { show($("err"), er.message); } };
+    row.append(f); f.amt.focus();
+  }
+  const KIND = { job: "Jobs & shifts", biz: "Businesses", invest: "Investments", gamble: "Gambling & games", gift: "Gifts & transfers from players", crime: "Crime & raids", other: "Other (rent, sales, rewards…)" };
+  async function incomeOf(pl, row) { // where this player's money came from, and how
+    const old = row.querySelector(".src"); if (old) { old.remove(); return; } const box = document.createElement("div"); box.className = "hist src"; box.textContent = "Loading…"; row.append(box);
+    try { const d = await api("/api/admin/income?uid=" + encodeURIComponent(pl.uid)); box.textContent = ""; const add = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; e.textContent = text; box.append(e); return e; };
+      add("p", "", "Cash " + money(d.cash) + " · net worth " + money(d.worth) + " · " + d.count + " lines recorded" + (d.since ? " since " + new Date(d.since).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "") + " · in " + money(d.inn) + " / out " + money(d.out) + " · raids made today " + d.raidsDone + " · times raided " + d.raided);
+      if (d.flags && d.flags.length) { const w = add("p", "", "⚠️ Money from nowhere: " + d.flags.map((f) => "+" + money(f.d) + " on " + new Date(f.t).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + (f.took ? " (taken back" + (f.refunded ? ", refunded" : "") + ")" : " (not taken back: flagged only)")).join(" · ")); w.style.color = "#e5484d"; w.style.fontWeight = "700"; if (d.flags.some((f) => f.took && !f.refunded)) { const rf = document.createElement("button"); rf.type = "button"; rf.textContent = "↩️ Give back what was taken"; rf.onclick = async () => { if (!confirm("Send " + pl.name + " back the money the cheat watch took?")) return; try { const r = await api("/api/admin/refund", { uid: pl.uid }); rf.textContent = "Sent " + money(r.amt || 0) + " ✔"; rf.disabled = true; } catch (e) { rf.textContent = e.message; } }; box.append(rf); } }
+      add("h4", "", "Lifetime income by kind"); const tot = Object.values(d.src).reduce((a, b) => a + b, 0) || 1; const t1 = document.createElement("table");
+      for (const k of Object.keys(KIND).sort((a, b) => (d.src[b] || 0) - (d.src[a] || 0))) { const v = d.src[k] || 0, tr = document.createElement("tr"); for (const c of [KIND[k], money(v), Math.round(v / tot * 100) + "%"]) { const td = document.createElement("td"); td.textContent = c; tr.append(td); } if ((k === "crime" || k === "gamble" || k === "gift") && v / tot > 0.4) tr.style.color = "#e5484d"; t1.append(tr); } box.append(t1);
+      if (d.topIn.length) { add("h4", "", "Biggest money sources (from recorded lines)"); const t2 = document.createElement("table"); t2.innerHTML = "<tr><th>What</th><th>Times</th><th>Money in</th></tr>"; for (const g of d.topIn) { const tr = document.createElement("tr"); for (const c of [g.l, String(g.n), money(g.inn)]) { const td = document.createElement("td"); td.textContent = c; tr.append(td); } t2.append(tr); } box.append(t2); }
+      if (d.places.length) add("p", "muted", "Where it was earned: " + d.places.map((x) => x.w + " " + money(x.a)).join(" · "));
+      if (d.topOut.length) add("p", "muted", "Biggest spending: " + d.topOut.map((g) => g.l + " " + money(g.out)).join(" · "));
+      if (d.recent.length) { add("h4", "", "Latest lines"); const t3 = document.createElement("table"); for (const r of d.recent) { const tr = document.createElement("tr"); for (const c of [new Date(r.t).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }), r.l, (r.a > 0 ? "+" : "") + money(r.a), r.w || ""]) { const td = document.createElement("td"); td.textContent = c; tr.append(td); } tr.style.color = r.a > 0 ? "" : "#8a8f98"; t3.append(tr); } box.append(t3); }
+      else add("p", "muted", "No lines recorded yet. Lines appear as the player plays.");
+    } catch (e) { box.textContent = e.message; }
+  }
+  async function teamLoad() { const L = $("teamList"); try { const d = await api("/api/admin/team"); L.textContent = ""; if (!d.rows.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "No messages yet."; L.append(p); return; }
+      for (const r of d.rows) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = r.name + (r.login ? " (@" + r.login + ")" : "") + (r.un ? "  ·  " + r.un + " new" : ""); if (r.un) b.style.color = "#e08a00"; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = (r.last.from === "me" ? "Player: " : "Team: ") + r.last.text.slice(0, 90) + " · " + new Date(r.last.at).toLocaleString(); const open = document.createElement("button"); open.type = "button"; open.textContent = "Open"; open.onclick = () => teamOpen(r, row); const acts = document.createElement("div"); acts.className = "row acts"; acts.append(open); row.append(b, acts, meta); L.append(row); } } catch (e) { L.textContent = e.message; } }
+  async function teamOpen(r, row) { const old = row.querySelector(".hist"); if (old) { old.remove(); return; } const box = document.createElement("div"); box.className = "hist"; row.append(box); try { const d = await api("/api/admin/team?uid=" + encodeURIComponent(r.uid)); for (const m of d.m) { const p = document.createElement("p"); p.textContent = (m.from === "me" ? "👤 " + d.name : "💬 Team") + ": " + m.text; p.style.margin = "4px 0"; if (m.from !== "me") p.style.color = "#6fd8ff"; box.append(p); }
+      const f = document.createElement("form"); f.className = "row"; f.innerHTML = "<input placeholder='Reply to " + d.name.replace(/[<>&']/g, "") + "' maxlength='400'><button class='primary' type='submit'>Reply</button>"; f.onsubmit = async (e) => { e.preventDefault(); const text = f.querySelector("input").value.trim(); if (!text) return; try { await api("/api/admin/team", { uid: r.uid, text }); const p = document.createElement("p"); p.textContent = "💬 Team: " + text; p.style.color = "#6fd8ff"; box.insertBefore(p, f); f.querySelector("input").value = ""; } catch (er) { alert(er.message); } }; box.append(f); teamLoad(); } catch (e) { box.textContent = e.message; } }
+  $("teamRe").onclick = teamLoad;
+  async function adLoad() { const L = $("adList"); try { const d = await api("/api/admin/ads"); L.textContent = ""; for (const id of Object.keys(d.ads)) { const a = d.ads[id], h = document.createElement("h4"); h.textContent = id === "devcon" ? "💻 DevCon 2026" : id === "belle" ? "🍛 Belle's Kitchen" : id === "cutz" ? "✂️ A* Cutz" : id; L.append(h); const p = document.createElement("p"); p.textContent = (id === "devcon" ? "" : "Seen = login poster shown or walked near the building · Opened = went inside, opened the menu or prices, or the business chat · Clicked = pressed the WhatsApp button. ") + "Seen " + a.total.view + " (" + a.players.view + " players) · Opened " + a.total.open + " (" + a.players.open + " players) · Clicked through " + a.total.click + " (" + a.players.click + " players)"; L.append(p);
+      if (a.rewards && id === "devcon") { const rp = document.createElement("p"); rp.textContent = "In-game money paid: " + a.rewards.click + " players got Rs 150,000 for clicking through, " + a.rewards.visit + " got Rs 20,000 for visiting · Rs " + a.rewards.paid.toLocaleString("en") + " in total"; L.append(rp); const an = document.createElement("button"); an.type = "button"; an.textContent = "📢 Announce it again in town chat" + (a.announced ? " (last " + new Date(a.announced).toLocaleString() + ")" : ""); an.onclick = async () => { if (!confirm("Post the DevCon announcement in town chat again?")) return; try { await api("/api/admin/ads", { announce: "devcon" }); an.textContent = "Announced ✔"; } catch (e) { an.textContent = e.message; } }; L.append(an); }
+      if (a.codes && a.codes.length) { const ch = document.createElement("h4"); ch.textContent = "Discount codes handed out (give these to the client)"; L.append(ch); const ct = document.createElement("table"); ct.innerHTML = "<tr><th>Player</th><th>Code</th><th>When</th></tr>"; for (const c of a.codes) { const tr = document.createElement("tr"); for (const v of [c.name + (c.login ? " (@" + c.login + ")" : ""), c.code, new Date(c.at).toLocaleString()]) { const td = document.createElement("td"); td.textContent = v; tr.append(td); } ct.append(tr); } L.append(ct); }
+      if (a.days.length) { const tb = document.createElement("table"); tb.innerHTML = "<tr><th>Day</th><th>Seen</th><th>Opened</th><th>Clicked</th></tr>"; for (const r of a.days.slice().reverse()) { const tr = document.createElement("tr"); for (const c of [r.day, r.view, r.open, r.click]) { const td = document.createElement("td"); td.textContent = String(c); tr.append(td); } tb.append(tr); } L.append(tb); } } } catch (e) { L.textContent = e.message; } }
+  async function seaLoad() { const I = $("seaInfo"); try { const d = await api("/api/admin/season"); I.textContent = ""; const row = (x) => { const p = document.createElement("div"); p.textContent = x; p.style.margin = "4px 0"; I.append(p); };
+      $("seaLevy").checked = !!d.levy.on; $("seaMult").value = d.levy.mult; row("Wealth levy: " + (d.levy.on ? "on" : "off") + ", strength " + d.levy.mult + ". Collected so far: Rs " + (d.levy.total || 0).toLocaleString("en") + (d.levy.last ? " (last run charged " + d.levy.hits + " players)" : " (starts when Season 2 is live)") + ".");
+      if (d.n >= 2) { row("Season 2 is live. Started " + new Date(d.firedAt).toLocaleString() + " for " + d.count + " players."); (d.hall || []).forEach((r) => row("#" + r.rank + " " + r.name + " · Rs " + r.worth.toLocaleString("en"))); $("seaAtGo").disabled = $("seaCashGo").disabled = $("seaFire").disabled = $("seaWipe").disabled = true; return; }
+      $("seaAtGo").disabled = $("seaCashGo").disabled = $("seaFire").disabled = $("seaWipe").disabled = false; row("Season 1 is running. Season 2 starts " + new Date(d.at).toLocaleString() + " with Rs " + d.start.toLocaleString("en") + " each."); const pv = d.preview; row("If it started now: " + pv.players + " players reset (" + pv.flagged + " flagged and left out of the Hall of Fame). Total net worth today: Rs " + pv.totalWorth.toLocaleString("en") + "."); pv.top.forEach((r) => row("#" + r.rank + " " + r.name + " · Rs " + r.worth.toLocaleString("en")));
+      const dt = new Date(d.at - new Date(d.at).getTimezoneOffset() * 60000).toISOString().slice(0, 16); $("seaAt").value = dt; $("seaCash").value = d.start; $("seaWipe").checked = !!d.wipe; } catch (e) { I.textContent = e.message || "Failed"; } }
+  async function disLoad() { const I = $("disInfo"); try { const d = await api("/api/admin/disaster"); I.textContent = ""; const row = (x) => { const p = document.createElement("div"); p.textContent = x; p.style.margin = "4px 0"; I.append(p); }; $("disAuto").checked = !!d.auto;
+      row(d.cur ? "Happening now: " + d.cur.kind + " " + d.cur.name + " (" + d.cur.phase + ")" : d.auto && d.seasonLive ? "Next automatic disaster: " + (d.next ? new Date(d.next).toLocaleString() : "being scheduled") : d.auto ? "Automatic disasters start when Season 2 is live." : "Automatic disasters are off.");
+      row("Total repair bills so far: Rs " + (d.total || 0).toLocaleString("en")); d.log.forEach((l) => row(new Date(l.at).toLocaleString() + " · " + l.kind + " " + l.name + " · " + l.hits + " players paid Rs " + (l.total || 0).toLocaleString("en") + " (" + l.by + ")")); } catch (e) { I.textContent = e.message || "Failed"; } }
+  $("disRe").onclick = disLoad; $("disAuto").onchange = async () => { try { await api("/api/admin/disaster", { auto: $("disAuto").checked }); } catch (e) { alert(e.message || "Failed"); } disLoad(); };
+  document.querySelectorAll("[data-dis]").forEach((b) => { b.onclick = async () => { if (!confirm("Start a " + b.dataset.dis + " now? Everyone gets a warning, then repair bills for the wealthy.")) return; try { await api("/api/admin/disaster", { start: b.dataset.dis }); } catch (e) { alert(e.message || "Failed"); } disLoad(); }; });
+  $("disCancel").onclick = async () => { try { await api("/api/admin/disaster", { cancel: true }); } catch (e) { alert(e.message || "Failed"); } disLoad(); };
+  async function blLoad() { const L = $("blList"); try { const d = await api("/api/admin/belle"); L.textContent = ""; $("blPct").value = d.cfg.pct; $("blWa").value = d.cfg.whatsapp;
+      if (!d.list.length) { L.textContent = "No bookings yet."; return; }
+      for (const b of d.list) { const row = document.createElement("div"); row.className = "row"; row.style.cssText = "margin:6px 0;align-items:center;gap:6px;flex-wrap:wrap"; const tx = document.createElement("span"); tx.style.marginRight = "auto"; tx.textContent = b.code + " · " + b.name + " · " + b.date + " " + b.hour + ":00 · " + b.size + " people · " + b.status; row.append(tx);
+        for (const [st, label] of [["confirmed", "Confirm"], ["declined", "Decline"], ["done", "Done"]]) { const x = document.createElement("button"); x.type = "button"; x.textContent = label; x.onclick = async () => { const reply = st === "declined" ? prompt("Short message to the player (optional):", "Sorry, we are full then. Please try another time.") : st === "confirmed" ? prompt("Short message to the player (optional):", "See you soon!") : ""; if (reply === null) return; try { await api("/api/admin/belle", { code: b.code, status: st, reply }); } catch (e) { alert(e.message || "Failed"); } blLoad(); }; row.append(x); } L.append(row); } } catch (e) { L.textContent = e.message || "Failed"; } }
+  $("blRe").onclick = blLoad; $("blSave").onclick = async () => { try { await api("/api/admin/belle", { pct: +$("blPct").value, whatsapp: $("blWa").value }); alert("Saved."); } catch (e) { alert(e.message || "Failed"); } blLoad(); };
+  async function trLoad() { const I = $("trInfo"); try { const d = await api("/api/admin/trips"); I.textContent = ""; $("trOn").checked = !!d.on; $("trRw").checked = !!d.cfg.on; $("trRp").value = d.cfg.passenger; $("trRf").value = d.cfg.first; $("trRd").value = d.cfg.driver; $("trRb").value = d.cfg.bonus; $("trRc").value = d.cfg.cap; $("trRm").value = d.cfg.minMin; const add = (cls, text, btns) => { const row = document.createElement("div"); row.className = "row"; row.style.cssText = "margin:5px 0;gap:6px;flex-wrap:wrap;align-items:center"; const tx = document.createElement("span"); tx.style.marginRight = "auto"; tx.textContent = text; row.append(tx); for (const [label, fn] of btns || []) { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.onclick = async () => { try { await fn(); } catch (e) { alert(e.message || "Failed"); } trLoad(); }; row.append(b); } I.append(row); };
+      add("", "Testers: " + (d.testers.map((t2) => t2.name).join(", ") || "none"), d.testers.map((t2) => ["Remove " + t2.name, () => api("/api/admin/trips", { removeTester: t2.uid })]));
+      add("", "Paid out so far: Rs " + (d.paid || 0).toLocaleString("en")); add("", "Drivers (" + d.drivers.length + ")"); d.drivers.forEach((x) => add("", x.name + " · " + x.car + " · +" + x.wa + " · " + (x.verified ? "verified" : "NOT verified") + (x.online ? " · online" : "") + (x.blocked ? " · BLOCKED" : "") + " · " + x.trips + " trips" + (x.rating ? " · " + x.rating + "★" : ""), [[x.verified ? "Unverify" : "Verify", () => api("/api/admin/trips", { verify: x.uid, value: !x.verified })], [x.blocked ? "Unblock" : "Block", () => api("/api/admin/trips", { block: x.uid, value: !!x.blocked ? false : true })]]));
+      add("", "Recent requests (" + d.reqs.length + ")"); d.reqs.slice(0, 15).forEach((r) => add("", r.id + " · " + r.name + " → " + r.dest + " · Rs " + r.price + " · " + r.driverName + " · " + r.status));
+      add("", "Reports (" + d.reports.length + ")"); d.reports.forEach((r) => add("", new Date(r.at).toLocaleString() + " · " + r.byName + " about " + (r.driverName || "a driver") + ": " + r.text)); } catch (e) { I.textContent = e.message || "Failed"; } }
+  $("trRsave").onclick = async () => { try { await api("/api/admin/trips", { cfg: { on: $("trRw").checked, passenger: $("trRp").value, first: $("trRf").value, driver: $("trRd").value, bonus: $("trRb").value, cap: $("trRc").value, minMin: $("trRm").value } }); alert("Saved."); } catch (e) { alert(e.message || "Failed"); } trLoad(); }; $("trRe").onclick = trLoad; $("trOn").onchange = async () => { if ($("trOn").checked && !confirm("Open student driver trips to EVERY player now?")) { $("trOn").checked = false; return; } try { await api("/api/admin/trips", { on: $("trOn").checked }); } catch (e) { alert(e.message || "Failed"); } trLoad(); }; $("trTestGo").onclick = async () => { try { await api("/api/admin/trips", { addTester: $("trTest").value }); $("trTest").value = ""; } catch (e) { alert(e.message || "Failed"); } trLoad(); };
+  async function plLoad() { const C = $("plCur"); try { const d = await api("/api/admin/poll"); C.textContent = ""; if (!d.cur) { C.textContent = "No poll yet."; return; } const tot = d.cur.counts.reduce((a, b) => a + b, 0), h = document.createElement("div"); h.style.fontWeight = "700"; h.textContent = (d.cur.closed ? "CLOSED · " : "OPEN · ") + d.cur.q + " (" + tot + " votes)"; C.append(h); d.cur.opts.forEach((o, i) => { const r = document.createElement("div"); r.style.margin = "3px 0"; r.textContent = o + " — " + d.cur.counts[i] + (tot ? " (" + Math.round(d.cur.counts[i] / tot * 100) + "%)" : ""); C.append(r); }); } catch (e) { C.textContent = e.message || "Failed"; } }
+  $("plRe").onclick = plLoad; $("plFill").onclick = () => { $("plQ").value = "Would you want to be able to book real life trips in the game?"; $("plD").value = "Student drivers (learner drivers) would offer real trips. You would pick where you want to go on a map, a driver accepts, and you message them on WhatsApp. You also earn in-game money for every finished trip. Nothing starts until we know you want it."; $("plO").value = "Yes, I would book trips\nYes, and I would also drive as a student driver\nMaybe, I want to know more\nNo, not for me"; };
+  $("plSend").onclick = async () => { if (!confirm("Send this poll to every player now?")) return; try { await api("/api/admin/poll", { create: { q: $("plQ").value, desc: $("plD").value, opts: $("plO").value.split("\n") } }); alert("Poll sent."); } catch (e) { alert(e.message || "Failed"); } plLoad(); };
+  $("plClose").onclick = async () => { if (!confirm("Close the poll? Nobody can vote any more.")) return; try { await api("/api/admin/poll", { close: true }); } catch (e) { alert(e.message || "Failed"); } plLoad(); };
+  async function czLoad() { const L = $("czList"); try { const d = await api("/api/admin/cutz"); L.textContent = ""; $("czDisc").value = d.cfg.disc; $("czWa").value = d.cfg.whatsapp; if (!d.list.length) { L.textContent = "No bookings yet."; return; }
+      for (const b of d.list) { const row = document.createElement("div"); row.className = "row"; row.style.cssText = "margin:6px 0;align-items:center;gap:6px;flex-wrap:wrap"; const tx = document.createElement("span"); tx.style.marginRight = "auto"; tx.textContent = b.code + " · " + b.name + " · " + b.svcName + " (Rs " + b.price + ") · " + b.date + " " + b.hour + ":00 · " + b.status; row.append(tx);
+        for (const [st, label] of [["confirmed", "Confirm"], ["declined", "Decline"], ["done", "Done"]]) { const x = document.createElement("button"); x.type = "button"; x.textContent = label; x.onclick = async () => { const reply = st === "declined" ? prompt("Short message to the player (optional):", "Sorry, no chair free then. Please try another time.") : st === "confirmed" ? prompt("Short message to the player (optional):", "See you soon!") : ""; if (reply === null) return; try { await api("/api/admin/cutz", { code: b.code, status: st, reply }); } catch (e) { alert(e.message || "Failed"); } czLoad(); }; row.append(x); } L.append(row); } } catch (e) { L.textContent = e.message || "Failed"; } }
+  async function bzLoad() { const L = $("bzList"); try { const d = await api("/api/admin/biz"); const W = $("bzWho"); if (!W.options.length) for (const b of d.list) W.add(new Option(b.name, b.id)); const nm = Object.fromEntries(d.list.map((b) => [b.id, b.name])); L.textContent = ""; if (!d.sent.length) { L.textContent = "Nothing sent yet."; return; } for (const m of d.sent) { const r = document.createElement("div"); r.className = "muted"; r.textContent = new Date(m.at).toLocaleString() + " · " + (nm[m.biz] || m.biz) + ": " + m.text; L.append(r); } } catch (e) { L.textContent = e.message || "Failed"; } }
+  const hwLocal = (ms) => { const d = new Date(ms - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
+  async function hwLoad() { const L = $("hwList"); try { const d = await api("/api/admin/halloween"); $("hwOn").checked = d.on; $("hwFrom").value = hwLocal(d.from); $("hwTo").value = hwLocal(d.to); L.textContent = ""; const s1 = document.createElement("p"); s1.textContent = (d.active ? "🟢 Running now" : d.on ? "⏳ On, but outside its dates" : "⚪ Off") + " · " + d.players + " players have candy · " + d.candy + " candy in total · " + d.hunted + " finished the ghost hunt" + (d.paid ? " · prizes paid " + new Date(d.paid).toLocaleString() : ""); L.append(s1);
+      const h1 = document.createElement("h4"); h1.textContent = "Candy leaderboard"; L.append(h1); if (!d.top.length) L.append(document.createTextNode("Nobody yet.")); for (const c of d.top) { const r = document.createElement("div"); r.className = "muted"; r.textContent = c.name + " · " + c.candy; L.append(r); }
+      const h2 = document.createElement("h4"); h2.textContent = "Costume contest"; L.append(h2); if (!d.entries.length) L.append(document.createTextNode("No entries yet.")); for (const e of d.entries) { const r = document.createElement("div"); r.className = "muted"; r.textContent = e.name + " · " + e.costume + " · " + e.votes + " votes"; L.append(r); } } catch (e) { L.textContent = e.message || "Failed"; } }
+  $("hwRe").onclick = hwLoad; $("hwSave").onclick = async () => { try { await api("/api/admin/halloween", { on: $("hwOn").checked, from: new Date($("hwFrom").value).toISOString(), to: new Date($("hwTo").value).toISOString() }); alert("Saved."); } catch (e) { alert(e.message || "Failed"); } hwLoad(); };
+  async function huLoad() { const L = $("huList"); try { const d = await api("/api/admin/hunt"); $("huOn").checked = d.on; $("huAuto").checked = d.autoPay; $("huPay").hidden = !(d.winner && !d.winner.paid); L.textContent = ""; const s1 = document.createElement("p"); s1.textContent = (d.winner ? "🏆 Found by " + d.winner.name + " at " + new Date(d.winner.at).toLocaleString() + (d.winner.paid ? " · prize paid" : " · NOT PAID YET") : d.active ? "🟢 Running · nobody has found it yet" : d.on ? "⏳ On, waiting for Halloween Night" : "⚪ Off") + " · " + d.players + " players have started · prize Rs " + d.prize.toLocaleString("en"); L.append(s1);
+      const h1 = document.createElement("h4"); h1.textContent = "Who is furthest"; L.append(h1); if (!d.top.length) L.append(document.createTextNode("Nobody yet.")); for (const c of d.top) { const r = document.createElement("div"); r.className = "muted"; r.textContent = c.name + " · clue " + (c.stage + 1) + " · " + c.scans + " scans · " + c.digs + " digs"; L.append(r); }
+      const h2 = document.createElement("h4"); h2.textContent = "Log"; L.append(h2); for (const e of d.log) { const r = document.createElement("div"); r.className = "muted"; r.textContent = new Date(e.at).toLocaleTimeString() + " · " + e.name + " " + e.what + (e.x !== undefined ? " (" + e.x + ", " + e.y + ")" : ""); L.append(r); } } catch (e) { L.textContent = e.message || "Failed"; } }
+  $("huRe").onclick = huLoad; $("huSave").onclick = async () => { try { await api("/api/admin/hunt", { on: $("huOn").checked, autoPay: $("huAuto").checked }); alert("Saved."); } catch (e) { alert(e.message || "Failed"); } huLoad(); }; $("huPay").onclick = async () => { if (!confirm("Send the prize to the winner now?")) return; try { await api("/api/admin/hunt", { approve: true }); } catch (e) { alert(e.message || "Failed"); } huLoad(); }; $("huReset").onclick = async () => { if (!confirm("Restart the hunt? Everyone goes back to clue 1 and any winner is cleared.")) return; try { await api("/api/admin/hunt", { reset: "restart" }); } catch (e) { alert(e.message || "Failed"); } huLoad(); };
+  $("bzRe").onclick = bzLoad; $("bzSend").onclick = async () => { const text = $("bzText").value.trim(); if (!text) return; if (!confirm("Send this to every player from " + $("bzWho").selectedOptions[0].textContent + "?")) return; try { await api("/api/admin/biz", { biz: $("bzWho").value, text }); $("bzText").value = ""; } catch (e) { alert(e.message || "Failed"); } bzLoad(); };
+  $("czRe").onclick = czLoad; $("czSave").onclick = async () => { try { await api("/api/admin/cutz", { disc: +$("czDisc").value, whatsapp: $("czWa").value }); alert("Saved."); } catch (e) { alert(e.message || "Failed"); } czLoad(); };
+  $("seaRe").onclick = seaLoad;
+  $("seaWipe").onchange = async () => { try { await api("/api/admin/season", { wipe: $("seaWipe").checked }); } catch (e) { alert(e.message || "Failed"); } seaLoad(); };
+  $("seaLevyGo").onclick = async () => { try { await api("/api/admin/season", { levyOn: $("seaLevy").checked, levyMult: +$("seaMult").value }); seaLoad(); } catch (e) { alert(e.message || "Failed"); } };
+  $("seaAtGo").onclick = async () => { const at = new Date($("seaAt").value).getTime(); if (!at) return alert("Pick a date and time."); try { await api("/api/admin/season", { at }); seaLoad(); } catch (e) { alert(e.message || "Failed"); } };
+  $("seaCashGo").onclick = async () => { try { await api("/api/admin/season", { start: +$("seaCash").value }); seaLoad(); } catch (e) { alert(e.message || "Failed"); } };
+  $("seaFire").onclick = async () => { if (!confirm("Start Season 2 for everyone RIGHT NOW? Season 2 opens: Hall of Fame saved, Heists open, levy starts" + ($("seaWipe").checked ? ", and EVERYONE'S CASH IS RESET" : "") + ". A backup is saved first.")) return; if (prompt('Type START to confirm') !== "START") return; try { const d = await api("/api/admin/season", { fire: true }); alert("Season 2 started for " + d.players + " players."); seaLoad(); } catch (e) { alert(e.message || "Failed"); } };
+  $("adRe").onclick = adLoad;
+  function tabOn(name) { let n = name; if (!n) { try { n = sessionStorage.getItem("fefAdminTab") || ""; } catch (e) {} } if (!["players", "money", "safety", "game", "talk", "stats"].includes(n)) n = "players"; document.querySelector("main").dataset.tab = n; for (const b of document.querySelectorAll("#tabs button")) b.classList.toggle("on", b.dataset.t === n); try { sessionStorage.setItem("fefAdminTab", n); } catch (e) {} if (name) window.scrollTo({ top: 0 }); }
+  for (const b of document.querySelectorAll("#tabs button")) b.onclick = () => tabOn(b.dataset.t);
+  const GROUPS = [["biz", "🏢 Businesses"], ["inv", "📈 Investments"], ["jet", "✈️ Jet"], ["cars", "🚗 Cars"], ["home", "🏠 Home"], ["misc", "🧰 Other things they own"]];
+  const sumLine = (m) => m ? [m.biz.length ? m.biz.map((b) => b.k + " L" + b.lvl).join(", ") : "no businesses", "investments " + money(m.invVal) + " (savings " + money(m.inv.save) + ", fund " + m.inv.fund + ", crypto " + m.inv.crypto + ")", m.jet ? "jet " + m.jet : "no jet", m.cars + " car" + (m.cars === 1 ? "" : "s"), "home #" + m.home].join(" · ") : "";
+  async function assetsOf(pl) { // a player's business and investment snapshots, with restore
+    $("tabs") && tabOn("safety"); const box = $("asBox"); box.textContent = "Loading…"; $("asCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    try { const d = await api("/api/admin/assets?uid=" + encodeURIComponent(pl.uid)); box.textContent = ""; const h = document.createElement("h2"); h.textContent = (pl.name || d.name || "Player") + " · assets history"; const now = document.createElement("p"); now.className = "muted"; now.textContent = "Now: " + (sumLine(d.now) || "unknown"); box.append(h, now);
+      if (d.now) { const sz = document.createElement("div"); sz.className = "asr bad"; const sh = document.createElement("b"); sh.textContent = "Seize assets (take them away now)"; sz.append(sh); const picks = []; // tick businesses and investments to confiscate
+        for (const bz of d.now.biz) { const l = document.createElement("label"); l.className = "check"; const c = document.createElement("input"); c.type = "checkbox"; picks.push(["biz", bz.k, c]); l.append(c, " 🏢 " + bz.k + " (level " + bz.lvl + ") · worth " + money(Math.round(bz.spent * 0.5))); sz.append(l); }
+        for (const [g, lab] of [["save", "Savings"], ["fund", "Unit trust fund"], ["crypto", "Crypto"]]) { if (!(d.now.inv[g] > 0)) continue; const l = document.createElement("label"); l.className = "check"; const c = document.createElement("input"); c.type = "checkbox"; picks.push(["inv", g, c]); l.append(c, " 📈 " + lab + " · " + d.now.inv[g]); sz.append(l); }
+        const town = document.createElement("select"); for (const [v, t] of [["", "Just remove it"], ["fef", "Give its worth to the Flic en Flac treasury"], ["tam", "Give its worth to the Tamarin treasury"], ["tri", "Give its worth to the Trianon treasury"]]) { const o = document.createElement("option"); o.value = v; o.textContent = t; town.append(o); }
+        const note = document.createElement("input"); note.placeholder = "Reason (shown in the record)"; note.maxLength = 80; note.style.width = "100%"; const go = document.createElement("button"); go.type = "button"; go.className = "primary"; go.textContent = "Seize ticked";
+        go.onclick = async () => { const biz = picks.filter((x) => x[0] === "biz" && x[2].checked).map((x) => x[1]), inv = picks.filter((x) => x[0] === "inv" && x[2].checked).map((x) => x[1]); if (!biz.length && !inv.length) { alert("Tick what to take."); return; } if (!confirm("Take " + biz.concat(inv).join(", ") + " from " + (pl.name || d.name) + "? They get a backup in the server's backups folder.")) return; try { const r = await api("/api/admin/assets/seize", { uid: pl.uid, biz, inv, town: town.value, note: note.value }); alert("Taken: " + r.took.join(", ") + " (worth " + money(r.value) + ")"); assetsOf(pl); } catch (e) { alert(e.message || "Failed"); } };
+        sz.append(town, note, go); box.append(sz); }
+      if (!d.snaps.length) { const p0 = document.createElement("p"); p0.className = "muted"; p0.textContent = "Nothing recorded yet for this player. A snapshot is taken the next time they play."; box.append(p0); }
+      for (const s2 of d.snaps) { const row = document.createElement("div"); row.className = "asr" + (s2.alert ? " bad" : ""); const t1 = document.createElement("b"); t1.textContent = new Date(s2.at).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + (s2.pin ? "  📌 last good state" : "") + "  ·  cash " + money(s2.cash); const t2 = document.createElement("span"); t2.className = "muted"; t2.textContent = sumLine(s2.sum); row.append(t1, t2);
+        if (s2.alert) { const al = document.createElement("span"); al.style.color = "#e08a00"; al.textContent = "⚠️ " + s2.alert; row.append(al); }
+        const chk = document.createElement("div"); chk.className = "chk"; const boxes = {}; for (const [g, label] of GROUPS) { const l = document.createElement("label"); l.className = "check"; const c = document.createElement("input"); c.type = "checkbox"; c.checked = g === "biz" || g === "inv"; boxes[g] = c; l.append(c, " " + label); chk.append(l); }
+        const rb = document.createElement("button"); rb.type = "button"; rb.className = "primary"; rb.textContent = "Restore ticked"; rb.onclick = async () => { const parts = GROUPS.map((g) => g[0]).filter((g) => boxes[g].checked); if (!parts.length) { alert("Tick what to restore."); return; } if (!confirm("Put back " + parts.join(", ") + " for " + (pl.name || d.name) + " as they were on " + new Date(s2.at).toLocaleString() + "? Their cash is not changed.")) return; rb.disabled = true; try { await api("/api/admin/assets/restore", { uid: pl.uid, at: s2.at, parts }); rb.textContent = "Restored ✔"; setTimeout(() => assetsOf(pl), 1200); } catch (e) { alert(e.message); rb.disabled = false; } };
+        row.append(chk, rb); box.append(row); }
+    } catch (e) { box.textContent = e.message; } }
+  async function asLoad() { const L = $("asDrops"); L.textContent = "Loading…";
+    try { const d = await api("/api/admin/assets"); L.textContent = ""; const h = document.createElement("p"); h.className = "muted"; h.textContent = d.tracked + " players tracked · " + (d.rows.length ? "recent losses (last 14 days):" : "nobody has lost a business or investments lately."); L.append(h);
+      for (const r of d.rows) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = r.name; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = new Date(r.at).toLocaleString() + " · " + r.alert; const go = document.createElement("button"); go.type = "button"; go.className = "primary"; go.textContent = "Open"; go.onclick = () => assetsOf({ uid: r.uid, name: r.name }); row.append(b, meta, go); L.append(row); }
+    } catch (e) { L.textContent = e.message; } }
+  $("asRe").onclick = asLoad; $("asForm").onsubmit = async (e) => { e.preventDefault(); const q = $("asQ").value.trim(); if (!q) return; try { const d = await api("/api/admin/players?q=" + encodeURIComponent(q)); const r = (d.rows || d.players || [])[0]; if (!r) { alert("No player found."); return; } assetsOf({ uid: r.uid, name: r.name }); } catch (er) { alert(er.message); } };
+  async function rqLoad() { const L = $("rqList"); L.textContent = "Loading…";
+    try { const d = await api("/api/admin/requests"); L.textContent = ""; $("rqN").textContent = d.rows.length ? "(" + d.rows.length + " waiting)" : ""; const tb = document.querySelector('#tabs button[data-t="safety"]'); if (tb) tb.textContent = "🛡️ Safety & recovery" + (d.rows.length ? " (" + d.rows.length + ")" : "");
+      if (!d.rows.length) { const p0 = document.createElement("p"); p0.className = "muted"; p0.textContent = "No requests waiting. Nothing is taken without you."; L.append(p0); }
+      for (const q of d.rows) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = q.name + "  ·  " + money(q.amt); b.style.color = "#e08a00"; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = new Date(q.at).toLocaleString() + " · " + q.reason + " · cash now " + money(q.cash);
+        const acts = document.createElement("div"); acts.className = "row acts"; const sel = document.createElement("select"); sel.innerHTML = '<option value="">No treasury (just remove it)</option><option value="fef">Flic en Flac treasury</option><option value="tam">Tamarin treasury</option><option value="tri">Trianon treasury</option>';
+        const src = document.createElement("button"); src.type = "button"; src.textContent = "Money sources"; src.onclick = () => { tabOn("players"); incomeOf({ uid: q.uid, name: q.name }, document.getElementById("list")); };
+        const ap = document.createElement("button"); ap.type = "button"; ap.className = "danger"; ap.textContent = "Approve: take " + money(q.amt); ap.onclick = async () => { if (!confirm("Take " + money(q.amt) + " from " + q.name + "?")) return; ap.disabled = true; try { await api("/api/admin/requests", { id: q.id, decision: "approve", amt: q.amt, town: sel.value }); rqLoad(); szLoad(); } catch (e) { alert(e.message); ap.disabled = false; } };
+        const dc = document.createElement("button"); dc.type = "button"; dc.textContent = "Decline"; dc.onclick = async () => { try { await api("/api/admin/requests", { id: q.id, decision: "decline" }); rqLoad(); } catch (e) { alert(e.message); } };
+        acts.append(sel, ap, dc, src); row.append(b, meta, acts); L.append(row); }
+      if (d.done.length) { const h = document.createElement("p"); h.className = "muted"; h.textContent = "Recently decided: " + d.done.map((q) => q.name + " " + money(q.amt) + " " + q.status).join(" · "); L.append(h); }
+    } catch (e) { L.textContent = e.message; } }
+  $("rqRe").onclick = rqLoad;
+  async function lpLoad() { const L = $("lpList"); L.textContent = "Loading…";
+    try { const d = await api("/api/admin/lostpay"); L.textContent = ""; if (!d.rows.length) { const p0 = document.createElement("p"); p0.className = "muted"; p0.textContent = "No transfers over Rs 10,000,000 in the chats."; L.append(p0); }
+      for (const r of d.rows) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = (r.fromName || "Someone") + " → " + (r.toName || "player") + "  ·  " + money(r.amt) + (r.paid ? "  ·  paid ✔" : ""); b.style.color = r.paid ? "#3ecf8e" : "#e08a00"; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = new Date(r.at).toLocaleString() + (r.paid ? " · paid out " + new Date(r.paid).toLocaleString() : " · never arrived");
+        row.append(b, meta); if (!r.paid) { const go = document.createElement("button"); go.type = "button"; go.className = "primary"; go.textContent = "Pay " + money(r.amt); go.onclick = async () => { if (!confirm("Send " + money(r.amt) + " to " + (r.toName || "this player") + "?")) return; go.disabled = true; try { await api("/api/admin/lostpay", { id: r.id }); lpLoad(); } catch (e) { alert(e.message); go.disabled = false; } }; row.append(go); } L.append(row); }
+    } catch (e) { L.textContent = e.message; } }
+  $("lpRe").onclick = lpLoad;
+  let szUid = ""; // show only this player's seizures
+  async function szLoad() { const L = $("szList"); L.textContent = "Loading…";
+    try { const d = await api("/api/admin/seizures" + (szUid ? "?uid=" + encodeURIComponent(szUid) : "")); L.textContent = ""; $("szSum").textContent = d.total + " seizure" + (d.total === 1 ? "" : "s") + " in all · " + money(d.out) + " taken · " + money(d.back) + " given back" + (szUid ? " · showing one player" : "");
+      if (!d.rows.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "No seizures yet."; L.append(p); }
+      for (const z of d.rows) { const left = z.amt - (z.back || 0), row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = z.name + "  ·  " + money(z.amt) + (z.back ? (left > 0 ? "  ·  " + money(z.back) + " returned" : "  ·  returned ✔") : ""); b.style.color = left > 0 ? "#e08a00" : "#3ecf8e"; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = [new Date(z.at).toLocaleString(), z.kind === "admin" ? "admin seizure" : "cheat watch", z.town ? "to the " + z.town + " treasury" : "", z.note].filter(Boolean).join(" · ");
+        const acts = document.createElement("div"); acts.className = "row acts"; const who = document.createElement("button"); who.type = "button"; who.textContent = "Only this player"; who.onclick = () => { szUid = z.uid; szLoad(); }; acts.append(who);
+        if (left > 0) { const all = document.createElement("button"); all.type = "button"; all.className = "primary"; all.textContent = "Return " + money(left); all.onclick = async () => { if (!confirm("Give " + z.name + " " + money(left) + " back?")) return; all.disabled = true; try { await api("/api/admin/seizures/return", { id: z.id, all: true }); szLoad(); } catch (e) { alert(e.message); all.disabled = false; } };
+          const part = document.createElement("button"); part.type = "button"; part.textContent = "Return part"; part.onclick = async () => { const v = prompt("How much to give back? (up to " + money(left) + ")", String(Math.round(left / 2))); const n = Math.round(Number(String(v || "").replace(/[^0-9.]/g, ""))); if (!(n > 0)) return; try { await api("/api/admin/seizures/return", { id: z.id, all: false, amt: n }); szLoad(); } catch (e) { alert(e.message); } }; acts.append(all, part); }
+        row.append(b, meta, acts); L.append(row); }
+    } catch (e) { L.textContent = e.message; } }
+  $("szRe").onclick = szLoad; $("szForm").onsubmit = async (e) => { e.preventDefault(); const q = $("szQ").value.trim().toLowerCase(); szUid = ""; if (q) { try { const d = await api("/api/admin/seizures"); const m = d.rows.find((z) => (z.name || "").toLowerCase().includes(q)); szUid = m ? m.uid : "nobody"; } catch (er) {} } szLoad(); };
+  $("susGo").onclick = async () => { const L = $("susList"); L.textContent = "Scanning…"; $("susGo").disabled = true;
+    try { const d = await api("/api/admin/suspects"); L.textContent = ""; $("susGo").textContent = "Scan again";
+      if (!d.rows.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "Nobody looks suspicious right now (" + d.total + " players checked)."; L.append(p); }
+      for (const r of d.rows) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = r.name + "  ·  score " + r.score; b.style.color = r.score >= 100 ? "#e5484d" : r.score >= 60 ? "#e08a00" : ""; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = [r.login ? "@" + r.login : "no login", "cash " + money(r.cash), "worth " + money(r.worth)].join(" · ");
+        const ul = document.createElement("ul"); for (const w of r.why) { const li = document.createElement("li"); li.textContent = w; ul.append(li); }
+        const acts = document.createElement("div"); acts.className = "row acts"; const pl = { uid: r.uid, name: r.name }; const inc = document.createElement("button"); inc.type = "button"; inc.textContent = "Money sources"; inc.onclick = () => incomeOf(pl, row); const sz = document.createElement("button"); sz.type = "button"; sz.textContent = "Seize money"; sz.onclick = () => seizeAsk(pl); const iv = document.createElement("button"); iv.type = "button"; iv.textContent = "Investigate / freeze"; iv.onclick = () => invAsk(pl); const ex = document.createElement("button"); ex.type = "button"; ex.textContent = "Export data"; ex.onclick = () => dossier(pl); const pc = document.createElement("button"); pc.type = "button"; pc.textContent = "Publish case"; pc.onclick = () => publishCase(pl); const mg = document.createElement("button"); mg.type = "button"; mg.textContent = "Message"; mg.onclick = () => msgTo(pl); acts.append(inc, iv, sz, ex, pc, mg); row.append(b, ul, acts, meta); L.append(row); }
+    } catch (e) { L.textContent = e.message; } $("susGo").disabled = false; };
+  async function history(pl, row) { // a player's money in every backup, with restore buttons
+    const old = row.querySelector(".hist"); if (old) { old.remove(); return; } const box = document.createElement("div"); box.className = "hist"; box.textContent = "Loading…"; row.append(box);
+    try { const d = await api("/api/admin/history?uid=" + encodeURIComponent(pl.uid)); box.textContent = "";
+      const give = document.createElement("form"); give.className = "row"; give.innerHTML = "<input type='number' min='1' max='10000000' placeholder='Amount (Rs)' aria-label='Amount'><button class='primary' type='submit'>Give money</button>"; give.onsubmit = async (e) => { e.preventDefault(); const amt = +give.querySelector("input").value; if (!amt || !confirm("Send " + money(amt) + " to " + pl.name + "?")) return; try { await api("/api/admin/give", { uid: pl.uid, amount: amt, from: "Game team" }); show($("msg"), money(amt) + " sent to " + pl.name + ". They get it at once if online, or next time they play."); } catch (er) { show($("err"), er.message); } }; box.append(give);
+      const tbl = document.createElement("table"); tbl.innerHTML = "<tr><th>Backup</th><th>Cash</th><th>Net worth</th><th>Game day</th><th></th></tr>";
+      for (const v of d.versions) { const tr = document.createElement("tr"); const cells = [v.file === "current" ? "Now" : new Date(v.at).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + (v.file.startsWith("before-") ? " (" + v.file.split("-").slice(0, 2).join(" ") + ")" : ""), money(v.cash), money(v.worth), String(v.day)];
+        for (const c of cells) { const td = document.createElement("td"); td.textContent = c; tr.append(td); } const td = document.createElement("td");
+        if (v.file !== "current") { const rb = document.createElement("button"); rb.type = "button"; rb.textContent = "Restore"; rb.onclick = async () => { if (!confirm("Put " + pl.name + " back to this save (" + money(v.cash) + " cash)? Anything they did since is replaced. Their game loads it automatically.")) return; rb.disabled = true; try { await api("/api/admin/restore", { uid: pl.uid, file: v.file }); show($("msg"), pl.name + " was restored to " + money(v.cash) + " cash. Their game loads it now, or next time they open it."); history(pl, row); history(pl, row); } catch (er) { show($("err"), er.message); rb.disabled = false; } }; td.append(rb); }
+        tr.append(td); tbl.append(tr); }
+      box.append(tbl); if (d.versions.length < 2) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "No backups with this player yet. Backups are made every 6 hours."; box.append(p); }
+    } catch (e) { box.textContent = e.message; }
+  }
+  function ask(pl) { target = pl; $("dlgTitle").textContent = "Delete " + pl.name + "?"; $("dlgWho").textContent = (pl.login ? "@" + pl.login + " · " : "") + money(pl.money) + " · id " + pl.uid; $("ban").checked = false; $("banWhy").value = ""; $("confirm").disabled = false; $("dlg").showModal(); }
+  $("cancel").onclick = () => $("dlg").close();
+  $("confirm").onclick = async () => { if (!target) return; $("confirm").disabled = true;
+    try { await api("/api/admin/delete", { uid: target.uid, ban: $("ban").checked, reason: $("banWhy").value }); $("dlg").close(); show($("msg"), target.name + " was deleted" + ($("ban").checked ? " and banned." : ".")); search(); }
+    catch (e) { $("dlg").close(); show($("err"), e.message); } };
+  $("keyForm").onsubmit = (e) => { e.preventDefault(); key = $("key").value.trim(); if (!key) return; try { sessionStorage.setItem("fefAdminKey", key); } catch (er) {} show($("keyErr"), ""); search(); };
+  $("findForm").onsubmit = (e) => { e.preventDefault(); show($("msg"), ""); search(); };
+  $("lock").onclick = () => locked("");
+  $("giftForm").onsubmit = async (e) => { e.preventDefault(); show($("gMsg"), ""); show($("gErr"), ""); const amt = +$("gAmt").value, n = (+$("gOn").value || 0) + (+$("gAny").value || 0);
+    if (!confirm("Send " + money(amt) + " each to up to " + n + " players, from \"" + $("gFrom").value + "\"?")) return; $("gGo").disabled = true;
+    try { const d = await api("/api/admin/gift", { from: $("gFrom").value, amount: amt, online: +$("gOn").value, role: $("gRole").value, any: +$("gAny").value }); const list = $("gList"); list.innerHTML = "";
+      for (const r of d.sent) { const row = document.createElement("div"); row.className = "p"; const b = document.createElement("b"); b.textContent = r.name; const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = [r.online ? "online now" : "gets it next login", r.role, "id " + r.uid].filter(Boolean).join(" · "); row.append(b, meta); list.append(row); }
+      show($("gMsg"), "Sent " + money(amt) + " to " + d.sent.length + " players." + (d.sent.filter((r) => r.online).length < (+$("gOn").value || 0) ? " Only " + d.onlineFound + " matching players were online." : "")); }
+    catch (er) { show($("gErr"), er.message); } $("gGo").disabled = false; };
+  if (key) search();
+})();
+</script>
+</body>
+</html>
