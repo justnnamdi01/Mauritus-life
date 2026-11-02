@@ -8,7 +8,7 @@ Keep this file current. Claude reads it at the start of every session and update
 - **The walkable world:** one grid of 460 x 320 tiles. Rows 0-231 are the starter world (Flic en Flac, Tamarin, Bambous, Trianon). Rows 236-315 are Grand Baie (x 0-123), with deep sea all round. `HO` (232) marks the boundary; the server reads the region from the player's row.
 
 ## Done, session 2 (2 Nov 2026)
-- **Grand Baie, first look** (`gbTile`, `GBSOON` in `game/public/index.html`): the SPEC layout. Lagoon, public beach, promenade, coast road, Sunset Boulevard with bars, a club, a cinema and food, the marina jetty, Marché square with the bus station, estate lanes, the red-roof chapel and the hills. Its 14 buildings are "opening soon" (signs, no doors yet), like Tamarin's.
+- **Grand Baie, first look** (`gbTile`, `GBSOON` in `game/public/index.html`): the SPEC layout. Lagoon, public beach, promenade, coast road, Sunset Boulevard with bars, a club, a cinema and food, the marina jetty, Marché square with the bus station, estate lanes, the red-roof chapel and the hills. Two shops are open: Dholl Puri Corner (reuses the snack menu and kitchen shifts) and Sega Bar (reuses the bar menu and shifts). The other 12 buildings are "opening soon" (signs, no doors yet), like Tamarin's.
 - **Intercity bus:** Rs 75, from the Beach bus stop in Flic en Flac to Marché square and back. It refuses when the destination is locked. Taxis and cars cannot cross between the towns.
 - **The server reads the region from the position** (`walkRegion` in `game/regions.js`), so a phone cannot lie about it. The "put back" message now includes x and y (bug fixed), and closing Grand Baie moves everyone inside back to Flic en Flac.
 - **Maps:** a Grand Baie pin on the zoomed-out world map (grey and "not open yet" when locked; "guide me" leads to the bus stop), a Grand Baie label on the Town map, and the Island tab's "you" dot follows you.
@@ -20,7 +20,7 @@ Keep this file current. Claude reads it at the start of every session and update
 - Grand Baie's layout drawn top-down from the game's own data: everything is reachable on foot from the bus stop, and there is no way to walk through to Tamarin.
 
 ## Not tested, session 2
-- **The 3D look of Grand Baie.** The headless browser crashes when the game starts (it did before these changes too), so nobody has seen it in 3D yet. Please check it on a real phone: the ground, the buildings, the trees, the lagoon and the camera.
+- **The 3D look of Grand Baie on a real phone.** In the headless browser I saw the beach, promenade, road, buildings and name pills render correctly (screenshots at night). Not checked: daytime, the lagoon, the chapel and hills, or how it looks on a phone. (An earlier note here said the headless browser crashes: that was wrong. The game just waits at character creation.)
 - Performance with the bigger world on a mid-range phone.
 
 ## Done (2 Nov 2026)
@@ -52,7 +52,7 @@ Keep this file current. Claude reads it at the start of every session and update
 
 ## Next step
 1. Deploy to a test server and walk around Grand Baie on a real phone. Fix whatever looks wrong in 3D.
-2. Open Grand Baie's first shops (jobs, food, the bar) so it has things to do. Pereybere Estate homes with 3-tile gaps (SPEC).
+2. Open more Grand Baie shops with their own Mauritian content (the first two reuse Flic en Flac's menus). Pereybere Estate homes with 3-tile gaps (SPEC). Retune prices for the new economy.
 3. Phase 2 graphics on one Grand Baie street (Sunset Boulevard).
 4. Port Louis is open on the island map but has no streets yet: build it, or lock it until it does.
 5. Confirm hosting (Railway service, volume, domain).

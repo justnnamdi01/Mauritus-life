@@ -1416,9 +1416,9 @@ const GBSOON = (() => { // Grand Baie's places: you can walk the streets and rea
   B("Beach Snacks · opening soon", 18, 13, 5, 4, "#fdf0c7", "#d9482b", { awn: "#d9482b", icon: "🌭", door: "W" });
   B("Supermarché · opening soon", 20, 24, 10, 6, "#f3f3ef", "#2f6b9a", { awn: "#2f6b9a", icon: "🛒" }); // Sunset Boulevard
   B("Ciné Baie · coming soon", 44, 24, 9, 6, "#2a2e35", "#c9a227", { awn: "#8b0f1f", icon: "🎬", tall: 3.8 });
-  B("Sega Bar · opening soon", 20, 37, 6, 4, "#f2cfa6", "#c9a45a", { roof: "thatch", awn: "#c8102e", icon: "🍹" });
+  B("Sega Bar", 20, 37, 6, 4, "#f2cfa6", "#c9a45a", { roof: "thatch", awn: "#c8102e", icon: "🍹", id: "gbbar", gbOpen: "bar", soon: 0 }); // open: same drinks and bar shifts as the Sunset Bar
   B("Club Lagon · opening soon", 30, 37, 8, 5, "#1c2a33", "#7a4fd1", { awn: "#7a4fd1", icon: "🪩", tall: 3.6 });
-  B("Dholl Puri Corner · opening soon", 44, 37, 5, 4, "#fde6c2", "#b5482f", { roof: "tile", awn: "#e2a21b", icon: "🫓" });
+  B("Dholl Puri Corner", 44, 37, 5, 4, "#fde6c2", "#b5482f", { roof: "tile", awn: "#e2a21b", icon: "🫓", id: "gbdholl", gbOpen: "snack", soon: 0 }); // open: same food and kitchen shifts as Snack Chez Ram
   B("Gato Piment Kiosk · opening soon", 52, 37, 4, 3, "#fff3d6", "#c2457a", { awn: "#c2457a", icon: "🌶️" });
   B("Restaurant Les Pêcheurs · opening soon", 20, 43, 8, 5, "#eef6f3", "#3f9a8a", { roof: "tile", roofCol: "#b5482f", awn: "#3f9a8a", icon: "🐟" });
   B("Boat Trips & Dolphins · opening soon", 18, 30, 6, 3, "#f2f6fa", "#1f6fa8", { awn: "#1f6fa8", icon: "🐬", door: "W" }); // by the marina jetty
@@ -1428,6 +1428,7 @@ const GBSOON = (() => { // Grand Baie's places: you can walk the streets and rea
   B("Red-Roof Chapel", 96, 2, 5, 6, "#f4efe6", "#c8202c", { roof: "tile", icon: "⛪", tall: 4.2 }); // the Cap Malheureux idea: a landmark and photo spot
   return o;
 })();
+const GBSHOPS = GBSOON.filter((b) => b.gbOpen); for (const b of GBSHOPS) { GBSOON.splice(GBSOON.indexOf(b), 1); BUILD.push(b); } // the first Grand Baie shops you can walk into
 const GB_STOP = { x: 22.5, y: GBY + 56.5 }; // where the intercity bus drops you in Grand Baie (Marché square)
 const FEF_STOP = { x: 17.5, y: 12.5 }; // and in Flic en Flac (by the Beach bus stop)
 const SOONB = BAMBOUS.concat(TAMSOON, GBSOON); // every building you can see but not enter
@@ -1808,6 +1809,7 @@ const PLACE = { // what each building door offers
   golf: () => golfActs(), // the golf club
   tmarket: () => [A("Buy groceries", "Rs 500 · 4 meals and 4 drinks for your fridge", 20, 500, {}, { why: openAt(7, 21), run() { s.meals += 4; s.drinks = (s.drinks || 0) + 4; return "Sourdough, cheese, fruit and juice. In the fridge."; } }), partTime("Stack the Tamarin shelves", 450, 8, 18)] // groceries or a student job
 }; // end PLACE
+for (const b of GBSHOPS) PLACE[b.id] = PLACE[b.gbOpen]; // Grand Baie shops offer what their Flic en Flac twin offers
 for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" ? b.y + b.h + 0.5 : b.y - 0.5, icon: "", name: b.name, enter: b.id }); // add a door object for every building
 
 OBJ.push({ x: 60.5, y: 14.5, icon: "🚏", stop: true, name: "Cascavelle bus stop", acts: busActs }); // bus stop for the mall and the university
@@ -1873,6 +1875,7 @@ const ROOMDEF = { // each building's room: two floor colours and its stations [i
   cutz: { w: 14, h: 9, floor: ["#16171a", "#d9d5ca"], st: [["✂️", "Barber chairs", "barberchair", 3.2, 3.4, /haircut|Haircut|Line up|hairstyle|chair/i], ["", "", "barberchair", 6.8, 3.4, null], ["📅", "Reception", "cutzdesk", 10.6, 3.4, /Book|bookings|WhatsApp|price list|Chat with the barber/i], ["", "", "cutzsofa", 3.2, 7.6, null], ["", "", "mirrors", 7.0, 1.3, null], ["", "", "cutzposter", 12.6, 1.3, null], ["", "", "plant", 12.8, 7.8, null]] }, // A* Cutz: black, chrome and gold
   belle: { w: 16, h: 10, floor: ["#111111", "#3a0a10"], st: [["🍛", "Kitchen pass", "goldcounter", 5, 3.1, /Jollof|Fried Rice|Coconut|Egusi|Okra|Grilled|Chicken and Chips|Moi Moi|Yam|Catfish/i], ["🍹", "Drinks bar", "goldbar", 11.2, 3.1, /Chapman|Zobo|Malta|water/i], ["📅", "Host stand", "hoststand", 8, 6.2, /Book|bookings|WhatsApp|Chef Belle|menu & offers/i], ["🍽️", "Dining table", "gdtable", 3.4, 7.6, /Sit and dine/], ["", "", "gdtable", 12.6, 7.6, null], ["", "", "ankara", 8, 1.3, null], ["", "", "bposter1", 1.9, 1.3, null], ["", "", "bposter2", 14.0, 1.3, null], ["", "", "palm", 1.5, 8.6, null], ["", "", "palm", 14.5, 8.6, null]] } // Belle's Kitchen: red and black
 }; // end ROOMDEF
+for (const b of GBSHOPS) ROOMDEF[b.id] = ROOMDEF[b.gbOpen]; // and look like it inside
 function stationActs(id, k) { // the actions one station offers
   const all = PLACE[id](), def = ROOMDEF[id].st, mine = all.filter((a) => def[k][5].test(a.label)); // everything here, then this station's share
   if (k === 0) for (const a of all) if (!def.some((q) => q[5] && q[5].test(a.label))) mine.push(a); // unclaimed actions go to the first station
@@ -3721,7 +3724,7 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
     ["How do I see the whole of Mauritius?", "Phone → Maps → Island. Open regions are in colour: Grand Baie, Port Louis, and Flic en Flac with the west. Tap a region to see whether it is open.", "maps"],
     ["How do I get to Grand Baie?", "Walk to the Beach bus stop in Flic en Flac and take the intercity bus (Rs 75). It drops you on Marché square. Take it back from the bus station there. Taxis and cars cannot drive between the two towns yet.", "maps"],
-    ["What is in Grand Baie?", "The public beach at La Cuvette, the dive and kayak centre, Sunset Boulevard with its bars, club, cinema and food, the marina jetty, Marché square and the red-roof chapel. The shops open over the coming weeks.", "maps"],
+    ["What is in Grand Baie?", "The public beach at La Cuvette, Sunset Boulevard, the marina jetty, Marché square and the red-roof chapel. Open now: Dholl Puri Corner (food and kitchen shifts) and Sega Bar (drinks and bar shifts). The other shops show 'opening soon' and open over the coming weeks.", "maps"],
     ["Why are some regions grey?", "They are not open yet. Nobody can go in, on foot, by car, by ride or by air, until they open. When a region gets an opening date, the map shows it. New regions open over time.", "maps"],
     ["How do I get around quickly?", "Rent or buy a car or a motorbike at Flic Motors, ride the bus, call a taxi, or use a scooter. A car is the fastest way between Flic en Flac, Cascavelle and Tamarin."],
     ["What are the towns?", "Flic en Flac and Cascavelle in the north, with the new Civic Quarter to the south, then Tamarin (a surf village that grows into a city with the Heights), Trianon on the plateau east of Tamarin (with Tribeca Mall), and Bambous Town in the east."],
@@ -10585,6 +10588,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.03", "2 Nov 2026", "Grand Baie opens its first two shops", [
+    ["🫓", "Dholl Puri Corner", "Walk in for a mine frite or work a kitchen shift. On Sunset Boulevard in Grand Baie.", null],
+    ["🍹", "Sega Bar", "Drinks with the crowd, or work as a glass collector. Next to the club on Sunset Boulevard.", null]
+  ]],
   ["2027.03.02", "2 Nov 2026", "Grand Baie: first look", [
     ["🏝️", "Visit Grand Baie", "Take the intercity bus from the Beach bus stop in Flic en Flac. Walk the beach at La Cuvette, Sunset Boulevard, the marina jetty and Marché square.", () => openPhone("maps", "island")],
     ["🚌", "The intercity bus", "Rs 75 each way, between the Beach bus stop and the bus station on Marché square.", null],
