@@ -1147,10 +1147,10 @@ html[data-theme="light"] .chat, html[data-theme="light"] .chatform input { color
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
 <script>
 // ================= basics =================
-const W = 460, H = 232, NH = 60; // map size in tiles: rows 0-59 are Flic en Flac on the west, Cascavelle and the new estates in the middle and Bambous Town behind its roadblock in the far east; rows 60-231 are the coast road south and Tamarin (with its new Heights district)
+const W = 460, H = 320, NH = 60, HO = 232, GBY = 236, GBH = 80, GBW = 124; // HO: the old bottom edge (Tamarin ends there); Grand Baie is rows GBY to GBY+GBH-1, x 0 to GBW-1, with deep sea all round so nobody walks there from Tamarin; // map size in tiles: rows 0-59 are Flic en Flac on the west, Cascavelle and the new estates in the middle and Bambous Town behind its roadblock in the far east; rows 60-231 are the coast road south and Tamarin (with its new Heights district)
 const ELEV = 2.6; // Tamarin stands on a bluff this high above the sea and the plain around Flic en Flac
 const smooth = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); }; // an S-shaped ramp from 0 to 1
-const elevAt = (x, z) => { if (z < 96) return 0; const w = smooth(112, 118, x); return ELEV * smooth(10.5, 14.5, x) * ((1 - w) * smooth(96, 124, z) + w * smooth(102, 110, z)); }; // the ground rises on the way into Tamarin, and from the beach up to the village; east of x 118 the Trianon plateau is flat from row 110 (3D only)
+const elevAt = (x, z) => { if (z < 96 || z >= HO) return 0; const w = smooth(112, 118, x); return ELEV * smooth(10.5, 14.5, x) * ((1 - w) * smooth(96, 124, z) + w * smooth(102, 110, z)); }; // the ground rises on the way into Tamarin, and from the beach up to the village; east of x 118 the Trianon plateau is flat from row 110 (3D only)
 const TAM_Y = 112, TAM_W = 112, TAM_END = 227; // Tamarin runs from row 112 to row 227 (the village, then the Heights with the Sky Tower and the Presidential Palace) // Tamarin village starts at this row, and hills close it in on the east at this column
 const tamRoad = (y) => y < 66 || y > 110 ? 15 : 15 + Math.round(3 * Math.sin((y - 66) / 44 * 2 * Math.PI)); // the coast road is two tiles wide; this is its left tile, sweeping out towards the sea and back inland between Flic en Flac and Tamarin
 const KEY = "fef-sim-v2"; // browser save key
@@ -1395,7 +1395,42 @@ const TAMSOON = (() => { // the Tamarin places that are not open yet: you can se
   B("Barber Shop · coming soon", 56, 45, 5, 4, "#e8ecef", "#1f3a6b", { awn: "#c8102e", icon: "💈", door: "S" }); // the men's barber shop, on the main street next to Burgo Burgers
   return o;
 })();
-const SOONB = BAMBOUS.concat(TAMSOON); // every building you can see but not enter
+// ---------- Grand Baie (Region 1): the layout from docs/SPEC.md, local rows 0-79 ----------
+const inGB = (x, y) => y >= HO; // anywhere south of the old map edge is the Grand Baie region (the server works this out too)
+const GB_STREETS = [20, 34, 50, 62]; // east-west streets (local rows, two tiles wide): La Cuvette edge, the marina street, Sunset Boulevard's south end, Marché square
+function gbTile(x, y) { // the terrain of Grand Baie
+  const ly = y - GBY; if (ly < 0 || ly >= GBH || x >= GBW) return 0; // deep sea around the town
+  if (x < 4) return 0; if (x < 8) return ly === 34 ? 7 : 1; if (x < 13) return ly === 34 ? 7 : 2; // deep sea, lagoon and the public beach (the marina jetty at row 34)
+  if (x < 15) return 22; if (x < 17) return 4; // the promenade and the coast road
+  if (x >= 104) return x >= 120 ? 0 : 15; // the hills (blocked) at the east edge
+  if (GB_STREETS.some((r) => ly === r || ly === r + 1) && x <= 100) return 4; // the cross streets
+  if ((x === 40 || x === 41 || x === 60 || x === 61) && ly >= 2 && ly <= 77) return 4; // two avenues running north-south
+  if (x >= 64 && x <= 100 && (ly % 10 === 5) && ly >= 5 && ly <= 75) return 4; // estate lanes on a grid
+  if (x >= 18 && x <= 36 && ly >= 52 && ly <= 61) return 22; // Marché square (paved)
+  if (x >= 20 && x <= 26 && ly >= 70 && ly <= 74) return 12; // a five-a-side pitch by the market
+  return 3; // grass
+}
+const GBSOON = (() => { // Grand Baie's places: you can walk the streets and read the signs; the doors open as the region fills up
+  const o = [], B = (name, lx, ly, w, h, col, roofCol, extra) => o.push(Object.assign({ name, x: lx, y: GBY + ly, w, h, col, roof: "flat", roofCol, sign: roofCol, door: "S", soon: 1, gb: 1 }, extra));
+  B("Dive & Kayak Centre · opening soon", 18, 6, 6, 4, "#e2f0f6", "#1f6fa8", { roof: "thatch", roofCol: "#c9a45a", awn: "#1f6fa8", icon: "🤿", door: "W" }); // La Cuvette
+  B("Beach Snacks · opening soon", 18, 13, 5, 4, "#fdf0c7", "#d9482b", { awn: "#d9482b", icon: "🌭", door: "W" });
+  B("Supermarché · opening soon", 20, 24, 10, 6, "#f3f3ef", "#2f6b9a", { awn: "#2f6b9a", icon: "🛒" }); // Sunset Boulevard
+  B("Ciné Baie · coming soon", 44, 24, 9, 6, "#2a2e35", "#c9a227", { awn: "#8b0f1f", icon: "🎬", tall: 3.8 });
+  B("Sega Bar · opening soon", 20, 37, 6, 4, "#f2cfa6", "#c9a45a", { roof: "thatch", awn: "#c8102e", icon: "🍹" });
+  B("Club Lagon · opening soon", 30, 37, 8, 5, "#1c2a33", "#7a4fd1", { awn: "#7a4fd1", icon: "🪩", tall: 3.6 });
+  B("Dholl Puri Corner · opening soon", 44, 37, 5, 4, "#fde6c2", "#b5482f", { roof: "tile", awn: "#e2a21b", icon: "🫓" });
+  B("Gato Piment Kiosk · opening soon", 52, 37, 4, 3, "#fff3d6", "#c2457a", { awn: "#c2457a", icon: "🌶️" });
+  B("Restaurant Les Pêcheurs · opening soon", 20, 43, 8, 5, "#eef6f3", "#3f9a8a", { roof: "tile", roofCol: "#b5482f", awn: "#3f9a8a", icon: "🐟" });
+  B("Boat Trips & Dolphins · opening soon", 18, 30, 6, 3, "#f2f6fa", "#1f6fa8", { awn: "#1f6fa8", icon: "🐬", door: "W" }); // by the marina jetty
+  B("Marché Central · opening soon", 44, 53, 10, 7, "#f7f1e4", "#2f6b45", { awn: "#e2a21b", icon: "🥭", door: "W" }); // Marché square
+  B("Post Office · coming soon", 28, 65, 6, 4, "#f1ece4", "#c8102e", { awn: "#c8102e", icon: "📮", door: "N" });
+  B("Taxi Rank", 44, 65, 6, 3, "#e8ecef", "#e2a21b", { awn: "#e2a21b", icon: "🚕", door: "N" });
+  B("Red-Roof Chapel", 96, 2, 5, 6, "#f4efe6", "#c8202c", { roof: "tile", icon: "⛪", tall: 4.2 }); // the Cap Malheureux idea: a landmark and photo spot
+  return o;
+})();
+const GB_STOP = { x: 22.5, y: GBY + 56.5 }; // where the intercity bus drops you in Grand Baie (Marché square)
+const FEF_STOP = { x: 17.5, y: 12.5 }; // and in Flic en Flac (by the Beach bus stop)
+const SOONB = BAMBOUS.concat(TAMSOON, GBSOON); // every building you can see but not enter
 
 const FB = { x0: 36, x1: 49, y0: 38, y1: 44, gy0: 40, gy1: 42 }; // football pitch edges and the goal mouth
 const CT = { x0: 50, x1: 55, y0: 38, y1: 44, hx: 52.5, hy: 38.55 }; // basketball court edges and the hoop
@@ -1498,6 +1533,7 @@ function buildMap() { // fill the terrain and collision grids
     if (y === 34 && x >= 4 && x <= 8) t = 7; // wooden jetty
     if (y >= NH) t = tamTile(x, y); // the south: coast road, cane, salt pans and Tamarin
     if (y >= NH && y < BZ_Y1 && x >= BZS_X0 && x < BZS_X1) t = bzsTile(x, y); // Bambous South: open ground where the hills were
+    if (y >= HO) t = gbTile(x, y); // Grand Baie and the sea around it
     if (x >= 27 && x <= 38 && y >= 20 && y <= 26) t = (x === 32 || x === 33 || y === 23) ? 10 : 9; // the park: lawn with crossing paths
     terr[y * W + x] = t; // store terrain
     solid[y * W + x] = (t === 0 || t === 6 || t === 15 || t === 20) ? 1 : 0; // deep water, walls, hillsides and the golf pond block you
@@ -1513,7 +1549,7 @@ function buildMap() { // fill the terrain and collision grids
   for (let y = 140; y < 165; y++) if (y < 143 || y > 147) solid[y * W + 67] = 1; // the golf club's fence on its west side, with a gateway by the first tee
   for (const p of PLOTS) for (let y = p.y; y < p.y + 3; y++) for (let x = p.x; x < p.x + 3; x++) solid[y * W + x] = 1; // house plots block you too
   for (let y = 0; y < H; y++) for (let x = 13; x < GATE; x++) { // place trees
-    if (terr[y * W + x] !== 3 || solid[y * W + x]) continue; // trees only on free grass
+    if (y >= HO || terr[y * W + x] !== 3 || solid[y * W + x]) continue; // trees only on free grass (Grand Baie gets its own below)
     const strip = x < 15; // the filao line behind the beach
     if (hash(x, y) % (strip ? 3 : 15) !== 0) continue; // dense on the strip, sparse in town
     if (!strip && BUILD.some((b) => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2)) continue; // keep a clear ring around every building
@@ -1528,6 +1564,11 @@ function buildMap() { // fill the terrain and collision grids
     terr[y * W + x] = 8; solid[y * W + x] = 1; // mark the tree and block it
   } // end tree loop
   for (const [x, y] of [[28, 21], [37, 21], [28, 25], [35, 26]]) { terr[y * W + x] = 8; solid[y * W + x] = 1; } // shade trees in the park
+  for (let y = GBY; y < GBY + GBH; y++) for (let x = 13; x < 104; x++) { // Grand Baie: filao trees behind the beach, sparse palms in town, clear of buildings and the bus stops
+    if (terr[y * W + x] !== 3 || solid[y * W + x] || hash(x, y) % (x < 18 ? 4 : 13) !== 0) continue;
+    if (GBSOON.some((b) => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2)) continue; if (OBJ.some((o) => Math.abs(o.x - x - 0.5) < 2.2 && Math.abs(o.y - y - 0.5) < 2.2)) continue;
+    terr[y * W + x] = 8; solid[y * W + x] = 1;
+  }
   for (let y = 0; y < H; y++) for (let x = GATE + 2; x < W; x++) { // palms in Bambous Town, off the roads and clear of its buildings
     if (terr[y * W + x] !== 3 || solid[y * W + x] || hash(x, y) % 11 !== 0) continue;
     if (BAMBOUS.some((b) => x >= b.x - 1 && x < b.x + b.w + 1 && y >= b.y - 1 && y < b.y + b.h + 2)) continue; if (BUILD.some((b) => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 3)) continue; if (y >= NH && (x === 205 || x === 206 || y === 77 || y === 78 || y === 93 || y === 94)) continue;
@@ -1771,7 +1812,9 @@ for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" 
 
 OBJ.push({ x: 60.5, y: 14.5, icon: "🚏", stop: true, name: "Cascavelle bus stop", acts: busActs }); // bus stop for the mall and the university
 // (Flic Motors is now a real building with a car lot: see BUILD "motors" and motorsActs)
-OBJ.push({ x: 17.5, y: 11.5, icon: "🚏", stop: true, name: "Beach bus stop", acts: busActs }); // bus stop by the public beach
+OBJ.push({ x: 17.5, y: 11.5, icon: "🚏", stop: true, name: "Beach bus stop", acts: () => busActs().concat(intercityActs("grandbaie")) }); // bus stop by the public beach (and the intercity bus to Grand Baie)
+OBJ.push({ x: GB_STOP.x, y: GB_STOP.y - 2, icon: "🚌", name: "Grand Baie bus station", acts: () => intercityActs("west") }); // Marché square: the intercity bus back to Flic en Flac
+OBJ.push({ x: 15.5, y: GBY + 34.5, icon: "⚓", name: "Marina jetty", acts: () => [{ label: "Boat trips and the dolphin tour", info: "Opening soon in Grand Baie", go: () => { closeMenu(); toast("🐬 Boat trips from the marina open soon. Watch What's new!"); } }] }); // the jetty (trips come later)
 OBJ.push({ x: 17.5, y: 27.5, icon: "🚏", stop: true, name: "Wolmar bus stop", acts: busActs }); // bus stop for the hotels
 OBJ.push({ x: 46.5, y: 27.5, icon: "🚏", stop: true, name: "Jumbo bus stop", acts: busActs }); // bus stop by the hypermarket
 OBJ.push({ x: 28.5, y: 23.5, icon: "⛲", name: "Park fountain", acts: () => [A("Sit by the fountain", "45 min · +18 fun, +10 people", 45, 0, { fun: 18, social: 10, energy: 5 }, { msg: "Kids on bikes, old men playing dominoes." }), A("Picnic", "Uses 1 grocery meal · +40 food, +15 fun", 40, 0, { hunger: 40, fun: 15 }, { why: s.meals > 0 ? "" : "No groceries", run() { s.meals--; return "Picnic on the grass."; } })] }); // chill in the park
@@ -3677,6 +3720,8 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
   ["🗺️", "Places and travel", [
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
     ["How do I see the whole of Mauritius?", "Phone → Maps → Island. Open regions are in colour: Grand Baie, Port Louis, and Flic en Flac with the west. Tap a region to see whether it is open.", "maps"],
+    ["How do I get to Grand Baie?", "Walk to the Beach bus stop in Flic en Flac and take the intercity bus (Rs 75). It drops you on Marché square. Take it back from the bus station there. Taxis and cars cannot drive between the two towns yet.", "maps"],
+    ["What is in Grand Baie?", "The public beach at La Cuvette, the dive and kayak centre, Sunset Boulevard with its bars, club, cinema and food, the marina jetty, Marché square and the red-roof chapel. The shops open over the coming weeks.", "maps"],
     ["Why are some regions grey?", "They are not open yet. Nobody can go in, on foot, by car, by ride or by air, until they open. When a region gets an opening date, the map shows it. New regions open over time.", "maps"],
     ["How do I get around quickly?", "Rent or buy a car or a motorbike at Flic Motors, ride the bus, call a taxi, or use a scooter. A car is the fastest way between Flic en Flac, Cascavelle and Tamarin."],
     ["What are the towns?", "Flic en Flac and Cascavelle in the north, with the new Civic Quarter to the south, then Tamarin (a surf village that grows into a city with the Heights), Trianon on the plateau east of Tamarin (with Tribeca Mall), and Bambous Town in the east."],
@@ -4024,6 +4069,19 @@ function salonMenu(kind) { // the salon's price list
 } // end salonMenu
 
 // ================= transport =================
+const INTERCITY_FARE = 75; // the intercity bus between Flic en Flac and Grand Baie
+function intercityActs(to) { // what the intercity bus offers at a stop
+  const nm = to === "grandbaie" ? "Grand Baie" : "Flic en Flac", rg = (ISL.regions || []).find((r) => r.id === to), shut = rg && !rg.open;
+  return [{ label: (shut ? "🔒 " : "🚌 ") + "Intercity bus to " + nm, info: shut ? nm + " is not open yet" + (rg.opensAt ? ": it opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : "") : rs(INTERCITY_FARE) + " · about 2 minutes", go: () => intercityGo(to) }];
+}
+async function intercityGo(to) { // take the intercity bus (the server refuses a locked region, so we ask first)
+  closeMenu(); const nm = to === "grandbaie" ? "Grand Baie" : "Flic en Flac"; ISL.at = 0; await islandLoad(); const rg = (ISL.regions || []).find((r) => r.id === to);
+  if (!rg || !rg.open) { toast("🔒 " + nm + " is not open yet." + (rg && rg.opensAt ? " It opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); return; }
+  if (s.money < INTERCITY_FARE) { toast("The intercity bus costs " + rs(INTERCITY_FARE) + ". Do a shift first."); return; }
+  if (s.inside || (ride && ride.on)) { toast("Get to the bus stop first."); return; }
+  s.money -= INTERCITY_FARE; txn("Intercity bus to " + nm, -INTERCITY_FARE); const at = to === "grandbaie" ? GB_STOP : FEF_STOP; s.x = at.x; s.y = at.y; path = []; pending = null; keys = {}; save();
+  toast(to === "grandbaie" ? "🚌 Welcome to Grand Baie! Walk the beach at La Cuvette, Sunset Boulevard and the marina. The shops open soon." : "🚌 Back in Flic en Flac.");
+}
 function busActs() { return [{ label: "Get a ride from here", info: "Public bus, student driver or taxi", go: rideMenu }]; } // what a bus stop offers
 function nearestStop(x, y) { return OBJ.filter((o) => o.stop).sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0]; } // closest bus stop to a point
 const hasCar0 = () => s.car || s.t < s.rentCar, hasCar = () => hasCar0() && !probOn("car"); // do you have a car right now (owned or still rented, and not in for repairs)?
@@ -4153,6 +4211,7 @@ function nearestRoad(x, y) { // closest road tile to a point
   return best; // the pickup or drop-off point
 } // end nearestRoad
 function startRide(kind, dest, mins, msg) { // a vehicle comes to get you
+  if (dest && inGB(s.x, s.y) !== inGB(dest.x, dest.y)) { toast("🚌 No road joins Flic en Flac and Grand Baie in the game yet. Take the intercity bus: the Beach bus stop in Flic en Flac, or the bus station on Marché square in Grand Baie."); return; }
   const P = nearestRoad(s.x, s.y), D = nearestRoad(dest.x, dest.y); // pickup and drop-off points on the road
   const far = [[15.5, 0.5], [GATE - 1.5, 12.5], [GATE - 1.5, 28.5], [15.5, 43.5]].map(([x, y]) => ({ x, y })).sort((a, b) => Math.hypot(b.x - P.x, b.y - P.y) - Math.hypot(a.x - P.x, a.y - P.y))[0]; // the road end farthest from you
   const come = findPath(P.x, P.y, far.x, far.y, true).slice(0, 12).reverse(); // the vehicle starts 12 tiles up the road
@@ -4945,7 +5004,7 @@ const peerName = (o) => String(o.p.name || "Player").slice(0, 14); // another pl
 function peerLook(p) { return { g: p.g === "f" ? "f" : "m", skin: safeHex(p.skin, SKINS[2]), hair: safeHex(p.hcol, "#17100c"), hs: ["short", "fade", "afro", "long", "braids", "bun", "bald"].includes(p.hs) ? p.hs : "", nails: p.nails ? safeHex(p.nails, "") : "", shirt: p.shirt === "" ? "" : safeHex(p.shirt, SHIRTS[3]), pants: p.pants === "" ? "" : safeHex(p.pants, "#22364a"), cap: p.cap ? safeHex(p.cap, "") : "", shades: !!p.shades, role: ROLE[p.role] ? p.role : "resident", head: String(p.hd || "").slice(0, 20), top: String(p.tp || "").slice(0, 20), legs: String(p.lg || "").slice(0, 20), feet: String(p.ft || "").slice(0, 20), bag: BAGS[p.bg] ? p.bg : "", chain: p.ch ? safeHex(p.ch, "") : "", shadesCol: p.sc ? safeHex(p.sc, "") : "" }; } // build a safe look from what a player sent
 function netSend() { // tell everyone where you are
   if (!room || !s.made) return; // offline, or still creating your character
-  const me = hwPres({ sc: scoot ? 1 : 0, bk: cyc ? 1 : 0, pd: onPeriod() ? 1 : 0, name: s.name, g: s.g, skin: s.skin, shirt: s.shirt, pants: s.pants, cap: s.cap || "", shades: !!s.shades, role: s.role, x: Math.round(s.x * 50) / 50, y: Math.round(s.y * 50) / 50, face: s.face, mv: meMoving, in: roomKey(), hid: !!((ride && ride.on) || s.jf), jf: s.jf ? { a: s.jf.a, b: s.jf.b, st: s.jf.st, t0: s.jf.t0, m: s.jf.m, c: s.jf.c, nm: s.jf.nm } : null, uid, hl: govHeliState(), hs: s.hs, hcol: s.hcol, nails: s.nails, md: moodLevel(), hd: s.head || "", tp: s.top || "", lg: s.legs || "", ft: s.feet || "", bg: s.bag || "", ch: s.chain || "", sc: s.shadesCol || "", hp: hostingNow() ? s.hostEnd : 0, cls: myClass(), po: curPose() ? curPose().k : "", pz: curPose() ? curPose().h : 0, dn: dancing || "", pet: s.pet ? s.pet.k : "", hg: hostingNow() ? s.genre : "", hm: s.home || 0, tm: s.team || "", mt: matchMsg() }); // your public state, including any house party you host or attend
+  const me = hwPres({ sc: scoot ? 1 : 0, bk: cyc ? 1 : 0, pd: onPeriod() ? 1 : 0, name: s.name, g: s.g, skin: s.skin, shirt: s.shirt, pants: s.pants, cap: s.cap || "", shades: !!s.shades, role: s.role, x: Math.round(s.x * 50) / 50, y: Math.round(s.y * 50) / 50, rg: !s.inside && inGB(s.x, s.y) ? "grandbaie" : "west", face: s.face, mv: meMoving, in: roomKey(), hid: !!((ride && ride.on) || s.jf), jf: s.jf ? { a: s.jf.a, b: s.jf.b, st: s.jf.st, t0: s.jf.t0, m: s.jf.m, c: s.jf.c, nm: s.jf.nm } : null, uid, hl: govHeliState(), hs: s.hs, hcol: s.hcol, nails: s.nails, md: moodLevel(), hd: s.head || "", tp: s.top || "", lg: s.legs || "", ft: s.feet || "", bg: s.bag || "", ch: s.chain || "", sc: s.shadesCol || "", hp: hostingNow() ? s.hostEnd : 0, cls: myClass(), po: curPose() ? curPose().k : "", pz: curPose() ? curPose().h : 0, dn: dancing || "", pet: s.pet ? s.pet.k : "", hg: hostingNow() ? s.genre : "", hm: s.home || 0, tm: s.team || "", mt: matchMsg() }); // your public state, including any house party you host or attend
   for (const k of ["fb", "bb"]) if (ballDirty[k] && Date.now() - ballSent[k] > 130) { // a ball you touched needs sharing (at most 7 times a second)
     const b = BALL[k], r2 = (v) => Math.round(v * 100) / 100; // the ball and a rounding helper
     room.presence({ [k]: k === "fb" ? { x: r2(b.x), y: r2(b.y), vx: r2(b.vx), vy: r2(b.vy), t: b.t, a: b.a, b: b.b } : { x: r2(b.x), y: r2(b.y), vx: r2(b.vx), vy: r2(b.vy), t: b.t, h: b.h } }).catch(() => {}); // send where it is and how it moves
@@ -5949,8 +6008,9 @@ async function islandLoad() { if (ISL.busy) return; ISL.busy = true; try {
   if (!ISL.d) { const d = await (await fetch("island.json", { cache: "no-cache" })).json(), un = (a) => { const o = new Uint8Array(d.w * d.h); let i = 0; for (let k = 0; k < a.length; k += 2) { o.fill(a[k], i, i + a[k + 1]); i += a[k + 1]; } return o; }; ISL.t = un(d.tiles); ISL.rg = un(d.region); ISL.d = d; }
   ISL.at = Date.now(); const r = await (await fetch("/api/regions", { cache: "no-store" })).json(); if (r && r.ok) ISL.regions = r.regions;
 } catch (e) {} ISL.busy = false; if (pv && pv.app === "maps" && !$("phone").hidden) phoneRender(); }
-window.addEventListener("fef-regions", (e) => { ISL.regions = e.detail || ISL.regions; if (pv && pv.app === "maps" && !$("phone").hidden) phoneRender(); });
-window.addEventListener("fef-regionlocked", (e) => { const d = e.detail || {}; toast("🔒 " + (d.name || "That area") + " is not open yet." + (d.opensAt ? " It opens " + new Date(d.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); });
+setTimeout(() => { fetch("/api/regions", { cache: "no-store" }).then((r) => r.json()).then((r) => { if (r && r.ok) { ISL.regions = r.regions; ISL.at = Date.now(); } }).catch(() => {}); }, 2500); // which regions are open, for the maps and the bus stops
+window.addEventListener("fef-regions", (e) => { try { WM.key = ""; } catch (er) {} ISL.regions = e.detail || ISL.regions; if (pv && pv.app === "maps" && !$("phone").hidden) phoneRender(); });
+window.addEventListener("fef-regionlocked", (e) => { const d = e.detail || {}; if (d.back && Number.isFinite(d.back.x) && Number.isFinite(d.back.y) && !s.inside) { s.x = d.back.x; s.y = d.back.y; path = []; pending = null; save(); } /* the server put us back where we may be */ toast("🔒 " + (d.name || "That area") + " is not open yet." + (d.opensAt ? " It opens " + new Date(d.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); });
 const islTile = (lo, la) => [(lo - ISL.d.lon0) * ISL.d.kx / ISL.d.tileM, (ISL.d.lat0 - la) * ISL.d.ky / ISL.d.tileM];
 function islandImage() { // draw the tiles once per change of open regions (2 px a tile)
   const d = ISL.d, key = ISL.regions.map((r) => r.open ? 1 : 0).join(""); if (ISL.img && ISL.imgKey === key) return ISL.img;
@@ -5970,7 +6030,7 @@ function islandImage() { // draw the tiles once per change of open regions (2 px
 function islandApp(box) { // the Island tab of the Maps app
   if (!ISL.d || !ISL.regions) { box.append(el("p", "pnote", "Loading the map of Mauritius...")); islandLoad(); return; }
   const c = el("canvas"); c.width = ISL.d.w * 2; c.height = ISL.d.h * 2; c.style.cssText = "width:100%;height:auto;border-radius:14px;display:block"; c.setAttribute("role", "img"); c.setAttribute("aria-label", "Map of Mauritius. Open: " + ISL.regions.filter((r) => r.open).map((r) => r.name).join(", ") + ". The grey regions are not open yet."); box.append(c);
-  const g = c.getContext("2d"); g.drawImage(islandImage(), 0, 0); const [hx, hy] = islTile(ISL_HOME[0], ISL_HOME[1]);
+  const g = c.getContext("2d"); g.drawImage(islandImage(), 0, 0); const [hx, hy] = inGB(s.x, s.y) && !s.inside ? islTile(57.585, -20.012) : islTile(ISL_HOME[0], ISL_HOME[1]);
   g.fillStyle = "#ffffff"; g.beginPath(); g.arc(hx * 2, hy * 2, 9, 0, 7); g.fill(); g.fillStyle = "#e4572e"; g.beginPath(); g.arc(hx * 2, hy * 2, 6, 0, 7); g.fill(); // you
   c.onclick = (ev) => { const b = c.getBoundingClientRect(), x = Math.floor((ev.clientX - b.left) / b.width * ISL.d.w), y = Math.floor((ev.clientY - b.top) / b.height * ISL.d.h); if (x < 0 || y < 0 || x >= ISL.d.w || y >= ISL.d.h) return; const i = y * ISL.d.w + x, r = ISL.regions.find((q) => q.id === ISL.d.regions[ISL.rg[i]]); if (!r) return; toast(ISL.t[i] === 0 ? "🌊 The sea off " + r.name : r.open ? "🏝️ " + r.name + " is open." : "🔒 " + r.name + " is not open yet." + (r.opensAt ? " It opens " + new Date(r.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); };
   box.append(el("p", "pnote", "Red dot: you. Coloured regions are open. Grey regions are coming soon and closed to everyone until they open. Tap a region to see it."));
@@ -6064,7 +6124,7 @@ function phoneRender0() { // draw the current phone screen
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { m.fillStyle = COL[terr[y * W + x]]; m.fillRect(x * 5, y * 5, 5, 5); } // terrain
     for (const b of BUILD) { m.fillStyle = b.roofCol; m.fillRect(b.x * 5, b.y * 5, b.w * 5, b.h * 5); } // buildings
     m.globalAlpha = 0.45; for (const b of SOONB) { m.fillStyle = b.roofCol; m.fillRect(b.x * 5, b.y * 5, b.w * 5, b.h * 5); } m.globalAlpha = 1; m.fillStyle = "#ffffff"; m.font = "700 15px sans-serif"; m.textAlign = "center"; m.fillText("🏚️ Bambous Town", (GATE + (W - GATE) / 2) * 5, 20 * 5); // Bambous Town
-    m.font = "700 18px sans-serif"; m.lineWidth = 4; m.strokeStyle = "rgba(0,0,0,0.55)"; for (const [txt, tx, ty] of [["🏄 Tamarin", 50, 124], ["🧂 Salt pans", 46, 92], ["⛰️ Trois Mamelles", 104, 66], ["⛳ Golf", 84, 150], ["🏙️ Trianon", 280, 140], ["🛍️ Tribeca Mall", 258, 108], ["🛣️ Trianon highway", 170, 128], ["🌃 Ebène Cyber City", 285 + CXO, 3], ["✈️ Tribeca Airport", 285, 176]]) { m.strokeText(txt, tx * 5, ty * 5); m.fillText(txt, tx * 5, ty * 5); } // the new south: Tamarin and its landmarks
+    m.font = "700 18px sans-serif"; m.lineWidth = 4; m.strokeStyle = "rgba(0,0,0,0.55)"; for (const [txt, tx, ty] of [["🏝️ Grand Baie", 55, GBY + 10], ["🏄 Tamarin", 50, 124], ["🧂 Salt pans", 46, 92], ["⛰️ Trois Mamelles", 104, 66], ["⛳ Golf", 84, 150], ["🏙️ Trianon", 280, 140], ["🛍️ Tribeca Mall", 258, 108], ["🛣️ Trianon highway", 170, 128], ["🌃 Ebène Cyber City", 285 + CXO, 3], ["✈️ Tribeca Airport", 285, 176]]) { m.strokeText(txt, tx * 5, ty * 5); m.fillText(txt, tx * 5, ty * 5); } // the new south: Tamarin and its landmarks
     for (const k in others) if (!others[k].p.in) { m.fillStyle = "#ffd23c"; m.beginPath(); m.arc(others[k].x * 5, others[k].y * 5, 4, 0, 7); m.fill(); } // other players
     const me = s.inside ? { x: s.ox, y: s.oy } : s; m.fillStyle = "#ffffff"; m.beginPath(); m.arc(me.x * 5, me.y * 5, 6, 0, 7); m.fill(); m.fillStyle = "#e4572e"; m.beginPath(); m.arc(me.x * 5, me.y * 5, 4, 0, 7); m.fill(); // you
     { const md = doorAt(homeIdxOf(uid || "me")); if (md) { m.fillStyle = "#ff9f1a"; m.strokeStyle = "#fff"; m.lineWidth = 2; m.beginPath(); m.arc(md.x * 5, md.y * 5, 7, 0, 7); m.fill(); m.stroke(); m.fillStyle = "#fff"; m.font = "700 13px sans-serif"; m.textAlign = "center"; m.fillText("🏠 You live here", md.x * 5, md.y * 5 - 12); }
@@ -7891,7 +7951,7 @@ function sunDir(h) { // where the sun is (the moon at night): up in the east (+x
 
 function buildGround() { // the ground as painted pictures (the north, then the south with Tamarin), plus water and lamps
   const P = 16, gparts = [];
-  for (const [gx0, gx1, gy0, gy1] of [[0, BZS_X1 + 1, 0, NH], [BZS_X1 + 1, W, 0, NH], [0, TAM_W + 4, NH, H], [TAM_W + 4, 340, BZ_Y1, TRI.y1 + 2], [BZS_X1 + 1, W, NH, BZ_Y1], [BZS_X1 + 1, 340, TRI.y1 + 2, 196]]) { // six textures, each under 4,096 pixels wide so phones keep them sharp: the north, the far north-east (Ebène), the south and Tamarin, Trianon, the M1 north, and Tribeca Airport
+  for (const [gx0, gx1, gy0, gy1] of [[0, BZS_X1 + 1, 0, NH], [BZS_X1 + 1, W, 0, NH], [0, TAM_W + 4, NH, HO], [TAM_W + 4, 340, BZ_Y1, TRI.y1 + 2], [BZS_X1 + 1, W, NH, BZ_Y1], [BZS_X1 + 1, 340, TRI.y1 + 2, 196], [0, GBW, HO, H]]) { // seven textures (the last is Grand Baie), each under 4,096 pixels wide so phones keep them sharp: the north, the far north-east (Ebène), the south and Tamarin, Trianon, the M1 north, and Tribeca Airport
   const c = document.createElement("canvas"); c.width = (gx1 - gx0) * P; c.height = (gy1 - gy0) * P; const x2 = c.getContext("2d"); // 16 pixels per tile
   for (let y = gy0; y < gy1; y++) for (let x = gx0; x < gx1; x++) { // every tile
     const t2 = terr[y * W + x], X = (x - gx0) * P, Y = (y - gy0) * P; const bzg = x > GATE && x <= BZS_X1 && y < BZ_Y1 && (t2 === 3 || t2 === 8 || t2 === 9); x2.fillStyle = bzg ? "#4a7d3f" : t2 === 8 ? COL[3] : t2 === 6 ? "#8a6a48" : COL[t2]; x2.fillRect(X, Y, P, P); // base colour (grass under trees, floor under walls); Bambous has its own rough village green
@@ -7931,12 +7991,13 @@ function buildGround() { // the ground as painted pictures (the north, then the 
   x2.beginPath(); x2.arc(42.5 * P, 41 * P, P * 1.1, 0, 7); x2.stroke(); x2.strokeRect(FB.x0 * P + 3, 39.4 * P, P * 1.6, P * 3.2); x2.strokeRect(FB.x1 * P - 3 - P * 1.6, 39.4 * P, P * 1.6, P * 3.2); // centre circle and boxes
   x2.strokeRect(CT.x0 * P + 3, CT.y0 * P + 3, (CT.x1 - CT.x0) * P - 6, (CT.y1 - CT.y0) * P - 6); x2.strokeRect((CT.hx - 0.9) * P, CT.y0 * P + 3, P * 1.8, P * 2.2); x2.beginPath(); x2.arc(CT.hx * P, CT.hy * P, P * 3.6, 0.25, Math.PI - 0.25); x2.stroke(); } // court outline, key and arc
   const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = R.renderer.capabilities.getMaxAnisotropy(); // ground picture
-  const south = gy0 >= NH, gw = gx1 - gx0, gh = gy1 - gy0, gg = new THREE.PlaneGeometry(gw, gh, south ? gw : 1, south ? gh : 1); if (south) { const ps = gg.attributes.position; for (let i = 0; i < ps.count; i++) ps.setZ(i, elevAt((gx0 + gx1) / 2 + ps.getX(i), (gy0 + gy1) / 2 - ps.getY(i))); gg.computeVertexNormals(); } // the southern ground follows the rise into Tamarin
+  const south = gy0 >= NH && gy0 < HO, gw = gx1 - gx0, gh = gy1 - gy0, gg = new THREE.PlaneGeometry(gw, gh, south ? gw : 1, south ? gh : 1); if (south) { const ps = gg.attributes.position; for (let i = 0; i < ps.count; i++) ps.setZ(i, elevAt((gx0 + gx1) / 2 + ps.getX(i), (gy0 + gy1) / 2 - ps.getY(i))); gg.computeVertexNormals(); } // the southern ground follows the rise into Tamarin
   const ground = mesh(gg, new THREE.MeshLambertMaterial({ map: tex }), (gx0 + gx1) / 2, 0, (gy0 + gy1) / 2, R.world, false); ground.rotation.x = -Math.PI / 2; ground.userData.noLift = true; if (gx0 > 0) ground.position.y = 0.02; // lay it flat (Trianon's picture sits just above the hills)
   } // end the two ground pictures
-  { const hw = W - TAM_W - 4, hh = H - NH, hg = new THREE.PlaneGeometry(hw, hh, hw / 2, hh / 2), ps = hg.attributes.position; for (let i = 0; i < ps.count; i++) ps.setZ(i, elevAt((TAM_W + 4 + W) / 2 + ps.getX(i), (NH + H) / 2 - ps.getY(i))); hg.computeVertexNormals(); const hills = mesh(hg, new THREE.MeshLambertMaterial({ color: 0x4a7d3f }), (TAM_W + 4 + W) / 2, -0.005, (NH + H) / 2, R.world, false); hills.rotation.x = -Math.PI / 2; hills.material.color.convertSRGBToLinear(); hills.userData.noLift = true; } // the wooded hills in the south east, one flat colour
+  { const hw = W - TAM_W - 4, hh = HO - NH, hg = new THREE.PlaneGeometry(hw, hh, hw / 2, hh / 2), ps = hg.attributes.position; for (let i = 0; i < ps.count; i++) ps.setZ(i, elevAt((TAM_W + 4 + W) / 2 + ps.getX(i), (NH + HO) / 2 - ps.getY(i))); hg.computeVertexNormals(); const hills = mesh(hg, new THREE.MeshLambertMaterial({ color: 0x4a7d3f }), (TAM_W + 4 + W) / 2, -0.005, (NH + HO) / 2, R.world, false); hills.rotation.x = -Math.PI / 2; hills.material.color.convertSRGBToLinear(); hills.userData.noLift = true; } // the wooded hills in the south east, one flat colour
   const sea = mesh(new THREE.PlaneGeometry(700, 700), makeWater(false), W / 2, -0.03, H / 2, R.scene, false); sea.rotation.x = -Math.PI / 2; R.sea = sea; // the ocean beyond the map
-  R.water = mesh(new THREE.PlaneGeometry(8.3, H), makeWater(true), 4.15, 0.04, H / 2, R.world, false); R.water.rotation.x = -Math.PI / 2; // the sea inside the map: reef, lagoon and foam on the beach
+  R.water = mesh(new THREE.PlaneGeometry(8.3, HO), makeWater(true), 4.15, 0.04, HO / 2, R.world, false); R.water.rotation.x = -Math.PI / 2; // the sea inside the map: reef, lagoon and foam on the beach
+  { const gw = mesh(new THREE.PlaneGeometry(8.3, GBH), makeWater(true), 4.15, 0.04, GBY + GBH / 2, R.world, false); gw.rotation.x = -Math.PI / 2; } // Grand Baie's lagoon
   R.sky = makeSky(); R.scene.add(R.sky); // the sky dome
   const lamps = []; for (let x = 18; x < GATE - 2; x += 8) lamps.push([x + 0.5, 11.25], [x + 0.5, 27.25]); for (let y = 2; y < 230; y += 8) lamps.push([y < NH ? 14.6 : tamRoad(y) - 0.4, y + 0.5]); // street lamp spots
   for (const [lx, lz] of lamps) { if (solid[Math.floor(lz) * W + Math.floor(lx)]) continue; cyl(0.04, 0.05, 2.4, "#3a4147", lx, 1.2, lz, R.world, 6); box(0.3, 0.08, 0.14, "#3a4147", lx, 2.4, lz, R.world); box(0.18, 0.06, 0.1, R.lampMat, lx, 2.34, lz, R.world); } // pole, arm and bulb
@@ -10524,6 +10585,11 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.02", "2 Nov 2026", "Grand Baie: first look", [
+    ["🏝️", "Visit Grand Baie", "Take the intercity bus from the Beach bus stop in Flic en Flac. Walk the beach at La Cuvette, Sunset Boulevard, the marina jetty and Marché square.", () => openPhone("maps", "island")],
+    ["🚌", "The intercity bus", "Rs 75 each way, between the Beach bus stop and the bus station on Marché square.", null],
+    ["⛪", "Shops open soon", "The bars, the cinema, the market and the boat trips are built and open over the coming weeks. Find the red-roof chapel in the north-east for a photo.", null]
+  ]],
   ["2027.03.01", "2 Nov 2026", "The whole island on your phone", [
     ["🏝️", "A map of all of Mauritius", "Maps now has an Island tab: the real island, its roads and towns, with Grand Baie, Port Louis and Flic en Flac open.", () => openPhone("maps", "island")],
     ["🔒", "More regions coming soon", "The grey regions open over time. The map shows when each one opens.", null]
@@ -12811,12 +12877,14 @@ const WM_COL = { 0: "#58b2e2", 1: "#9be3ee", 2: "#f5e6b4", 3: "#c6e6a8", 4: "#ff
 function wmPins() { // every city and the places people look for
   const ok = triAllowed(), P = [["fef", "🏖️", "Flic en Flac", 48, 26, 1], ["cas", "🛍️", "Cascavelle", 66, 20, 2], ["bam", "🏚️", "Bambous Town", 206, 42, 1], ["tam", "🏄", "Tamarin", 50, 140, 1], ["air1", "✈️", "SSR Airport", 90, 45, 3], ["air2", "✈️", "Tamarin Airport", 150, 176, 3], ["bzs", "⚽", "Bambous South", 205, 80, 3]];
   if (ok) P.push(["tri", "🏙️", "Trianon", 285, 134, 1], ["mall", "🛍️", "Tribeca Mall", 258, 118, 2], ["air3", "✈️", "Tribeca Airport", 316, 176, 3], ["cy", "🌃", "Ebène Cyber City", 285 + CXO, 30, 1], ["hel", "🚁", "Trianon heliport", CHOP_PADS.tri.x, CHOP_PADS.tri.y, 3]);
+  P.push(["gb", gbLocked() ? "🔒" : "🏝️", gbLocked() ? "Grand Baie (not open yet)" : "Grand Baie", 60, GBY + 40, 1]); // Region 1: reached by the intercity bus
   return P;
 }
+const gbLocked = () => { const r = (ISL.regions || []).find((q) => q.id === "grandbaie"); return !!r && !r.open; }; // the server decides; this only colours the maps
 function wmBuild() { // paint the map picture once: land, sea, roads, buildings
-  const ok = triAllowed(), key = ok ? "open" : "closed"; if (WM.key === key && WM.cv) return; WM.key = key; const S = 3, c = document.createElement("canvas"); c.width = W * S; c.height = H * S; const g2 = c.getContext("2d");
+  const ok = triAllowed(), key = (ok ? "open" : "closed") + (gbLocked() ? "-gbshut" : ""); if (WM.key === key && WM.cv) return; WM.key = key; const S = 3, c = document.createElement("canvas"); c.width = W * S; c.height = H * S; const g2 = c.getContext("2d");
   const hid = (x, y) => !ok && (x > BZS_X1 || (x >= 113 && y >= 106 && y <= 196)); // the closed areas are drawn as plain hills
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let t2 = terr[y * W + x]; if (hid(x, y)) t2 = 15; if (x > BZS_X1 && y < NH && t2 === 15 && ok) t2 = 15; g2.fillStyle = WM_COL[t2] || "#c6e6a8"; g2.fillRect(x * S, y * S, S, S); }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let t2 = terr[y * W + x]; if (hid(x, y)) t2 = 15; if (x > BZS_X1 && y < NH && t2 === 15 && ok) t2 = 15; g2.fillStyle = WM_COL[t2] || "#c6e6a8"; if (y >= HO && t2 !== 0 && gbLocked()) g2.fillStyle = "#b9bbbd"; g2.fillRect(x * S, y * S, S, S); } // a locked Grand Baie is grey
   g2.fillStyle = "rgba(60,110,70,0.10)"; for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (terr[y * W + x] === 15 && (x + y) % 4 === 0) g2.fillRect(x * S, y * S, S * 2, S * 2); // hill texture
   const bl = (b, col) => { if (hid(b.x, b.y)) return; g2.fillStyle = "rgba(0,0,0,0.12)"; g2.fillRect(b.x * S + 1, b.y * S + 1, b.w * S, b.h * S); g2.fillStyle = col; g2.fillRect(b.x * S, b.y * S, b.w * S, b.h * S); };
   for (const b of SOONB) bl(b, "#efe9de"); for (const b of BUILD) bl(b, "#f4efe6");
@@ -12839,7 +12907,7 @@ function wmOpen() {
 }
 function wmApply() { const inner = $("wmInner"); if (!inner) return; inner.style.setProperty("--k", WM.k); inner.style.transform = "translate(" + WM.x + "px," + WM.y + "px) scale(" + WM.k + ")"; }
 function wmZoom(nk) { const view = $("wmView"), cx = view.clientWidth / 2, cy = view.clientHeight / 2, f = nk / WM.k; WM.x = cx - (cx - WM.x) * f; WM.y = cy - (cy - WM.y) * f; WM.k = nk; wmApply(); for (const d of WM.pins || []) d.classList.toggle("far", false); const inner = $("wmInner"); inner.dataset.lv = WM.k < 1.3 ? "1" : WM.k < 2.6 ? "2" : "3"; }
-function wmSelect(p) { WM.sel = p; const c = $("wmCard"); c.hidden = false; c.innerHTML = ""; const h = document.createElement("b"); h.textContent = p.ic + " " + p.name; const go = document.createElement("button"); go.type = "button"; go.className = "primary"; go.textContent = "📍 Guide me there"; go.onclick = () => { setZoomTo(0.5); navTo(p.x, p.y, p.name); }; const x = document.createElement("button"); x.type = "button"; x.textContent = "Close"; x.onclick = () => { c.hidden = true; WM.sel = null; }; c.append(h, go, x); }
+function wmSelect(p) { WM.sel = p; const c = $("wmCard"); c.hidden = false; c.innerHTML = ""; const h = document.createElement("b"); h.textContent = p.ic + " " + p.name; const go = document.createElement("button"); go.type = "button"; go.className = "primary"; go.textContent = "📍 Guide me there"; go.onclick = () => { setZoomTo(0.5); if (p.id === "gb" && !inGB(s.x, s.y)) { if (gbLocked()) { toast("🔒 Grand Baie is not open yet. Coming soon!"); return; } navTo(17.5, 11.5, "Beach bus stop: intercity bus to Grand Baie"); return; } if (p.id !== "gb" && inGB(s.x, s.y) && p.y < HO) { navTo(GB_STOP.x, GB_STOP.y - 2, "Grand Baie bus station: intercity bus back"); return; } navTo(p.x, p.y, p.name); }; const x = document.createElement("button"); x.type = "button"; x.textContent = "Close"; x.onclick = () => { c.hidden = true; WM.sel = null; }; c.append(h, go, x); }
 function wmTick(force) { // update the dots: you, other players and your route
   if (!WM.on || !WM.me) return; const now = performance.now(); if (!force && now - WM.lastT < 400) return; WM.lastT = now; const me = s.inside ? { x: s.ox || s.x, y: s.oy || s.y } : s; WM.me.style.left = me.x / W * 100 + "%"; WM.me.style.top = me.y / H * 100 + "%";
   const inner = $("wmInner"); let i = 0; for (const k in others) { const o = others[k]; if (!o || !o.p || o.p.in || o.p.hid) continue; let d = WM.dots[i]; if (!d) { d = WM.dots[i] = document.createElement("div"); d.className = "wmdot"; inner.append(d); } d.hidden = false; d.style.left = o.x / W * 100 + "%"; d.style.top = o.y / H * 100 + "%"; d.title = peerName(o); i++; } for (; i < WM.dots.length; i++) WM.dots[i].hidden = true;

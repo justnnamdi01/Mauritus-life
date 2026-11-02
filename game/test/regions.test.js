@@ -24,14 +24,14 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     const pres = (patch) => ws.send(JSON.stringify({ t: "presence", patch }));
     const locked = async () => { await wait(250); const i = got.findIndex((m) => m.t === "region.locked"); if (i < 0) return null; return got.splice(i, 1)[0]; };
 
-    pres({ rg: "north", x: 10, y: 10 }); let l = await locked();
-    ok(l && l.id === "north" && l.back.rg === undefined, "walking into the locked north map is refused");
+    pres({ rg: "north" }); let l = await locked();
+    ok(l && l.id === "north" && l.back.rg === undefined, "a phone with no place yet that claims the locked north is refused");
+    pres({ rg: "nowhere" }); l = await locked(); ok(!!l, "an unknown region is refused");
     pres(tile(57.70, -20.40)); l = await locked(); ok(l && l.id === "southeast", "standing on a Mahébourg island tile is refused");
     pres(tile(57.585, -20.012)); l = await locked(); ok(!l, "Grand Baie island tile is allowed");
     pres(tile(57.70, -20.40)); l = await locked(); ok(l && Math.abs(l.back.ix - tile(57.585, -20.012).ix) < 0.01, "a jump into a locked region is put back to the last good tile");
     pres({ ix: -5, iy: 3 }); l = await locked(); ok(!!l, "a tile off the map is refused");
     pres({ ix: "NaN", iy: null }); l = await locked(); ok(!!l, "rubbish coordinates are refused");
-    pres({ rg: "nowhere" }); l = await locked(); ok(!!l, "an unknown region is refused");
 
     // Admin: no key, then open the north, then close it with a player inside
     const nokey = await fetch(`http://127.0.0.1:${PORT}/api/admin/regions`).then((r) => r.status); ok(nokey === 401, "the admin card needs the key");
@@ -41,6 +41,14 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     a = await admin("POST", { id: "north", open: false }); l = await locked(); ok(l && l.id === "north" && l.back.ix !== undefined, "closing the north walks the player inside to a safe place");
     a = await admin("POST", { id: "east", opensAt: Date.now() - 1000 }); ok(!a.ok, "an opening date in the past is refused");
     a = await admin("POST", { id: "east", opensAt: Date.now() + 86400000 }); ok(a.ok && !a.regions.find((r) => r.id === "east").open, "an opening date tomorrow keeps it closed today");
+    // The walkable map: rows from 232 down are Grand Baie. The server reads the place, not the phone's claim.
+    pres({ x: 20, y: 30, rg: "west" }); l = await locked(); ok(!l, "standing in Flic en Flac is allowed");
+    pres({ x: 22.5, y: 292.5, rg: "grandbaie" }); l = await locked(); ok(!l, "the intercity bus to Grand Baie is allowed while it is open");
+    a = await admin("POST", { id: "grandbaie", open: false }); l = await locked(); ok(l && l.id === "grandbaie" && l.back.y < 232, "closing Grand Baie moves the player inside back to Flic en Flac (y " + (l && l.back.y) + ")");
+    pres({ x: 22.5, y: 292.5, rg: "west" }); l = await locked(); ok(l && l.id === "grandbaie" && l.back.y < 232 && l.back.x === 17.5, "a phone that lies about its region cannot stand in a locked Grand Baie");
+    pres({ x: 3, y: 4, in: "home" }); l = await locked(); ok(!l, "indoors, room positions are not mistaken for regions");
+    pres({ in: "" });
+    a = await admin("POST", { id: "grandbaie", open: true }); pres({ x: 22.5, y: 292.5 }); l = await locked(); ok(!l, "reopened, Grand Baie is allowed again");
     ws.close();
   } finally { srv.kill(); await new Promise((r) => srv.on("exit", r)); try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {} }
   console.log(fails ? fails + " failed" : "all passed"); process.exit(fails ? 1 : 0);

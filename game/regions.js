@@ -1,6 +1,8 @@
 // Island regions and the locks on them. The server decides who may stand where: the phone is never trusted.
 // A player's position can say two things:
-//   rg      the region whose detailed walkable map they are in (players without one are in "west", the Flic en Flac map)
+//   x, y    their place on the walkable map: rows from 232 down are Grand Baie, the rows above are Flic en Flac and the west.
+//           The server works the region out from this itself, so a phone cannot claim the wrong one.
+//   rg      the region the phone says it is in (only used when it sends no x, y)
 //   ix, iy  their tile on the island map (150 m tiles, see public/island.json), when they travel on it
 // If either points into a locked region, the server puts the old value back and tells the phone "region.locked".
 "use strict";
@@ -14,6 +16,9 @@ const unrle = (a, n) => { const out = new Uint8Array(n); let i = 0; for (let k =
 const REGION_AT = unrle(ISL.region, W * H);
 const BY_ID = Object.fromEntries(DEF.map((r) => [r.id, r]));
 const DEFAULT_RG = "west"; // the map every player starts on today
+const GB_ROW = 232; // the walkable map: Grand Baie starts at this row (see HO in public/index.html)
+const STOPS = { west: { x: 17.5, y: 12.5 }, grandbaie: { x: 22.5, y: 292.5 } }; // the intercity bus stops: safe places to put someone back
+const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= GB_ROW ? "grandbaie" : DEFAULT_RG) : ""; }; // "" indoors or with no place
 
 let db = null, persist = () => {}, onChange = () => {};
 function init(theDb, persistFn, changed) { // call once the save has loaded
@@ -38,10 +43,10 @@ function list() { // what every phone may know
 }
 function spawn() { // somewhere safe: the first seed of the first open region
   const r = DEF.find((q) => isOpen(q.id)) || BY_ID[DEFAULT_RG], [lo, la] = r.seeds[0];
-  return { rg: r.map ? r.id : DEFAULT_RG, ix: (lo - ISL.lon0) * ISL.kx / ISL.tileM, iy: (ISL.lat0 - la) * ISL.ky / ISL.tileM };
+  const rg = STOPS[r.id] ? r.id : DEFAULT_RG; return { rg, x: STOPS[rg].x, y: STOPS[rg].y, ix: (lo - ISL.lon0) * ISL.kx / ISL.tileM, iy: (ISL.lat0 - la) * ISL.ky / ISL.tileM };
 }
 function placeOk(p) { // is a presence somewhere it is allowed to be? returns "" or the locked region's id
-  const rg = p.rg === undefined || p.rg === "" ? DEFAULT_RG : String(p.rg);
+  const rg = walkRegion(p) || (p.rg === undefined || p.rg === "" ? DEFAULT_RG : String(p.rg)); // where they stand decides, not what the phone says
   if (!BY_ID[rg] || !isOpen(rg)) return BY_ID[rg] ? rg : "?";
   if (p.ix !== undefined || p.iy !== undefined) { const ix = Number(p.ix), iy = Number(p.iy), at = regionAt(ix, iy); if (!Number.isFinite(ix) || !Number.isFinite(iy) || !at) return "?"; if (!isOpen(at)) return at; }
   return "";
@@ -50,10 +55,10 @@ function placeOk(p) { // is a presence somewhere it is allowed to be? returns ""
 // (with any locked fields put back) and the id of the region that was refused, if any.
 function filterPatch(prev, patch) {
   if (!patch || typeof patch !== "object") return { patch, refused: "" };
-  if (!("rg" in patch) && !("ix" in patch) && !("iy" in patch)) return { patch, refused: "" };
+  const KEYS = ["rg", "ix", "iy", "x", "y"]; if (!KEYS.some((k) => k in patch)) return { patch, refused: "" };
   const next = Object.assign({}, prev, patch), bad = placeOk(next); if (!bad) return { patch, refused: "" };
-  const fixed = Object.assign({}, patch), back = placeOk(prev || {}) ? spawn() : { rg: prev.rg, ix: prev.ix, iy: prev.iy }; // put the last good place back (or a safe spawn)
-  for (const k of ["rg", "ix", "iy"]) if (k in patch || back[k] !== undefined) { if (back[k] === undefined) delete fixed[k]; else fixed[k] = back[k]; }
+  const fixed = Object.assign({}, patch), back = placeOk(prev || {}) ? spawn() : { rg: prev.rg, ix: prev.ix, iy: prev.iy, x: prev.x, y: prev.y }; // put the last good place back (or a safe spawn)
+  for (const k of KEYS) if (k in patch || back[k] !== undefined) { if (back[k] === undefined) delete fixed[k]; else fixed[k] = back[k]; }
   return { patch: fixed, refused: bad };
 }
 function info(id) { const r = BY_ID[id]; return r ? { id, name: r.name, opensAt: db.regions[id].opensAt || 0 } : { id: "", name: "that place", opensAt: 0 }; }
@@ -64,4 +69,4 @@ function adminSet(b) {
   if (b.opensAt !== undefined) { const t = Number(b.opensAt) || 0; if (t && !(t > Date.now())) return { ok: false, error: "Pick an opening date in the future." }; s.opensAt = t; }
   persist(); onChange(); return { ok: true, regions: list() };
 }
-module.exports = { init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };
+module.exports = { walkRegion, init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };
