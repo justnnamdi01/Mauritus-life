@@ -4,6 +4,8 @@ A free multiplayer life game set across Mauritius, played in the phone browser. 
 
 - `docs/SPEC.md`: what to keep, cut and rebuild, and the layout of Region 1 (Grand Baie).
 - `docs/LAUNCH.md`: the launch plan, scripts, captions and video plan.
+- `docs/ROADMAP.md`: the build order for better graphics, the island map with locked regions, and driving.
+- `docs/STATUS.md`: where we are right now (updated at the end of every working session).
 - `game/`: the game and its server.
 
 > **Status:** `game/` is a working starter copy of the engine. It still plays as Flic en Flac inside (the map, shops and NPCs are unchanged) until Region 1 is built. Only the name, title and package are renamed. Follow `docs/SPEC.md`.

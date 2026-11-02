@@ -48,6 +48,9 @@ x 100-120 hills
 - **Far north-east:** a red-roofed chapel viewpoint (the Cap Malheureux idea) as a landmark and photo spot.
 - **Exit:** the M2 road to **Region 2: Port Louis** (capital, business district, harbour, government).
 
+## Graphics, the island map and driving
+The full plan, with the build order, the finish checks for each phase and the prompts to use, is in **`docs/ROADMAP.md`**: a much better stylized look (one street first), the real island with unopened regions grey and locked (enforced by the server), and drivable cars with a driver's-eye view you can switch back from.
+
 ## Launch scope
 1. **Must have:** Region 1 playable end to end, the economy with its sinks, accounts, chat, the Rich list, homes, one mascot, the Guide.
 2. **Nice to have:** Region 2, raids, heists, disasters.

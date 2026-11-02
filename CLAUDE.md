@@ -1,6 +1,6 @@
 # Mauritius Life
 
-The game lives in `game/` (the game page in `game/public/index.html`, the Node server in `game/server.js`). Railway deploys the main branch with root directory `game`. Read `docs/SPEC.md` for what we are building and `docs/LAUNCH.md` for the launch plan.
+The game lives in `game/` (the game page in `game/public/index.html`, the Node server in `game/server.js`). Railway deploys the main branch with root directory `game`. **At the start of every session read, in this order:** `docs/STATUS.md` (where we are), `docs/SPEC.md` (what we are building), `docs/ROADMAP.md` (graphics, the island map and driving: the build order), and `docs/LAUNCH.md` (the launch plan). Tell the user which phase we are on before building. **At the end of every session, update `docs/STATUS.md`** with what was done, what was tested, what was not, and the next step.
 
 ## Every player-facing update
 Add an entry at the top of `UPDATES` in `game/public/index.html` (search for `const UPDATES`): a new date-style version string (for example `2026.12.01`, must sort after the previous one), the date, a short headline, and one item per new thing with an icon, a title, one plain sentence and an optional "Try it" action.
