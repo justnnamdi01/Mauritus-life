@@ -4290,9 +4290,9 @@ function partyActs(id) { // extra actions a venue gets around its party
 // ================= homes, furniture and pets =================
 const HOMES = [ // the housing ladder: everyone starts in a small room
   { n: "Small room", where: "Your own front door", rent: 0, dep: 0, slots: 8, w: 12, h: 9, col: "#f3e3c6", floor: ["#c9a27a", "#bd956c"] }, // rent depends on who you are (its layout is in HOME_PLAN)
-  { n: "Studio apartment", where: "Pasadena Flats, Flic en Flac", rent: 5000, dep: 9000, slots: 14, w: 16, h: 10, col: "#efe2c8", floor: ["#d8c3a0", "#cdb592"] }, // first step up
-  { n: "Two-bedroom apartment", where: "Sunset Residence, Flic en Flac", rent: 9000, dep: 18000, slots: 20, w: 20, h: 12, col: "#dfe8ee", floor: ["#c9b39a", "#bea68b"] }, // room to entertain
-  { n: "Sea-view penthouse", where: "Wolmar seafront", rent: 18000, dep: 45000, slots: 28, w: 24, h: 14, col: "#f6f1e3", floor: ["#f2f0ea", "#e4e1d8"] } // the top
+  { n: "Studio apartment", where: "Pereybere Flats, Grand Baie", rent: 5000, dep: 9000, slots: 14, w: 16, h: 10, col: "#efe2c8", floor: ["#d8c3a0", "#cdb592"] }, // first step up
+  { n: "Two-bedroom apartment", where: "Baie Residence, Grand Baie", rent: 9000, dep: 18000, slots: 20, w: 20, h: 12, col: "#dfe8ee", floor: ["#c9b39a", "#bea68b"] }, // room to entertain
+  { n: "Sea-view penthouse", where: "Grand Baie seafront", rent: 18000, dep: 45000, slots: 28, w: 24, h: 14, col: "#f6f1e3", floor: ["#f2f0ea", "#e4e1d8"] } // the top
 ]; // end HOMES
 const HOME_PLAN = [ // the floor plan of each home, in tiles: where things stand, the inner walls (solid tiles, with gaps for doors), floor areas, fixed fittings and furniture spots
   { st: { bed: [2.6, 4.4], stove: [5.2, 3.0], tv: [7.2, 3.0], shower: [9.6, 3.0], toilet: [9.6, 5.2], deco: [9.8, 7.4], pet: [3.6, 7.3] }, // small room with its own bathroom
