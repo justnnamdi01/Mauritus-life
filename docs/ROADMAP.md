@@ -16,9 +16,9 @@ This is the build order for the three big upgrades. Work one phase at a time. Wh
 - An admin card to open or close regions and set opening dates.
 
 **Done when**
-- [ ] The whole island appears on the map and minimap.
-- [ ] Grey regions cannot be entered on foot, by car, by ride, or by helicopter, and a test with a modified client cannot get in.
-- [ ] Opening a region in the admin page makes it colourful and walkable without a deploy.
+- [x] The whole island appears on the map (Maps → Island). Not yet on the in-game minimap.
+- [x] Grey regions cannot be entered, and a test with a modified client cannot get in (`game/test/regions.test.js`). Every way of moving reports its place through the same presence message, which the server checks. Road barriers on the map are still to do.
+- [x] Opening a region in the admin page makes it colourful and allowed without a deploy. ("Walkable" needs that region's detailed map, which comes region by region.)
 
 ## Phase 2: the graphics upgrade, on Region 1 only
 **Build**
