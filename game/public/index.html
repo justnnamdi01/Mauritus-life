@@ -11,14 +11,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Flic en Flac">
+<meta name="apple-mobile-web-app-title" content="Mauritius Life">
 <meta name="description" content="Mauritius Life is a free multiplayer life game you play in your browser. Live on the beach in Mauritius with real players: get a job, party, decorate your home, race, gamble and make friends.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mauritius Life">
 <meta property="og:locale" content="en_US">
 <meta property="og:url" content="__SITE__/">
 <meta property="og:title" content="Mauritius Life: Free Multiplayer Life Game Set in Mauritius">
-<meta property="og:description" content="Click the link to play! Live your island life in Flic en Flac, Mauritius, with real players.">
+<meta property="og:description" content="Click the link to play! Live your island life in Mauritius, with real players.">
 <meta property="og:image" content="__SITE__/share.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="655">
@@ -99,7 +99,7 @@
 <noscript><p style="color:#eaf7f4;font:16px/1.5 system-ui,sans-serif;padding:24px">Mauritius Life is a free multiplayer life game that runs in your browser, so it needs JavaScript turned on. <a style="color:#ffa733" href="about.html">Read what it is about</a>.</p></noscript>
 <section class="seo-about" aria-label="About Mauritius Life">
 <h2>Mauritius Life: a free multiplayer life game set in Mauritius</h2>
-<p>Mauritius Life is a free life simulation you play in your web browser, with real players, in a 3D town inspired by the beach resort of Flic en Flac on the west coast of Mauritius. Choose your look, find a job, climb the career ladder, throw house parties, hit the gym, win and lose money at the Grand Casino, ride free electric scooters, decorate your own home and make friends.</p>
+<p>Mauritius Life is a free life simulation you play in your web browser, with real players, in a 3D world built from the real map of Mauritius, starting in the bay town of Grand Baie. Choose your look, find a job, climb the career ladder, eat dholl puri at the bazaar, throw house parties, decorate your own home and make friends. More regions of the island open over time.</p>
 <p>Every Saturday the whole town gathers for the Fashion Show, and the anonymous Heart Garden lets you say what is on your mind without a name. There is nothing to download. <a href="about.html">Learn more about Mauritius Life</a>.</p>
 </section>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -1020,14 +1020,14 @@ html[data-theme="light"] .chat, html[data-theme="light"] .chatform input { color
 </style>
 
 <div class="game">
-  <canvas id="world" aria-label="Flic en Flac town and beach. Walk with arrow keys or by tapping."></canvas>
+  <canvas id="world" aria-label="Grand Baie, Mauritius. Walk with arrow keys or by tapping."></canvas>
   <canvas id="rain" aria-hidden="true" hidden></canvas>
   <div id="vfxv" aria-hidden="true"></div>
   <canvas id="fxc" aria-hidden="true"></canvas>
   <div id="dodo" hidden aria-live="polite"></div>
   <button id="hwDoor" type="button" hidden></button>
   <button id="huntBtn" type="button" hidden>🗺️ Treasure hunt</button>
-  <div class="hud clock"><h1>Flic en Flac <span>Life</span></h1><b id="clock"></b><b class="cash" id="cash"></b><b class="status" id="status" hidden></b><button class="online" id="online" type="button"></button></div>
+  <div class="hud clock"><h1>Mauritius <span>Life</span></h1><b id="clock"></b><b class="cash" id="cash"></b><b class="status" id="status" hidden></b><button class="online" id="online" type="button"></button></div>
   <button class="hud quest" id="quest" type="button" hidden></button>
   <button class="hud questtab" id="questTab" type="button" aria-label="Show my goal" hidden>🎯</button>
   <button class="hud buildchip" id="buildChip" type="button" hidden></button>
@@ -1163,10 +1163,10 @@ const SHADES = [["Classic black", "", 500], ["Gold rim", "#c9a227", 1800], ["Red
 const CAPS = [["capk", "Black cap", "#15171a"], ["capr", "Red cap", "#d81e2c"], ["dcapw", "White designer cap", "#f4f4f4"], ["dpanama", "Panama hat", "#e9dcb4"]]; // headwear you can buy: key, name, colour
 const OUTFIT_KEYS = ["head", "top", "legs", "feet", "shirt", "pants", "cap", "shades", "shadesCol", "bag", "chain", "hs"]; // what a saved outfit remembers
 const SHIRTS = ["#ffa733", "#e4572e", "#35c4bb", "#3d9be9", "#f4f1e8", "#b07be0"]; // shirt colours to pick from
-const ROLE = { // the three ways to live in Flic en Flac
+const ROLE = { // the three ways to live in Mauritius
   tourist: { label: "Tourist", money: 46000, weekly: 7000, info: "Rs 46,000 (about US$1,000) holiday budget. Studio costs Rs 7,000 a week. No local jobs: freelance and gigs only. Fun fills 25% faster." }, // rich but cannot take careers
-  student: { label: "Student", money: 10000, weekly: 1500, info: "Rs 10,000 to start. Shared room at Rs 1,500 a week. Rs 4,500 allowance every Monday. Classes at Middlesex University on your course timetable. Part-time jobs at Saxo, Tigers, Kafe Wifi, Super U and the mall." }, // cheap rent plus allowance
-  resident: { label: "Resident", money: 4000, weekly: 2500, info: "Rs 4,000 to start. Room at Rs 2,500 a week. People know you: charisma starts at 3. Resident Card: 20% off food, free buses, half-price hospital and a Rs 1,000 grant every Monday." } // the standard life
+  student: { label: "Student", money: 10000, weekly: 1500, info: "Rs 10,000 to start. Shared room at Rs 1,500 a week. Rs 4,500 allowance every Monday. Part-time jobs at the bazaar, the supermarket and the shops. University classes come when the capital opens." }, // cheap rent plus allowance
+  resident: { label: "Resident", money: 4000, weekly: 2500, info: "Rs 4,000 to start. Room at Rs 2,500 a week. People know you: charisma starts at 3. Resident Card: 20% off food, free buses and a Rs 1,000 grant every Monday." } // the standard life
 }; // end ROLE
 const NEEDS = ["hunger", "energy", "hygiene", "bladder", "fun", "social"]; // the six needs (100 is good)
 const NEED_LABEL = { hunger: "Food", energy: "Sleep", hygiene: "Clean", bladder: "Toilet", fun: "Fun", social: "People" }; // HUD names
@@ -1240,12 +1240,12 @@ const mood = () => NEEDS.reduce((a, k) => a + s[k], 0) / 6; // average of all ne
 const terr = new Uint8Array(W * H); // terrain type per tile
 const solid = new Uint8Array(W * H); // 1 where you cannot walk
 const BUILD = [ // buildings: place, size, name, wall colour, roof style and colour, awning colour (kept about 4 tiles apart so the town feels open)
-  { id: "snack", x: 28, y: 7, w: 5, h: 4, name: "Snack Chez Ram", col: "#eadfc4", roof: "tile", roofCol: "#b5482f", awn: "#d9482b", door: "S" }, // street food
-  { id: "cafe", x: 37, y: 7, w: 5, h: 4, name: "Kafe Wifi", col: "#e6e0f2", roof: "flat", roofCol: "#8d8aa0", awn: "#7a4fd1", door: "S" }, // freelance spot
-  { id: "shop", x: 46, y: 6, w: 8, h: 5, name: "Super U", col: "#f3f3ef", roof: "flat", roofCol: "#9aa3a8", awn: "#d81e2c", sign: "#0d4fa3", door: "S" }, // supermarket
+  { id: "snack", x: 28, y: 7, w: 5, h: 4, name: "Dholl Puri Corner", col: "#eadfc4", roof: "tile", roofCol: "#b5482f", awn: "#d9482b", door: "S" }, // street food
+  { id: "cafe", x: 37, y: 7, w: 5, h: 4, name: "Grand Baie Bazar", col: "#e6e0f2", roof: "flat", roofCol: "#8d8aa0", awn: "#7a4fd1", door: "S" }, // freelance spot
+  { id: "shop", x: 46, y: 6, w: 8, h: 5, name: "Supermarché Baie", col: "#f3f3ef", roof: "flat", roofCol: "#9aa3a8", awn: "#d81e2c", sign: "#0d4fa3", door: "S" }, // supermarket
   { id: "gelato", x: 30, y: 45, w: 4, h: 3, name: "Gelato Heaven", col: "#fde6ee", roof: "tile", roofCol: "#ee86ab", awn: "#58c9b9", sign: "#c2457a", door: "S" }, // ice cream parlour
   { id: "dive", x: 18, y: 15, w: 5, h: 4, name: "Dive Centre", col: "#e2f0f6", roof: "tile", roofCol: "#1f6fa8", door: "S" }, // diving jobs
-  { id: "bar", x: 27, y: 15, w: 6, h: 4, name: "Sunset Bar", col: "#f2cfa6", roof: "thatch", roofCol: "#c9a45a", door: "S" }, // nightlife
+  { id: "bar", x: 27, y: 15, w: 6, h: 4, name: "Sega Bar", col: "#f2cfa6", roof: "thatch", roofCol: "#c9a45a", door: "S" }, // nightlife
   { id: "gym", x: 44, y: 14, w: 6, h: 4, tall: 4.4, name: "Lagoon Gym", col: "#d3dae0", roof: "flat", roofCol: "#6c7781", sign: "#1c2a33", door: "S" }, // fitness
   { id: "jumbo", x: 47, y: 21, w: 9, h: 5, name: "Jumbo", col: "#f5f5f1", roof: "flat", roofCol: "#a7afb4", awn: "#1f8f4e", sign: "#d81e2c", door: "S" }, // hypermarket
   { id: "sapphire", x: 18, y: 22, w: 7, h: 4, name: "Sapphire Resto Bar", col: "#eaf0fa", roof: "tile", roofCol: "#1f4fbf", awn: "#1f4fbf", sign: "#12306f", door: "S" }, // restaurant and bar
@@ -1402,12 +1402,16 @@ const inGB = (x, y) => y >= HO; // anywhere south of the old map edge is the Gra
 const GBT = (() => { const o = new Uint8Array(GBM.w * GBM.h); let i = 0; for (let k = 0; k < GBM.terr.length; k += 2) { o.fill(GBM.terr[k], i, i + GBM.terr[k + 1]); i += GBM.terr[k + 1]; } return o; })();
 function gbTile(x, y) { const ly = y - GBY; if (ly < 0 || ly >= GBM.h || x < 0 || x >= GBM.w) return 0; return GBT[ly * GBM.w + x]; } // the terrain of Grand Baie (deep sea round the edge)
 const GBPAL = [["#f3efe4", "#b5482f"], ["#f1dfc4", "#8d6a3a"], ["#e6edf2", "#4a6b9a"], ["#f4e3e3", "#a8433d"], ["#e9f1e2", "#3f7a4a"], ["#f2ead6", "#c9a45a"]]; // wall and roof colours, picked by position
-const GBSOON = (() => { // Grand Baie's places: the real landmarks and generic shops. Two are open; the rest show a sign and open over the coming weeks
-  const o = []; GBM.buildings.forEach((q, k) => { const pal = GBPAL[(q.x * 7 + q.y * 3 + k) % GBPAL.length], lm = /⛪|📚|🚓|🥭/.test(q.icon || ""), b = Object.assign({ name: q.name + (lm ? "" : q.open ? "" : " · opening soon"), x: q.x, y: GBY + q.y, w: q.w, h: q.h, col: pal[0], roof: "flat", roofCol: pal[1], awn: pal[1], sign: pal[1], door: "S", soon: 1, gb: 1, icon: q.icon }, q.open ? { id: q.open === "snack" ? "gbdholl" : "gbbar", gbOpen: q.open, soon: 0, roof: q.open === "bar" ? "thatch" : "tile", roofCol: q.open === "bar" ? "#c9a45a" : "#b5482f" } : {}); if (gbTile(b.x + (b.w >> 1), b.y + b.h - GBY) === 0 || ![3, 4, 9, 22].includes(gbTile(b.x + (b.w >> 1), b.y + b.h - GBY))) b.door = "N"; o.push(b); }); return o; })();
+const GBKIND = [[/Dholl Puri/, "dholl"], [/Sega Bar/, "bar"], [/Baza+r/i, "bazar"], [/Shopping Centre/, "mall"], [/Mini Market/, "mini"], [/Bakery/, "bakery"], [/Pharmacy/, "pharma"], [/Fish Market/, "fish"], [/Restaurant/, "resto"], [/Barber/, "barber"], [/Library/, "library"], [/Petrol/, "fuel"], [/Clothes/, "clothes"], [/Shiv|Mosque|Sunnee|Temple|Church/i, "worship"]]; // which template a building from the map gets
+const GBNAMES = { mall: ["Supermarché Baie", "Centre Commercial"], mini: ["Boutik Soleil", "Boutik Lakaz"], bakery: ["Boulangerie du Coin", "Boulangerie Lafam"], pharma: ["Pharmacie Centrale", "Pharmacie de la Baie"], resto: ["Resto Kreol", "Resto Vindaye"], barber: ["Barbier Grand Baie"], fuel: ["Station Service"], clothes: ["Boutique Mode", "Boutique Lamode"], fish: ["Marché Poisson"] }; // Mauritian names for the generic shops (made up, so they are not real businesses)
+const GBSOON = (() => { // Grand Baie's places from the real map: the ones with a template are open, the rest show a sign
+  const o = [], cnt = {}; GBM.buildings.forEach((q, k) => { const pal = GBPAL[(q.x * 7 + q.y * 3 + k) % GBPAL.length], lm = /⛪|📚|🚓|🥭/.test(q.icon || ""), kind = (GBKIND.find((g) => g[0].test(q.name)) || [])[1] || ""; let name = q.name; if (GBNAMES[kind]) { const n = cnt[kind] = (cnt[kind] || 0); name = GBNAMES[kind][n % GBNAMES[kind].length]; cnt[kind]++; }
+    const open = !!kind, b = { name: name + (open || lm ? "" : " · opening soon"), x: q.x, y: GBY + q.y, w: q.w, h: q.h, col: pal[0], roof: kind === "bar" || kind === "bazar" ? "thatch" : "tile" === "" ? "flat" : kind === "dholl" || kind === "bakery" || kind === "resto" ? "tile" : "flat", roofCol: pal[1], awn: pal[1], sign: pal[1], door: "S", soon: open ? 0 : 1, gb: 1, icon: q.icon }; if (kind === "bar" || kind === "bazar") b.roofCol = "#c9a45a"; if (open) { b.id = "gb" + k; b.gbKind = kind; }
+    if (gbTile(b.x + (b.w >> 1), b.y + b.h - GBY) === 0 || ![3, 4, 9, 22].includes(gbTile(b.x + (b.w >> 1), b.y + b.h - GBY))) b.door = "N"; o.push(b); }); return o; })();
 const PARTNERS_ON = false; // Belle's Kitchen, A* Cutz, DevCon and Clawed by Taps belong to other businesses (and to the old Flic en Flac game): off until they agree to be in Mauritius Life
 const PARTNER_IDS = ["belle", "cutz", "devcon", "salon"];
 if (!PARTNERS_ON) for (const id of PARTNER_IDS) { const i = BUILD.findIndex((q) => q.id === id); if (i >= 0) BUILD.splice(i, 1); } // their buildings are not in the world
-const GBSHOPS = GBSOON.filter((b) => b.gbOpen); for (const b of GBSHOPS) { GBSOON.splice(GBSOON.indexOf(b), 1); BUILD.push(b); } // the first Grand Baie shops you can walk into
+const GBSHOPS = GBSOON.filter((b) => b.gbKind); for (const b of GBSHOPS) { GBSOON.splice(GBSOON.indexOf(b), 1); BUILD.push(b); } // the first Grand Baie shops you can walk into
 const GB_STOP = { x: GBM.stop.x, y: GBY + GBM.stop.y }; // the bus station, beside the bazaar
 BUILD.splice(0, BUILD.length, ...BUILD.filter((q) => q.gb)); // the old Flic en Flac, Tamarin, Bambous and Trianon buildings are not in Mauritius Life
 const SOONB = GBSOON; // every building you can see but not enter
@@ -1618,6 +1622,10 @@ const JOBS = { // five careers with three levels each
   ,burgo: { name: "Burgo crew", titles: ["Cleaner", "Grill cook", "Shift manager"], pay: [520, 760, 1050], from: 0, to: 24 } // fast-food, any hour
   ,golf: { name: "Golf club", titles: ["Caddie", "Starter", "Pro shop manager"], pay: [650, 950, 1350], from: 7, to: 17 } // Tamarin Golf Club
   ,court: { name: "Court clerk", titles: ["Clerk", "Bailiff", "Court registrar"], pay: [600, 900, 1300], from: 9, to: 16 } // Flic en Flac Court
+  ,bazar: { name: "Market stall", titles: ["Porter", "Stall seller", "Stall owner"], pay: [500, 760, 1100], from: 6, to: 15 } // Grand Baie Bazar
+  ,resto: { name: "Restaurant crew", titles: ["Dishwasher", "Cook", "Chef"], pay: [520, 800, 1150], from: 11, to: 22 } // Mauritian restaurants
+  ,fish: { name: "Fish market", titles: ["Fish cleaner", "Fishmonger", "Market boss"], pay: [500, 780, 1100], from: 5, to: 13 } // the morning catch
+  ,bakery: { name: "Bakery", titles: ["Baker's helper", "Baker", "Head baker"], pay: [520, 790, 1100], from: 4, to: 12 } // early mornings
   ,surf: { name: "Surf school", titles: ["Beach assistant", "Surf instructor", "Head coach"], pay: [800, 1200, 1750], from: 8, to: 16, surf: 3 } // Tamarin: needs Surfing level 3
 }; // end JOBS
 const level = (id) => Math.min(2, Math.floor((s.jobs[id] || 0) / 4)); // promotion every 4 good shifts
@@ -1717,7 +1725,7 @@ const PLACE = { // what each building door offers
   coq: () => [A("2-piece chicken & chips", "Rs 120 · +55 food · eat in", 25, 120, { hunger: 55, fun: 6 }, { msg: "Crispy, juicy, cheap. Eaten in." }), A("Spicy chicken wrap", "Rs 90 · +40 food", 20, 90, { hunger: 40, fun: 5 }, { msg: "Hot sauce and slaw in a wrap." }), A("Family bucket to share", "Rs 350 · +100 food · fun and people", 35, 350, { hunger: 100, fun: 18, social: 15 }, { msg: "A whole bucket. Everyone dug in." }), A("🛵 Order chicken to your home", "Rs 150 · arrives at your house soon", 5, 0, {}, { run() { return orderDelivery("chicken box", 70, 0, 150, 100); } }), shift("coq"), partTime("Crispy Coq counter", 430, 0, 24)], // fried chicken: eat in, deliver, or work
   burgo: () => [A("Cheeseburger meal", "Rs 100 · +50 food · eat in", 25, 100, { hunger: 50, fun: 6 }, { msg: "Burger, fries and a drink. Cheap and fast." }), A("Double burger", "Rs 160 · +70 food", 25, 160, { hunger: 70, fun: 6 }, { msg: "Two patties, extra cheese." }), A("Fries & milkshake", "Rs 80 · +25 food, +12 fun", 15, 80, { hunger: 25, fun: 12 }, { msg: "Thick shake, salty fries." }), A("🛵 Order burgers to your home", "Rs 130 · arrives at your house soon", 5, 0, {}, { run() { return orderDelivery("burger meal", 65, 0, 130, 95); } }), shift("burgo"), partTime("Burgo front counter", 430, 0, 24)], // burgers: eat in, deliver, or work
   cafe: () => [partTime("Tutor a schoolkid", 600, 15, 19), A("Coffee", "Rs 100 · +15 sleep, +10 fun", 20, 100, { energy: 15, fun: 10, bladder: -10 }, { why: openAt(6, 24), msg: "Strong coffee, slow wifi." }), shift("cafe")], // coffee or freelance
-  shop: () => [partTime("Stack shelves", 400, 8, 18), A("Buy groceries", "Rs 400 · 4 meals and 4 drinks for your fridge", 20, 400, {}, { why: openAt(6, 24), run() { s.meals += 4; s.drinks = (s.drinks || 0) + 4; return "Rice, lentils, tomatoes, salted fish and juice. In the fridge."; } }), A("Pads and tampons", "Rs 180 · enough for one period", 5, 180, {}, { why: openAt(6, 24), run() { s.pads = (s.pads || 0) + PERIOD; return "Stocked up. One less thing to worry about."; } }), A("Painkillers", "Rs 120 · 6 tablets for cramps or headaches", 5, 120, {}, { why: openAt(6, 24), run() { s.pills = (s.pills || 0) + 6; return "Painkillers in your bag. Take one from the Health app."; } }), A("Sandwich and juice", "Rs 120 · +35 food", 10, 120, { hunger: 35 }, { why: openAt(6, 24), msg: "Quick lunch from the Super U counter." })].concat(shopFamilyActs()), // Super U: everyday shopping
+  shop: () => [partTime("Stack shelves", 400, 8, 18), A("Buy groceries", "Rs 400 · 4 meals and 4 drinks for your fridge", 20, 400, {}, { why: openAt(6, 24), run() { s.meals += 4; s.drinks = (s.drinks || 0) + 4; return "Rice, lentils, tomatoes, salted fish and juice. In the fridge."; } }), A("Pads and tampons", "Rs 180 · enough for one period", 5, 180, {}, { why: openAt(6, 24), run() { s.pads = (s.pads || 0) + PERIOD; return "Stocked up. One less thing to worry about."; } }), A("Painkillers", "Rs 120 · 6 tablets for cramps or headaches", 5, 120, {}, { why: openAt(6, 24), run() { s.pills = (s.pills || 0) + 6; return "Painkillers in your bag. Take one from the Health app."; } }), A("Sandwich and juice", "Rs 120 · +35 food", 10, 120, { hunger: 35 }, { why: openAt(6, 24), msg: "Quick lunch from the Supermarché Baie counter." })].concat(shopFamilyActs()), // Supermarché Baie: everyday shopping
   jumbo: () => [A("Bulk groceries", "Rs 850 · 10 meals and 8 drinks for your fridge", 40, 850, {}, { why: openAt(8, 24), run() { s.meals += 10; s.drinks = (s.drinks || 0) + 8; return "Trolley full. Ten meals and a crate of drinks sorted."; } }), A("Pads and tampons (bulk)", "Rs 300 · enough for two periods", 5, 300, {}, { why: openAt(8, 24), run() { s.pads = (s.pads || 0) + PERIOD * 2; return "Two periods' worth, sorted."; } }), // Jumbo: cheaper in bulk
     A("Buy a TV", "Rs 6,000 · fun at home", 30, 6000, {}, { why: s.tv ? "You own one" : openAt(8, 24), run() { s.tv = true; return "TV delivered to your room."; } }), // home fun
     A("Buy a proper mattress", "Rs 8,000 · full rest every night", 30, 8000, {}, { why: s.bed ? "You own one" : openAt(8, 24), run() { s.bed = true; return "No more back pain."; } }), // better sleep
@@ -1781,7 +1789,24 @@ const PLACE = { // what each building door offers
   golf: () => golfActs(), // the golf club
   tmarket: () => [A("Buy groceries", "Rs 500 · 4 meals and 4 drinks for your fridge", 20, 500, {}, { why: openAt(7, 21), run() { s.meals += 4; s.drinks = (s.drinks || 0) + 4; return "Sourdough, cheese, fruit and juice. In the fridge."; } }), partTime("Stack the Tamarin shelves", 450, 8, 18)] // groceries or a student job
 }; // end PLACE
-for (const b of GBSHOPS) PLACE[b.id] = PLACE[b.gbOpen]; // Grand Baie shops offer what their Flic en Flac twin offers
+const GBFOOD = (name, price, hunger, fun, msg, h0, h1) => A(name, "Rs " + price + " · +" + hunger + " food", 20, price, { hunger, fun }, { why: openAt(h0 || 7, h1 || 22), msg });
+const GBACTS = { // what each kind of place offers: Mauritian food, Mauritian prices
+  dholl: () => [GBFOOD("Dholl puri", 120, 45, 8, "Soft roti, yellow split peas, tomato chutney and a little pimen on the side."), GBFOOD("Faratha and chutney", 140, 45, 8, "Layered and buttery, with rougaille and lentil curry."), A("Gato piment (six)", "Rs 60 · +15 food", 10, 60, { hunger: 15, fun: 6 }, { why: openAt(7, 22), msg: "Hot, crunchy, and gone in two minutes." }), A("Alouda", "Rs 90 · +fun, cool down", 15, 90, { fun: 16, hunger: 8, energy: 5 }, { why: openAt(9, 22), msg: "Cold milk, basil seeds and agar jelly." }), shift("snack")].concat(shopShiftAct() || []),
+  bar: () => PLACE.bar().concat([A("Listen to live sega", "Rs 100 · 1 hour · fun and people", 60, 100, { fun: 30, social: 20, energy: -5 }, { why: openAt(18, 24), msg: "The ravanne drum and the whole bar swaying." })]),
+  bazar: () => [A("Fruit and vegetables", "Rs 250 · 4 meals for your fridge", 25, 250, {}, { why: openAt(6, 16), run() { s.meals += 4; return "Mangoes, brèdes, chouchou, tomatoes and fresh thyme."; } }), A("Coconut water", "Rs 80 · +fun, a cool drink", 5, 80, { hunger: 5, fun: 8, bladder: -8 }, { why: openAt(6, 18), msg: "Straight from the nut." }), GBFOOD("Samoussa and chilli sauce", 110, 35, 9, "Crispy, hot, and eaten walking.", 6, 17), partTime("Help on a stall", 450, 7, 15), shift("bazar")],
+  mall: () => [partTime("Stack shelves", 400, 8, 18), A("Buy groceries", "Rs 400 · 4 meals and 4 drinks for your fridge", 20, 400, {}, { why: openAt(8, 21), run() { s.meals += 4; s.drinks = (s.drinks || 0) + 4; return "Rice, lentils, tomatoes, salted fish and juice. In the fridge."; } }), A("Bulk groceries", "Rs 850 · 10 meals and 8 drinks", 40, 850, {}, { why: openAt(8, 21), run() { s.meals += 10; s.drinks = (s.drinks || 0) + 8; return "Trolley full. Ten meals and a crate of drinks sorted."; } }), A("Pads and tampons", "Rs 180 · enough for one period", 5, 180, {}, { why: openAt(8, 21), run() { s.pads = (s.pads || 0) + PERIOD; return "Stocked up."; } })],
+  mini: () => [A("Buy groceries", "Rs 400 · 4 meals and 4 drinks for your fridge", 20, 400, {}, { why: openAt(6, 22), run() { s.meals += 4; s.drinks = (s.drinks || 0) + 4; return "Rice, dholl, tomatoes and a bottle of Phoenix."; } }), A("Cold drink", "Rs 60 · +fun", 5, 60, { fun: 8, hunger: 3, bladder: -6 }, { why: openAt(6, 22), msg: "Ice cold." }), A("Pads and tampons", "Rs 180 · enough for one period", 5, 180, {}, { why: openAt(6, 22), run() { s.pads = (s.pads || 0) + PERIOD; return "Stocked up."; } })],
+  bakery: () => [GBFOOD("Baguette and butter", 70, 30, 4, "Still warm.", 4, 18), A("Gato coco", "Rs 60 · +15 food, +fun", 5, 60, { hunger: 15, fun: 10 }, { why: openAt(4, 18), msg: "Sweet coconut. Dangerous." }), A("Box of fresh bread", "Rs 300 · 4 meals for your fridge", 15, 300, {}, { why: openAt(4, 18), run() { s.meals += 4; return "Four meals' worth of bread and gato."; } }), shift("bakery")],
+  pharma: () => [A("Medicine for a cold", "Rs 220 · cures a stomach bug or infection", 10, 220, {}, { why: openAt(8, 20), run() { if (!s.sick) return "You are not ill, but now you are prepared."; s.sick = false; return "You feel better already."; } }), A("Vitamins", "Rs 150 · +15 energy", 5, 150, { energy: 15 }, { why: openAt(8, 20), msg: "Orange and tasteless." }), A("Pads and tampons", "Rs 180 · enough for one period", 5, 180, {}, { why: openAt(8, 20), run() { s.pads = (s.pads || 0) + PERIOD; return "Stocked up."; } })],
+  fish: () => [A("Fresh fish", "Rs 300 · 3 meals for your fridge", 15, 300, {}, { why: openAt(5, 14), run() { s.meals += 3; return "Caught this morning off the reef."; } }), GBFOOD("Fish vindaye plate", 380, 55, 12, "Turmeric, mustard and vinegar. Rice on the side.", 11, 20), shift("fish")],
+  resto: () => [GBFOOD("Briyani", 320, 60, 12, "Fragrant rice, tender meat and a boiled egg.", 11, 22), GBFOOD("Fish vindaye and rice", 380, 55, 12, "Turmeric, mustard and vinegar.", 11, 22), GBFOOD("Chicken curry and rice", 300, 55, 10, "Rougaille tomato and a little achard.", 11, 22), shift("resto")],
+  barber: () => [A("Haircut", "Rs 250 · +hygiene, +fun", 30, 250, { hygiene: 20, fun: 12 }, { why: openAt(9, 18), msg: "Short at the sides, sharp at the front." }), A("Shave", "Rs 120 · +hygiene", 15, 120, { hygiene: 12, fun: 4 }, { why: openAt(9, 18), msg: "Hot towel and a clean face." })],
+  library: () => [A("Read for an hour", "Free · +fun", 60, 0, { fun: 12, energy: -4 }, { why: openAt(9, 17), run() { s.reads = (s.reads || 0) + 1; return "Quiet, cool and a good chapter."; } })],
+  fuel: () => [A("Cold drink", "Rs 60 · +fun", 5, 60, { fun: 8, hunger: 3, bladder: -6 }, { why: openAt(0, 24), msg: "Ice cold." }), A("Sandwich", "Rs 130 · +30 food", 10, 130, { hunger: 30 }, { why: openAt(0, 24), msg: "Cheese, tomato and too much mayonnaise." }), A("Energy drink", "Rs 100 · +20 energy", 5, 100, { energy: 20, bladder: -8 }, { why: openAt(0, 24), msg: "Wired." })],
+  clothes: () => [A("Try on outfits", "Free · +fun", 20, 0, { fun: 8 }, { why: openAt(9, 19), msg: "You try everything and buy nothing. For now." })],
+  worship: () => [A("A quiet moment", "Free · +calm", 20, 0, { fun: 8, energy: 6 }, { why: openAt(6, 20), msg: "You sit quietly and breathe. The noise of the day falls away." })]
+};
+for (const b of GBSHOPS) PLACE[b.id] = GBACTS[b.gbKind]; // every open place in Grand Baie offers its kind's actions
 for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" ? b.y + b.h + 0.5 : b.y - 0.5, icon: "", name: b.name, enter: b.id }); // add a door object for every building
 
 OBJ.push({ x: 60.5, y: 14.5, icon: "🚏", stop: true, name: "Cascavelle bus stop", acts: busActs }); // bus stop for the mall and the university
@@ -1804,7 +1829,7 @@ const ROOMDEF = { // each building's room: two floor colours and its stations [i
   burgo: { floor: ["#f6edd2", "#efe3bf"], st: [["🍔", "Order counter", "counter", 3.5, 2.4, /burger|Cheeseburger|Double|Fries|Order/], ["🍳", "Grill", "stove", 8.5, 2.4, /shift|counter/], ["", "", "table", 3, 5.2, null], ["", "", "table", 8.5, 5.2, null]] }, // burger shop
   snack: { floor: ["#ead9b0", "#e0cc9a"], st: [["🍜", "Food counter", "counter", 3.5, 2.4, /Mine frite/], ["🍳", "Kitchen", "stove", 8.5, 2.4, /shift/], ["", "", "table", 3, 5, null], ["", "", "table", 9, 5, null]] }, // eat or cook
   cafe: { floor: ["#d9c7b0", "#cfbba2"], st: [["☕", "Coffee bar", "counter", 3.5, 2.4, /Coffee/], ["💻", "Laptop desk", "desk", 8.5, 2.6, /shift/], ["", "", "table", 3, 5, null]] }, // coffee or freelance
-  shop: { floor: ["#eef1f2", "#e2e7e9"], st: [["🛒", "Grocery aisle", "shelf", 3.5, 2.4, /groceries/], ["🥪", "Deli counter", "counter", 8.5, 2.4, /Sandwich/], ["", "", "shelf", 3.5, 4.9, null]] }, // Super U
+  shop: { floor: ["#eef1f2", "#e2e7e9"], st: [["🛒", "Grocery aisle", "shelf", 3.5, 2.4, /groceries/], ["🥪", "Deli counter", "counter", 8.5, 2.4, /Sandwich/], ["", "", "shelf", 3.5, 4.9, null]] }, // Supermarché Baie
   jumbo: { floor: ["#eef1f2", "#e2e7e9"], st: [["🛒", "Bulk aisle", "shelf", 2.5, 2.4, /Bulk/], ["📺", "Electronics", "shelf", 6, 2.4, /TV/], ["🛏", "Home section", "shelf", 9.5, 2.4, /mattress/], ["🧊", "Outdoor section", "shelf", 3, 4.9, /cooler/]] }, // hypermarket
   gelato: { floor: ["#fdeef4", "#f9dfe9"], st: [["🍨", "Gelato counter", "freezer", 4, 2.4, /scoops|Sundae/], ["☀", "Terrace table", "table", 8.5, 4.6, /Chill/], ["", "", "table", 3, 5, null]] }, // ice cream
   dive: { floor: ["#cfe6ee", "#c0dbe5"], st: [["🤿", "Dive desk", "counter", 4, 2.4, /shift/], ["", "", "rack", 9, 2.4, null]] }, // dive jobs
@@ -1845,7 +1870,8 @@ const ROOMDEF = { // each building's room: two floor colours and its stations [i
   cutz: { w: 14, h: 9, floor: ["#16171a", "#d9d5ca"], st: [["✂️", "Barber chairs", "barberchair", 3.2, 3.4, /haircut|Haircut|Line up|hairstyle|chair/i], ["", "", "barberchair", 6.8, 3.4, null], ["📅", "Reception", "cutzdesk", 10.6, 3.4, /Book|bookings|WhatsApp|price list|Chat with the barber/i], ["", "", "cutzsofa", 3.2, 7.6, null], ["", "", "mirrors", 7.0, 1.3, null], ["", "", "cutzposter", 12.6, 1.3, null], ["", "", "plant", 12.8, 7.8, null]] }, // A* Cutz: black, chrome and gold
   belle: { w: 16, h: 10, floor: ["#111111", "#3a0a10"], st: [["🍛", "Kitchen pass", "goldcounter", 5, 3.1, /Jollof|Fried Rice|Coconut|Egusi|Okra|Grilled|Chicken and Chips|Moi Moi|Yam|Catfish/i], ["🍹", "Drinks bar", "goldbar", 11.2, 3.1, /Chapman|Zobo|Malta|water/i], ["📅", "Host stand", "hoststand", 8, 6.2, /Book|bookings|WhatsApp|Chef Belle|menu & offers/i], ["🍽️", "Dining table", "gdtable", 3.4, 7.6, /Sit and dine/], ["", "", "gdtable", 12.6, 7.6, null], ["", "", "ankara", 8, 1.3, null], ["", "", "bposter1", 1.9, 1.3, null], ["", "", "bposter2", 14.0, 1.3, null], ["", "", "palm", 1.5, 8.6, null], ["", "", "palm", 14.5, 8.6, null]] } // Belle's Kitchen: red and black
 }; // end ROOMDEF
-for (const b of GBSHOPS) ROOMDEF[b.id] = ROOMDEF[b.gbOpen]; // and look like it inside
+const GBFLOOR = { dholl: ["#ead9b0", "#e0cc9a"], bar: ["#5b3a2a", "#523324"], bazar: ["#d9c7a0", "#cdb98c"], mall: ["#e6e8ea", "#d6dade"], mini: ["#e6e8ea", "#d6dade"], bakery: ["#f3e3c5", "#e8d3ac"], pharma: ["#eaf4f2", "#dcece9"], fish: ["#cfe3ec", "#bcd5e0"], resto: ["#efe2cf", "#e6d6bd"], barber: ["#16171a", "#d9d5ca"], library: ["#d9c7b0", "#cfbba2"], fuel: ["#c9ccd0", "#b9bdc2"], clothes: ["#f1e6f2", "#e4d4e6"], worship: ["#efe6d2", "#e3d7bb"] };
+for (const b of GBSHOPS) ROOMDEF[b.id] = { floor: GBFLOOR[b.gbKind], st: [["🛎️", "Counter", "counter", 3.5, 2.4, /./], ["", "", "table", 3, 5.2, null], ["", "", "table", 8.5, 5.2, null]] }; // one counter with everything the place offers, and tables
 function stationActs(id, k) { // the actions one station offers
   const all = PLACE[id](), def = ROOMDEF[id].st, mine = all.filter((a) => def[k][5].test(a.label)); // everything here, then this station's share
   if (k === 0) for (const a of all) if (!def.some((q) => q[5] && q[5].test(a.label))) mine.push(a); // unclaimed actions go to the first station
@@ -3679,33 +3705,30 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["What happens if I go to jail?", "You are locked in a cell until your time is up, and you cannot leave. Do your time (it passes quickly), pay bail at the cell, or ask an online friend to send you the bail money. Your bail is paid automatically when it arrives."],
     ["The streets show too many names", "Phone → Settings → Building names: show all of them (default), only the ones near you, or none. Settings → Name style: liquid glass (default), the old solid pills, or text only."],
     ["My progress or transactions went missing, what do I do?", "Phone → Settings → Report missing progress (or the same button at the top of Transactions). Write what is missing and when it happened. The report includes how your game was saving, so the team can find out what went wrong and restore it.", "feedback"],
-    ["I am stuck, what now?", "Phone → Settings → I'm stuck takes you back to your front door."]]],
+    ["I am stuck, what now?", "Phone → Settings → I'm stuck takes you back to your front door."]
+  ]],
   ["💰", "Money and jobs", [
     ["What is the Wealth tab?", "On the Rich list, the Wealth tab shows your rank on a ten-step ladder from Saver to Icon, how close you are to the next step, where you stand against other players (rank and the share of players you are richer than), who is just above and just behind you, and your change in net worth this week. Every time you climb a step you get a celebration banner. The first player to reach each step is remembered.", "wealth"],
-    ["What is the Island Patron shop?", "A place for rich players to spend big where everybody sees it: a charity gala (Rs 2,000,000, every online guest gets a gift), naming rights to a building (Rs 25,000,000, only for players who reached the Legend rank, one owner each, your name goes on its walls) and a golden statue (Rs 10,000,000, one per player, it stands on the plaza beside the Grand Casino). Each purchase is announced to the whole island and earns patron points on the Top patrons board.", "wealth"],
-    ["How do I earn money?", "Do shifts at jobs (Cascavelle Mall, resorts, cafés, the courthouse, surf school and more), part-time jobs for students, tips, driving passengers, selling and businesses. Wages and business profit can be taxed by the President.", "maps"],
     ["What is the Juice app?", "Your bank. See your balance, net worth, rent, savings and investments, and your last payments. You can send money to other players from their profile.", "juice"],
     ["How do investments work?", "In the Juice app: savings pay a little each day, the unit trust moves a few percent, crypto swings wildly. Only invest what you can lose."],
     ["Where can I see my transactions?", "Phone → Juice → Transactions. Every money line is listed with its date and time, with totals in and out. Everything that changes your balance is also recorded online.", "history"],
     ["Do the rich pay extra tax?", "Yes. Every Monday players worth more than Rs 500,000 pay a wealth tax: 0.5% on net worth above Rs 500,000, 1% above Rs 3 million, 2% above Rs 20 million (the game's owner can change the rates). It comes from cash first, then savings, and what you cannot pay is carried over. Your estimate is in the Juice app.", "juice"],
-    ["What is rent?", "Your home costs rent every Monday at 08:00. If you cannot pay you are locked out and owe the landlord. Pay it from your front door or the Juice app."],
-    ["Which businesses can I buy?", "Open the Business app. You start with kayaks, a food truck, a snack shop, a villa, a catamaran company and a tech startup. As your net worth grows, bigger ones unlock: Rs 100,000 (restaurant, car rentals), Rs 500,000 (surf schools, boutique hotel, nightclub, sugar estate), Rs 3 million (rum distillery, mall stake, luxury resort, charter airline) and Rs 20 million (private bank, island tourism, media network, space tourism). Once you reach a rank it stays unlocked.", "biz"],
-    ["What is net worth?", "Cash, savings, investments, businesses and any private jet. Your class (Big Baller, Mogul, Tycoon, King, Majesty) comes from it."]]],
+    ["What is rent?", "Your home costs rent every Monday at 08:00. If you cannot pay you are locked out and owe the landlord. Pay it from your front door or the Juice app."]
+  ]],
   ["🗺️", "Places and travel", [
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
-    ["How do I see the whole of Mauritius?", "Phone → Maps → Island. Open regions are in colour: Grand Baie, Port Louis, and Flic en Flac with the west. Tap a region to see whether it is open.", "maps"],
     ["Where does the game start?", "In Grand Baie, on the real bay: your house is in the estate near the bazaar and the bus station. Walk out of your front door and explore. More regions open one at a time.", "maps"],
     ["What is in Grand Baie?", "The map follows the real town: the bay and beach, the coast road, the Bazaar, the shopping centres, the library, the police station, the mosque and the temple. Open now: Dholl Puri Corner (food and kitchen shifts) and Sega Bar (drinks and bar shifts). The other places show their name and open over the coming weeks.", "maps"],
-    ["Why are some regions grey?", "They are not open yet. Nobody can go in, on foot, by car, by ride or by air, until they open. When a region gets an opening date, the map shows it. New regions open over time.", "maps"],
-    ["How do I get around quickly?", "Rent or buy a car or a motorbike at Flic Motors, ride the bus, call a taxi, or use a scooter. A car is the fastest way between Flic en Flac, Cascavelle and Tamarin."],
-    ["What are the towns?", "Flic en Flac and Cascavelle in the north, with the new Civic Quarter to the south, then Tamarin (a surf village that grows into a city with the Heights), Trianon on the plateau east of Tamarin (with Tribeca Mall), and Bambous Town in the east."],
-    ["Does the weather matter?", "Yes. Storms close the golf course and the beach, and rain makes streets look different. Check before you plan a day out."]]],
+    ["What can I eat in Grand Baie?", "Dholl puri, faratha, gato piment and alouda at the Dholl Puri Corner. Briyani, fish vindaye and chicken curry at the Resto. Baguette and gato coco at the bakery. Fruit, samoussa and coconut water at the Bazaar. Fresh fish at the fish market. Food gives you +food and a little fun, and every place has its own prices.", "maps"],
+    ["How do I earn money in Grand Baie?", "Open Jobs, or walk into the Bazaar, a restaurant, the bakery or the fish market and tap Work a shift. Students can do part-time shifts at the Bazaar and the supermarket. Work well and you get promoted.", "jobs"],
+    ["Why are some regions grey?", "They are not open yet. Nobody can go in, on foot, by car, by ride or by air, until they open. When a region gets an opening date, the map shows it. New regions open over time.", "maps"]
+  ]],
   ["👗", "Clothes and outfits", [
     ["How do I change my outfit?", "Phone → Wardrobe. Pick a tab (Hair, Tops, Bottoms, Shoes, Shades, Bags, Jewellery) and tap anything you own to wear it.", "wardrobe"],
     ["How do I make my own colours?", "Wardrobe → Studio. Pick any colour for your top, bottoms and cap and pay Rs 600 per dye. Other players see it.", "wardrobe"],
     ["How do I save outfits?", "Wardrobe → Outfits. You have 6 slots. Save what you are wearing, give it a name, then change into it in one tap.", "wardrobe"],
-    ["Where do I buy clothes?", "The fashion store in Cascavelle Mall, the designer stores in Tamarin (Maison Tamarin, Atelier Dal, Sole & Gem), and the very expensive Maison Dal Haute Couture on Main Street, Tamarin (gold and platinum dyes, crocodile bags, diamond jewellery up to Rs 400,000). Haircuts and nails are at Hair & Nails."],
-    ["Why does style matter?", "Style raises your tips and your charisma at parties, and helps with sugar patrons."]]],
+    ["Why does style matter?", "Style raises your tips and your charisma at parties, and helps with sugar patrons."]
+  ]],
   ["🏠", "Home and building", [
     ["How do I enter the Design Awards?", "Open the Rich list, go to the Design tab and tap List my home. Give your home a name. While it is listed, anyone can tour it and vote 1 to 5 stars. Each week the top three homes with at least 3 votes win Rs 500,000, Rs 250,000 and Rs 100,000, and every listed home starts the new week with no votes.", "awards"],
     ["How do I vote for a home?", "In the Design tab of the Rich list, tap a home and Tour it. After you look around you can give it 1 to 5 stars. You can change your vote during the week, but you can't vote for your own home.", "awards"],
@@ -3715,30 +3738,19 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["Do big homes have extra rooms?", "Yes. From the Four-bedroom duplex up, there is a study with a doorway, bookcases and a desk. Every inner doorway has a frame and an open door.", "house"],
     ["Why does my home look different from a friend's?", "Each home has its own style inside, from a plain concrete room to a marble mansion with gold trim. If you pick your own wall paint or floor in Paint & floors, yours is used instead of the home's style. Windows let in daylight by day and the lamps glow at night.", "house"],
     ["Can I see a home before I buy it?", "Yes. In the Home app, tap any home under Move house. You see a picture of it, where it will stand, the rent and deposit, the bedrooms, and how long the builders need. Only then do you tap Buy and start building.", "house"],
-    ["Where are the beach homes?", "The Sea-view penthouse and the Beachfront villa are built in the private Palm Beach Estate, on the quiet south sand west of the coast road (look for the gate signs). There are seven lots with plenty of space between them, and each one is a real address. Buy one in the Home app and your builders start on your lot straight away.", "house"],
     ["Where do I live while it is built?", "In your old home. You keep using your front door as normal until the new home is finished. Your building site shows the builders, a hut, scaffolding and a progress bar with the time left. Tap Show me the building site in the Home app to be guided there.", "house"],
     ["How do I decorate?", "Go home and open Buy mode. Choose furniture by category (kitchen, bedroom, outdoor, luxury), pick a full style, add a feature wall and set the lighting mood. Visitors see it all.", "house"],
-    ["Can I live in Tamarin?", "Yes. In the Home app, pick a Tamarin Crown Villa, Skyline Mansion or Royal Estate. They stand inside the gated Crown Estate in Tamarin Heights, with security at the gate, a pool and no burglaries. Only residents and the guests they invite can get past the gate. There are only ten villas, and you give up your Flic en Flac address when you move.", "house"],
     ["How long do homes take to build?", "From 10 minutes for a studio to a day, three days, a week or even two weeks for the biggest. Everyone is told in the town chat when you start and finish. In the Home app you can rush the builders: save an hour, six hours, or finish it now.", "house"],
     ["How do I move to a bigger home?", "Phone → House. Pick a bigger home and builders start work. Watch the countdown chip, see the building site on your plot, or pay to speed it up. Bigger homes take longer."],
     ["Can friends visit?", "Yes. Invite them from the Guests app. Real players can also host house parties.", "guests"],
-    ["Can I live with someone?", "Yes. In Phone → Home (House guests) tap Ask someone to move in, or open a player's profile and tap Ask to move in. Pick Roommate (up to 4 people) or Partner (one). They can accept or say no. Once they move in, they use your home like their own: sleep, eat and shower there. Find it under Go home in the same screen, and Move out whenever you like. You can ask them to move out too.", "guests"]]],
+    ["Can I live with someone?", "Yes. In Phone → Home (House guests) tap Ask someone to move in, or open a player's profile and tap Ask to move in. Pick Roommate (up to 4 people) or Partner (one). They can accept or say no. Once they move in, they use your home like their own: sleep, eat and shower there. Find it under Go home in the same screen, and Move out whenever you like. You can ask them to move out too.", "guests"]
+  ]],
   ["🚗", "Cars and the garage", [
-    ["How do I get a car?", "Flic Motors near Cascavelle. Rent for a day or a week, or buy one in any colour. You can own one of each type."],
-    ["What is the garage?", "Flic Garage (near the hospital in Flic en Flac). See all your cars parked in their bays, switch between them and fit upgrades: gold rims, neon underglow, spoiler, tinted windows, racing stripe and chrome kit."],
-    ["Where do I fill up?", "Petrol stations on the coast road and in Tamarin. The President can change the price."],
-    ["Can I drive for money?", "Yes: the Ride menu lets you take passengers in your own car as a driving job. You need a valid permit."]]],
-  ["🏄", "Tamarin", [
-    ["How do I surf?", "Rent or buy a board at the Tamarin Surf Shop, take lessons at Black Stone Surf School, then paddle out. Higher levels pay more and unlock Surf Legend."],
-    ["What else is in Tamarin?", "A golf course and club, a brewery, a café, designer fashion, a dolphin trip from the jetty, the Sky Tower (observation deck, sky bar, restaurant), Heights Avenue and the Presidential Palace in the middle."],
-    ["Why did a cinematic play?", "The arrival sweep plays when you enter Tamarin after being away a while. The ocean sound plays all over Tamarin."]]],
+    ["Can I drive for money?", "Yes: the Ride menu lets you take passengers in your own car as a driving job. You need a valid permit."]
+  ]],
   ["🏛️", "Government and the Presidents", [
-    ["How many governments are there?", "Three, completely separate: Flic en Flac, Tamarin and Trianon. Each has its own President, laws, treasury, Palace, helicopter and bodyguards. Flic en Flac holds its election first. When its first President is elected, the Tamarin and Trianon elections open.", "gov"],
     ["Who can run for President?", "You need to be a Business Mogul or higher (net worth Rs 500,000 or more), have Rs 150,000 in cash (the fee is Rs 100,000, kept by that town's treasury), and the town must have no President. Nobody can lead or run in two towns at once.", "gov"],
     ["How does an election work?", "When the first candidate registers in a town, voting stays open for 12 hours. Everyone gets one vote in the Government app and can change it until it closes. Most votes wins. The winner is announced in the town chat.", "gov"],
-    ["What does a President get?", "A 3-day term over their town, their own Presidential Palace behind a gate (Tamarin's is in the middle of Tamarin, Flic en Flac's is in the new Civic Quarter), a helicopter, two bodyguards, free rent while living in the Palace, and the President class.", "gov"],
-    ["What can a President change?", "In their own town: income tax (0 to 15%), petrol price, rents, fines and bail, police patrols, and programmes paid from the treasury: free healthcare (Flic en Flac), free surf lessons (Tamarin), road repair, student grants and a tourism campaign. Each law can change once every 10 minutes and everyone is told.", "gov"],
-    ["Which laws apply to me?", "The laws of the town you are in. Taxes, fuel, fines, police and programmes follow you across the border. Rent follows your home, which is in Flic en Flac.", "gov"],
     ["How do I start a political party?", "Open the Parties app and tap Found a party. Choose a name, a short tag, a symbol, a colour and a manifesto. It costs Rs 250,000, which becomes the party fund. Other players can join from the same app, you can make a member the leader, and members can donate to the fund.", "parties"],
     ["How does a party back a candidate?", "The party leader taps Back a candidate for President, picks a town and a member. The Rs 100,000 registration comes out of the party fund, so a member who is not rich can still run. A party can have one candidate per election. The party tag shows next to its candidate on the ballot.", "parties"],
     ["How do I run a campaign?", "If you are a candidate, open the Government app. Set up to 3 promises, then use posters, a rally or a TV ad to build buzz. Each one is paid from your campaign fund first, then from your cash. Anyone can donate to a candidate: tap the candidate and choose Donate. Buzz also breaks ties on election day.", "gov"],
@@ -3749,57 +3761,23 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["What are TV debates and coalitions?", "During an election, a candidate can challenge a rival to a live TV debate (Rs 100,000). Everyone watching votes on who is winning, and the winner gets a big buzz boost. Two parties can form a coalition from the Parties app: between them they back one candidate.", "gov"],
     ["What happens after an election?", "The results are announced to the whole town with each candidate's votes and turnout. The Government app then shows the President's promises with a tick when the laws match them, so you can see if they kept their word. The winning party gets an election win.", "gov"],
     ["Can a President be removed?", "Yes. Any player can vote Keep or Remove in the Government app. They fall when at least 3 want them out and those voters outnumber the ones who keep them. They can also resign, and the term ends after 3 days."],
-    ["Can I enter a Palace?", "Only the President of that town. Everyone else gets stopped at the gate by the guards (and can choose to do something rash)."],
-    ["How do I share a link to vote for someone?", "In the Government app, during an election, tap Share a link under the candidates. Whoever opens the link is asked to vote for that candidate. Candidates can share their own campaign link the same way.", "gov"],
-    ["What is JB Loan?", "A loan company that is opening soon in the Heights of Tamarin. Look up at the Sky Tower: its name is carved into the glass, unless a patron has bought the tower's naming rights, then their name is there instead. It has no building of its own yet.", "gov"],
-    ["Can a President take money from the treasury?", "Yes: the Treasury vault in the Palace (or the Government app) lets them take a “consulting fee” every 20 minutes: any amount from Rs 1,000 up to 80% of the treasury, never all of it. The bigger the haul, the sooner it leaks. A scandal tells the whole town and adds 3 votes against them.", "gov"],
-    ["How do I get rid of a President I don't like?", "Open the Government app and tap Vote them out. If at least 3 votes (scandals count as votes) outnumber the keep votes, they fall. You can also burn the Palace down at its gate, but the guards may catch you and the police will lock you up.", "gov"],
-    ["What happens when the Palace is on fire?", "Flames show over the Palace for 15 minutes. Repairs come out of the treasury (at least Rs 20,000), and the President cannot use the Palace until the fire is out. Arsonists pay Rs 3,000 for petrol and risk going to jail.", "gov"]]],
+    ["How do I share a link to vote for someone?", "In the Government app, during an election, tap Share a link under the candidates. Whoever opens the link is asked to vote for that candidate. Candidates can share their own campaign link the same way.", "gov"]
+  ]],
   ["📲", "New apps on your phone", [
-    ["How will I know when there is a new app?", "Your phone home screen shows a ✨ New on your phone card listing new apps, and a NEW tag on each one until you open it. Tap Got it to dismiss the card.", "home"]]],
+    ["How will I know when there is a new app?", "Your phone home screen shows a ✨ New on your phone card listing new apps, and a NEW tag on each one until you open it. Tap Got it to dismiss the card.", "home"]
+  ]],
   ["💎", "Sugar patrons", [
     ["What are they?", "Rich NPCs (Sugar Mummies and Sugar Daddies) in the Sugar app. They take you to dinner, give gifts and pay a weekly treat if you keep them company.", "sugar"],
     ["What is the catch?", "They text a lot and want answers within 2 hours. Ignore them three times and they block you. Being seen with them can start town gossip, and your partner may leave you.", "sugar"],
-    ["How do I start?", "Open Sugar and send a message. Charisma and style help. Then go on dates from noon to midnight. At high closeness, and only with Adult romance switched on in Settings (18+), there is a fade-to-black night option."]]],
+    ["How do I start?", "Open Sugar and send a message. Charisma and style help. Then go on dates from noon to midnight. At high closeness, and only with Adult romance switched on in Settings (18+), there is a fade-to-black night option."]
+  ]],
   ["🚓", "Crime, police and the court", [
     ["What happens if I steal?", "You can be caught and sent to a cell for a few minutes, or pay bail. The whole town may hear about it. The President can change how often police catch people and the size of fines."],
-    ["What is the Financial Crimes agent?", "An agent watches for huge fast gains from theft, winnings and transfers and audits the richest player. Your money can be frozen until the court rules. Open the Court app to defend yourself with your records, a lawyer (Rs 6,000) or by pleading guilty. Honest earnings from jobs and business are never a problem.", "court"]]],
-  ["✈️", "Flying and missions", [
-    ["How do I fly?", "Helicopter taxis fly between the heliports in Flic en Flac, Tamarin, Trianon and Ebène for Rs 3,500, or buy your own helicopter for Rs 1,500,000 and fly free. Private jets are sold at SSR Airport from Rs 2,500,000. Open Rides on your phone: the Fly section guides you to the nearest heliport or the airport.", () => openPhone("ride")],
-    ["What are missions?", "Open Goals on your phone and stay on the Missions tab. Three new daily missions appear every day and pay cash when you finish them. Explore missions pay once and show you what the game can do, like your first helicopter ride, a business, or a private jet. Tap a finished mission to claim it.", () => openPhone("missions")]
-  ]],
-  ["🎃", "Halloween Night", [
-    ["How do I get candy?", "Walk up to the door of any building in town. A Trick or treat button appears. Tap it, and the door opens to a treat (1 to 6 candy), or a trick with no candy. Each door can be knocked every 20 minutes.", () => openPhone("halloween")],
-    ["How does the costume contest work?", "In the Halloween app, buy and wear a costume (Rs 2,500 the first time), then tap Enter. Everyone gets one vote. The top 3 costumes win cash when Halloween Night ends.", () => openPhone("halloween")],
-    ["How does the treasure hunt work?", "Dodo gives you a clue that points to a place. Walk there, tap Scan on the treasure card to see if you are freezing or burning hot, and tap Dig. Each correct dig gives candy and the next clue. There are 5 clues. After the fifth key, Captain Citrouille, the Halloween boss, guards the chest worth Rs 15,000,000. The first three players to beat him win: 1st Rs 15,000,000, 2nd Rs 5,000,000 and 3rd Rs 2,500,000, sent to your mail. Everyone is told in the Halloween chat when a player is the first to find a key, reaches the boss, or nearly beats him (never where the keys are).", () => (huntApi() ? huntOpen() : openPhone("halloween"))],
-    ["How do I travel to other cities during the treasure hunt?", "Every city is open for the hunt: Flic en Flac, Tamarin, Trianon and Ebène. Take your car or motorbike, a ride from the Rides app, or fly. When a ride drops you far away, stand still for a few seconds before you scan or dig. Trianon is far out on the plateau east of Tamarin, along the highway.", () => openPhone("ride")],
-    ["How do I beat Captain Citrouille?", "Go to the old sugar estate ruins in Trianon with the troops you trained in the Raids app, then tap Face the boss. Pick up to 8 troops and tap Fight. The battle is in 3D and you give the orders: before each round pick an ability (Rally for more damage, Shield so he hits softer, Heal for your whole team, or Weak spot: tap the ring at the right moment for a big hit), or let Auto choose for you. Each ability needs a few rounds to recharge. Trained troops matter: around level 4 or 5 with a good mix can win, level 1 to 3 will not. Dog handlers heal and hackers weaken him. Fighters are used up, win or lose, and you can try again.", () => (huntApi() ? bossOpen() : openPhone("halloween"))],
-    ["Where is the ghost hunt?", "In the old sugar estate ruins in Trianon, in the south west. Six glowing ghosts float there. Walk close to each to catch it. Catch all six for Rs 15,000 and 15 candy.", () => navTo(127.5 + TX, 151.4, "Old Trianon sugar estate")]
-  ]],
-  ["🦤", "Dodo and the Road", [
-    ["Who is Dodo?", "Dodo is the game's guide. It pops up at the bottom of the screen to tell you about raids, news from your friends and finished quest chapters. Tap to continue, and tap the speaker to mute its voice. You can turn Dodo off in Settings.", () => openPhone("settings")],
-    ["What is the Road to Majesty?", "A journey of chapters in the Missions app. Each chapter has a goal, buttons that take you to what you need to do, and a prize chest with cash when you finish. Chapters unlock one after another.", () => openPhone("goals")],
-    ["What are the bars under my friends' names?", "In Messages, each friend shows their rank and a bar to their next rank. Private players are hidden. It lets you see who is catching up with you.", () => openPhone("msgs")],
-    ["Why do some names shine in chat?", "The richest players in town and the top classes (Tycoon, King, Queen, Majesty) get an animated name and a glowing message. Climb the Rich list to get yours.", null]
+    ["What is the Financial Crimes agent?", "An agent watches for huge fast gains from theft, winnings and transfers and audits the richest player. Your money can be frozen until the court rules. Open the Court app to defend yourself with your records, a lawyer (Rs 6,000) or by pleading guilty. Honest earnings from jobs and business are never a problem.", "court"]
   ]],
   ["🎨", "Graphics and speed", [
     ["The game is slow or my phone gets hot. What can I do?", "Open Phone, then Settings, then Graphics and pick Low. That turns off the glow, fireflies, dust and shadows. Auto does this for you if it notices the game running slowly. High is for strong phones and computers.", () => openPhone("settings")],
     ["What are the glowing lights and floating sparkles?", "After dark the street lamps, windows and car headlights glow and fireflies drift around you. By day, pollen and dust float in the sunlight and birds fly between the mountain tops, around the island, and back to roost at night or in the rain. Storms bring lightning and thunder, and winning something sets off confetti. Low turns off most of these.", null]
-  ]],
-  ["💬", "Business chats", [
-    ["Where do Belle's Kitchen and A* Cutz send their news?", "To your Messages, as a chat from the business, never in public chat. Open Messages (or Contacts, under Businesses) and tap Belle's Kitchen or A* Cutz. You can write back and you get an automatic reply with their WhatsApp number.", () => openPhone("msgs")]
-  ]],
-  ["✂️", "A* Cutz barber shop", [
-    ["Where is A* Cutz?", "In Tamarin, on the north side of Main Street between Cafe Dal and the golf course road. It is the dark building with the gold roof sign and a barber pole by the door. Find it in Maps under Tamarin.", null],
-    ["How do I book, and what do I get?", "At the reception choose Book a cut, then pick a service, a day and a time. You get a booking code. Show it at the shop for Rs 100 off, and you earn the A* Cutz Regular medal (see it in your badges). You can have up to 3 bookings.", null],
-    ["What does it cost?", "Normal haircut Rs 400, haircut + enhancements Rs 500, haircut + beard Rs 500, haircut + beard + enhancements Rs 600, line up Rs 200, line up + enhancements Rs 300. While your booking is on, from half an hour before to two hours after, each service is Rs 100 cheaper in the game too.", null],
-    ["How do I message the shop?", "Choose Message A* Cutz on WhatsApp at the reception, or tap the WhatsApp button after you book. It opens a chat with +230 5849 3970.", null]
-  ]],
-  ["🍛", "Belle\'s Kitchen", [
-    ["Where is Belle's Kitchen?", "In Flic en Flac, just west of Snack Chez Ram. Look for the red building with the black roof, the red sign and the red dome on the roof. Find it in Maps under Food & drinks.", null],
-    ["How do I book a table?", "Walk in and use the Host stand (📅 Book a table). Pick a day, a time and how many people. You can have up to 3 bookings. Cancel any time under My bookings.", null],
-    ["What discounts are there?", "While your table is booked, from half an hour before until two hours after, everything is 15% off. Your first Jollof Rice or Fried Rice with Chicken is 50% off. Discounts do not add up: you get the bigger one.", null],
-    ["How do I message Belle on WhatsApp?", "Inside Belle's Kitchen choose Message Belle on WhatsApp, or after you book tap the WhatsApp button. It opens a chat with Belle's real number, +230 5516 5327, for orders, parties and catering.", null]
   ]],
   ["🌀", "Natural disasters", [
     ["What are natural disasters?", "Every day or two a cyclone, flash flood or earthquake can hit the island. A warning bar shows on your screen for two minutes. Then the screen shakes, the sky changes and you hear a rumble. It lasts under a minute.", null],
@@ -3808,72 +3786,16 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
   ]],
   ["🏁", "Seasons", [
     ["What is a season?", "The game runs in seasons. When a season ends, the final ranking is saved in the Hall of Fame and everyone who played gets a Season 1 badge. New things, like Heists, open with the new season.", "rich"],
-    ["When does Season 2 start?", "Season 2 starts on Friday 30 October at 10:00 PM, Mauritius time. Open the Season tab in the Rich list to see the countdown and a peek at what is coming: new buildings, new skins and Heists.", "rich"],
-    ["What is the wealth levy?", "Once Season 2 starts, cash and savings above Rs 1,000,000 pay a small daily levy: 0.5% a day on the part between 1 and 10 million, 1.5% on the part between 10 and 50 million, and 3% on the part above that. It is taken the next time you play and goes to the town treasuries. It runs until the economy settles. If your money is under Rs 1,000,000 you pay nothing.", "rich"],
-    ["What do I keep when a season ends?", "You keep your money, homes, cars, jets, businesses, clothes, skills and friends.", "rich"]
-  ]],
-  ["🆘", "Support", [
-    ["How do I get help?", "Open Settings and tap Support in the game to message the Flic en Flac Team, or tap Support on WhatsApp (+230 5933 0011). Tell us your character name and what went wrong. If money was taken from you and you think it is a mistake, message us and we will look again."]
+    ["When does Season 2 start?", "Season 2 starts on Friday 30 October at 10:00 PM, Mauritius time. Open the Season tab in the Rich list to see the countdown and a peek at what is coming: new buildings, new skins and Heists.", "rich"]
   ]],
   ["🎉", "House parties", [
     ["How do I invite people to my party?", "Start a house party from your front door or the House guests app. It takes place in your own home. Everyone gets an invite in the public chat with Accept and Join now buttons. Players online can also tap Take me there."],
     ["Where does the party happen?", "Inside the host's own home, with their furniture and style. Guests walk in through the front door or tap Join now, then use the Dance floor in the middle of the room. The host picks the music."]
   ]],
-  ["🗺️", "The world map", [
-    ["How do I see the whole world?", "Zoom out with the minus button, a pinch or the scroll wheel. Past the furthest 3D view the game turns into a map of every city, with you as a red pin, other players as yellow dots and pins for the cities and airports. Drag to move around, pinch to zoom the map, and tap a pin to get a Guide me there button. Zoom in or press ✕ to return to the game."]
-  ]],
-  ["🌃", "Ebène Cyber City", [
-    ["How do I get to Ebène Cyber City?", "Drive to Trianon, take the M1 north, then follow the Cyber Highway east to the city gate. It is a long drive, so many people take the helicopter taxi to the Ebène heliport instead. You can also pick any Ebène place in the Rides app."],
-    ["What can I do there?", "Take a selfie with the holo dodo in Neon Plaza, eat at Neon Noodles and the night market, get a neon eye implant at the Chrome Clinic (+2 charisma, once), and play the Glitch Arcade."],
-    ["What are the three interiors?", "Glitch's Hacker Den in The Underbelly: hack jobs (Rs 2,500 to 6,000, with a 15% chance you are traced and fined), overnight crypto mining, a bunk and noodles. The Neon Capsule Hotel: Rs 350 a night in a pod. The Nexus Tower Penthouse: corporate deals for players worth Rs 1,000,000 or more, smart cocktails and a Rs 25,000 night above the city."],
-    ["Who governs Ebène?", "Ebène is part of the Trianon district, so Trianon's President sets its laws."]
-  ]],
-  ["🏙️", "Trianon", [
-    ["How do I get to Trianon?", "Trianon is far out on the plateau east of Tamarin, a long drive. Follow Tamarin's Main Street east onto the highway over the hills (take your car, motorbike or a ride from the Rides app). From Bambous South the M1 runs down to Trianon, but the checkpoint there only lets people into Bambous if they could get in at the main gate."],
-    ["What is in Tribeca Mall?", "It is open-air with no doors: walk into the galleria from the west end or from the car park. Shops have counters along the walkway: food court, MCiné, Fashion Avenue, iStore, the hypermarket, bowling and arcade, the Atrium café and the mall office for shifts. The car park hosts car meets and the ramp at the east end leads to the rooftop stunt deck."],
-    ["What is the rooftop stunt deck?", "Walk to the foot of the ramp at the east end of the mall. You can enjoy the view for free, or launch your own car or motorbike off the kicker. You usually land it, but you can scrape the car or crash and pay for repairs."],
-    ["Where are the relics?", "Six relics are hidden in the old sugar estate ruins in the south west of Trianon. Walk in through the gaps in the walls and search each 🔍 spot. Each one pays Rs 1,500, and the full set pays Rs 20,000 more."],
-    ["How do helicopters work?", "Each heliport (Flic en Flac, Tamarin, Trianon and Ebène) has a helicopter taxi stand. A flight costs Rs 3,500 and takes a few seconds. Buy your own helicopter there for Rs 1,500,000 and every flight is free."],
-    ["Is there an airport in Trianon?", "Yes: Tribeca Airport, at the south end of the M1. Private jet owners can fly between it, SSR Airport in Flic en Flac and Tamarin International."],
-    ["What else is south of the highway?", "Winners Hypermarket Trianon (cheap weekly and bulk groceries), MCine Trianon with IMAX screenings and the events list, and the Trianon Convention Centre, where you can open Trianon's government and treasury, attend a tech conference or work an event shift."],
-    ["What is the M1 toll?", "Any car, taxi or motorbike that drives through the M1 Toll Plaza between Trianon and Ebène pays Rs 50, at most once every 5 minutes. The money goes to Trianon's treasury. Walkers pass free."],
-    ["Does Trianon have a President?", "Yes. Trianon is the third town with its own election, laws and treasury. Its Presidential Palace stands in the north east of the plateau, by the road down from Bambous. Laws follow the town you are standing in, so Trianon's President sets the taxes and fines there. Open the Government app and pick the Trianon tab to vote or run."],
-    ["What are the speed cameras?", "Cameras on the Trianon highway and the M1 flash fast cars and motorbikes (the Sports Coupé and the Motorbike) when you drive your own. The fine is Rs 2,500 (more or less if the Trianon President changes the fines law), at most once every 10 minutes."]
-  ]],
-  ["🏚️", "Bambous Town", [
-    ["How do I get into Bambous Town?", "Walk east along either main street to the checkpoint. It lets in players with a net worth of Rs 500,000 or more. Inside, the lanes are narrow and dirty, dealers roam, and the police patrol."],
-    ["What are the dangers?", "Dealers chase you and may rob you or sell you a pill. The police arrest anyone carrying drugs. Dirty water can give you a stomach bug (the hospital treats it). Your heat goes up with everything illegal and cools down slowly. Run away, go inside a building, lay low at The Yard, or pay off a cop."],
-    ["How do I make money there?", "Borrow from the loan shark Ti-Zan (35% interest, pay it back in 3 days or the collectors come), sell shiny finds at Pawn Kreol, buy and sell street pills at the Marché Noir, buy stock at The Yard and sell to customers in the lanes with the Deal button. You can also buy four shady businesses (a loan ring, a pawn and fence, a black market stall, a dealing network) that earn every hour. The police raid them sometimes."],
-    ["What is the heat?", "Selling, carrying and being seen make the police notice you. At high heat they chase you even when you carry nothing. Heat cools down slowly, faster if you lay low in The Yard's back room or bribe a cop."],
-    ["Where can I buy cheap groceries in Bambous, and can I ride a bicycle?", "Winners and Jumbo Express in Bambous South sell groceries far cheaper than Jumbo in town. Bicycles only exist in Bambous now: hire stands on its streets give you a free bicycle: tap the stand, then Take a bicycle. Tap the 🚲 chip to leave it."],
-    ["Is there anything to find at the Bambous dumps?", "Yes. Stand next to a rubbish dump and pick through it: you may find a few hundred rupees or a trinket for the pawnshop, but you get dirty, and rats or a local who owns the dump can hurt you or rob you."],
-    ["What are festivals, gang wars, floods and street rep?", "Twice a month Sega Square holds Cavadee or All Saints candlelight (8am to 10pm): join in for fun, free food and +1 street rep. While in Bambous, gang wars, floods and a police helicopter can happen at random. Floods slow you down and make you ill. The helicopter appears when your heat is high. Street rep ranks (Nobody to Kingpin) cut how much muggers take. Ask the Boss in the Yard for your rank."],
-    ["What is there to do in Bambous South?", "Watch or bet on Etoile de l'Ouest at the stadium, join the sega circle in Sega Square (evenings are best), eat at Kaz Dholl Puri, drink with the supporters, and work shifts at the block yard, the garment workshop or the snack factory. You can buy all three businesses for steady, honest money.", ""],
-    ["Can I buy a house in Bambous?", "Not yet. Houses there are coming in a later update."]]],
-  ["💻", "DevCon 2026", [
-    ["Do I get money for DevCon?", "Yes, once each: Rs 150,000 the first time you press Get your pass (it opens thedevcon.space), and Rs 20,000 the first time you visit the DevCon building and use something there, like talking to the host, the speaker or the dev team. The money arrives from the Flic en Flac Team within a minute.", "devcon"],
-    ["What is DevCon?", "A real tech event in Flic en Flac on Sat 7 Nov at 2:00 PM: three short talks (product engineering, delivery and sales), a team workshop where you build a prototype with AI, team demos and a beach social with food and drinks. Tickets are MUR 600.", "devcon"],
-    ["How do I get Rs 100 off?", "The first 5 players to claim a code get Rs 100 off their DevCon ticket. Open the DevCon app (or tap the billboard) and tap Claim your code, then enter that code when you register at thedevcon.space.", "devcon"],
-    ["How do I get a ticket?", "Open the DevCon app, or tap the glowing blue billboard in the Civic Quarter, then tap Get your pass. It opens thedevcon.space. Use a Mauritian mobile number, and if you use Emtel ask for the code by phone call.", "devcon"]]],
-  ["💅", "Clawed by Taps bookings", [
-    ["How do I book a nail appointment?", "Open the Clawed by Taps app, or tap the big glowing advert above the salon (on the main road, where Sugar Beach used to be). Pick your set and any extra art, then a day, an hour and how Taps should contact you, then tap Book. The Prices tab shows her full menu.", "salon"],
-    ["How many bookings can I make?", "Each slot is one hour. You can book once per day and hold up to 3 upcoming bookings. Groups of up to 20 can book a slot together. Cancel any time from My bookings.", "salon"],
-    ["What is my booking code?", "After booking you get a code like TAPS-AB123. Show it to Taps or send it to her on WhatsApp so she knows it's you. Find it again under My bookings.", "salon"],
-    ["Do I get a reward or a discount?", "Yes. Your first booking through the game gives you Rs 50,000 in-game cash. For the first two weeks every combo deal is Rs 1,000. You pay Taps for the service in real life.", "salon"],
-    ["How does Taps confirm?", "Taps sees every booking, then accepts, moves or declines it, and you are told in the game. You can also message her in the game or on WhatsApp from My bookings.", "salon"]]],
   ["🏅", "Competing with other players", [
-    ["How do I see what other players have?", "Open the Rich list (Rich or Ranks tab) and tap a player. Their profile card shows their rank, home, best car, style, surf and golf records and badges.", "ranks"],
-    ["What are the leaderboards?", "In Ranks, pick a board: Richest, Best dressed, Biggest home, Best car, Top surfer, Best golfer, Most popular or Most badges. Home of the Week and Crews have their own tabs.", "ranks"],
-    ["How do I earn badges?", "Badges unlock by playing: reaching money goals, upgrading your home, owning cars or a jet, surfing, golf, winning challenges and more. Tap a badge on any profile to see how to get it.", "ranks"],
-    ["What is the Flex feed?", "A live list of what players just did: bought a jet or car, moved house, earned a badge, climbed the rich list or won a challenge.", "flex"],
-    ["How do challenges work?", "Open a player's profile and tap Challenge. Pick a money race, surf-off or golf round and a stake. They accept or decline within an hour. You each pay the stake, and whoever scores best within 24 hours wins the pot minus 5%. A tie gives the stakes back.", "chals"],
     ["How do I rate a home?", "Visit a player's home and rate it when asked, or open their profile and tap Rate home. You can rate each home once a week. The best-rated home becomes the Home of the Week.", "ranks"],
     ["How do crews work?", "In Ranks, open the Crews tab. Starting a crew costs Rs 50,000 and needs a 3 or 4 letter tag. Up to 12 players can join. Crews are ranked by their members' combined net worth.", "ranks"],
-    ["How do I hide my money and belongings?", "Settings → Privacy. When Private is on, other players see your rank but not your net worth, belongings or flex posts.", "settings"]]],
-  ["✈️", "Private jets and airports", [
-    ["How do I get a private jet?", "Visit an airport (SSR Airport in Flic en Flac or Tamarin International Airport) and tap the airport sign. Choose a Sky Cruiser, Atlas G or Condor and a livery. It is parked at the airport where you bought it, with your name on the side.", "maps"],
-    ["How do I fly to Tamarin?", "Stand at the airport your jet is parked at and tap the airport sign, then Fly to the other airport. A flight takes about a minute, costs Rs 15,000 to 40,000 for fuel and fees (paid to the treasury of the town you leave) and everyone can see your jet take off, fly and land. You arrive at the other airport's plaza and your jet is parked there.", "maps"],
-    ["Where is Tamarin Airport?", "East of the village. Follow the road that runs east from the village at row 166. The airfield is fenced, but the plaza in front of the terminal is open and the airport sign is there.", "maps"],
+    ["How do I hide my money and belongings?", "Settings → Privacy. When Private is on, other players see your rank but not your net worth, belongings or flex posts.", "settings"]
   ]],
   ["🏴‍☠️", "Raids and defenses", [
     ["How often can I be raided?", "A player can only be attacked 3 times a day, and you can attack 3 times a day yourself. Once someone has been hit 3 times they are safe until tomorrow.", "raids"],
@@ -3899,9 +3821,8 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["What does the chess board show?", "The last move is highlighted, and the message under the board says what was played and which piece was taken (for example: Rita played Bxf6, taking your knight). The move list sits under the board, and above it you see the pieces each player has taken, who is ahead, and both clocks. You can offer a draw, resign, or ask for a rematch when the game ends."],
     ["What is my chess rating?", "Everyone starts on 1200. Win and it goes up, lose and it goes down, and beating a stronger player moves it more. See the Chess rating board in Ranks and at the chess table.", "ranks"],
     ["How do I chat?", "Type in the Public chat or press T. Tap a player to message them privately, send money, ask for food or invite them over."],
-    ["How do I make friends and partners?", "Chat, hang out, do social actions and spend time together. Ask someone out from their profile. Adult romance is optional (18+, Settings) and fades to black."],
-    ["What are events?", "Parties, fashion shows, car meets and club nights run on a weekly schedule. Open the Events app to see when and where.", "events"],
-    ["What is the fashion show?", "Every Saturday at 19:00. Enter your look for free and the whole town votes. Top looks win prizes."]]]
+    ["How do I make friends and partners?", "Chat, hang out, do social actions and spend time together. Ask someone out from their profile. Adult romance is optional (18+, Settings) and fades to black."]
+  ]],
 ]; // end GUIDE
 const HOWTO_UI = { q: "" };
 function guideApp(box, link) {
@@ -4352,7 +4273,8 @@ const EVENTS = [ // weekly parties: organiser, venue, weekday (0 = Monday), star
 EVENTS.length = 0; // the weekly parties were at Flic en Flac venues; Grand Baie gets its own when its clubs open
 const evStart = (ev) => ev.d * 1440 + ev.h * 60; // minute of the week the party starts
 const evOn = (ev) => { const w = s.t % 10080; return w >= evStart(ev) && w < evStart(ev) + ev.len; }; // is the party on right now?
-const doorOf = (id) => OBJ.find((o) => o.id === id); // the door object of a building
+const OLDKIND = { snack: "dholl", gelato: "dholl", coq: "dholl", burgo: "dholl", maravan: "resto", belle: "resto", shop: "mall", jumbo: "mall", cafe: "bazar", bar: "bar", saxo: "bar", tigers: "bar", sapphire: "bar", hospital: "pharma", mall: "mall" }; // the old places that tasks and hints still name: the same kind of place in Grand Baie
+const doorOf = (id) => OBJ.find((o) => o.id === id) || (OLDKIND[id] ? OBJ.find((o) => o.enter && ((BUILD.find((b) => b.id === o.id) || {}).gbKind === OLDKIND[id])) : undefined); // the door object of a building
 function partyActs(id) { // extra actions a venue gets around its party
   const evs = EVENTS.filter((e) => e.venue === id), w = s.t % 10080, out = []; if (!evs.length) return out; // this venue's parties and the time of week
   const ev = evs.find(evOn) || evs.slice().sort((a, b) => ((evStart(a) - w + 10080) % 10080) - ((evStart(b) - w + 10080) % 10080))[0]; // the one on now, else the next one
@@ -6152,13 +6074,13 @@ function phoneRender0() { // draw the current phone screen
     box.append(el("p", "psec", "Records")); prow(box, "⚽ Football goals · 🏀 Basketball points", s.goals + " · " + s.hoops); if (s.g === "f") prow(box, "Harassed in the street · reported", s.harass + " · " + s.reported); // records
     prow(box, "Dog bite", s.sick ? "Infected" : s.bitten ? "Needs treatment" : "None", s.sick || s.bitten ? "Go to the Hospital" : ""); // bite status
     if (s.g === "f") { box.append(el("p", "psec", "🩸 Your cycle")); const link = (label, sub, fn) => { const r = el("button", "prow"), l = el("span", "", label); if (sub) l.append(el("small", "", sub)); r.type = "button"; r.append(l, el("b", "", "›")); r.onclick = fn; box.append(r); }; // periods (and a button helper)
-      if (cycleOn()) { const cd = cycleDay(); prow(box, "Cycle", onPeriod() ? "Period · day " + (cd + 1) + " of " + PERIOD : "Day " + (cd + 1) + " of " + CYCLE, onPeriod() ? (crampsNow() ? "Cramps: rest with a hot water bottle, a warm shower, comfort food or a painkiller" : "Take it easy and look after yourself") : "Next period in " + (CYCLE - cd) + " day" + (CYCLE - cd === 1 ? "" : "s")); prow(box, "Pads and tampons", (s.pads || 0) + " days' supply", "Super U and Jumbo sell them"); prow(box, "Painkillers", (s.pills || 0) + " tablets", "Super U or the Hospital pharmacy");
+      if (cycleOn()) { const cd = cycleDay(); prow(box, "Cycle", onPeriod() ? "Period · day " + (cd + 1) + " of " + PERIOD : "Day " + (cd + 1) + " of " + CYCLE, onPeriod() ? (crampsNow() ? "Cramps: rest with a hot water bottle, a warm shower, comfort food or a painkiller" : "Take it easy and look after yourself") : "Next period in " + (CYCLE - cd) + " day" + (CYCLE - cd === 1 ? "" : "s")); prow(box, "Pads and tampons", (s.pads || 0) + " days' supply", "Supermarché Baie and Jumbo sell them"); prow(box, "Painkillers", (s.pills || 0) + " tablets", "Supermarché Baie or the Hospital pharmacy");
         if (onPeriod() && s.pills > 0) link("💊 Take a painkiller", "Eases cramps for about 4 hours", () => { takePainkiller(); phoneRender(); }); }
       if (s.adult || s.preg || s.pregRoll || (s.kids || 0) > 0) { box.append(el("p", "psec", "🤰 Family"));
-        if (s.preg) { const days = Math.floor((s.t - s.preg.at) / 1440); prow(box, "Pregnancy", s.preg.known ? "Day " + (days + 1) + " of 6" : "You feel a bit off", s.preg.known ? "Due in " + Math.max(1, 6 - days) + " day" + (6 - days === 1 ? "" : "s") + " · check-ups " + (s.preg.checks || 0) + "/3 · Hospital" : "Take a test (Super U or the Hospital) or see a doctor"); }
+        if (s.preg) { const days = Math.floor((s.t - s.preg.at) / 1440); prow(box, "Pregnancy", s.preg.known ? "Day " + (days + 1) + " of 6" : "You feel a bit off", s.preg.known ? "Due in " + Math.max(1, 6 - days) + " day" + (6 - days === 1 ? "" : "s") + " · check-ups " + (s.preg.checks || 0) + "/3 · Hospital" : "Take a test (Supermarché Baie or the Hospital) or see a doctor"); }
         else if (s.pregRoll) prow(box, "Worried?", "A test works from tomorrow", "The Hospital sells a morning-after pill within a day");
         if ((s.kids || 0) > 0) prow(box, "👶 Children", String(s.kids), rs(KID_WEEK * s.kids) + " childcare every Monday");
-        prow(box, "Protection", hasPill() ? "On the pill" : (s.condoms || 0) + " condom" + ((s.condoms || 0) === 1 ? "" : "s"), "Used automatically · Super U and the Hospital"); }
+        prow(box, "Protection", hasPill() ? "On the pill" : (s.condoms || 0) + " condom" + ((s.condoms || 0) === 1 ? "" : "s"), "Used automatically · Supermarché Baie and the Hospital"); }
       link(cycleOn() ? "Turn the period cycle off" : "Turn the period cycle on", cycleOn() ? "Your character won't have periods" : "A " + PERIOD + "-day period every " + CYCLE + " days, with ways to feel better", () => { s.cycleOn = !cycleOn(); s.cramps = 0; s.noPads = false; save(); phoneRender(); }); } // the opt-out
   } // end health
   if (pv.app === "campus") { // university
@@ -6528,10 +6450,10 @@ const clsTag = (c) => (CLASSES[c] ? " · " + CLASSES[c].icon + " " + CLASSES[c].
 const QUESTS = [ // the first things every player is asked to do, in order
   { i: "👋", pct: () => (s.saidHey ? 1 : 0), t: "Say hey in the public chat", hint: "Type in the Public chat box (or press T) and say hey to everyone online.", prog: () => (s.saidHey ? "Done" : "Not yet"), done: () => !!s.saidHey, pay: 500 }, // break the ice
   { i: "🤝", pct: () => Math.min(3, Object.keys(s.realFriends).length) / 3, t: "Make 3 real online friends", hint: "Message players who are online and get a reply. Phone, then Messages.", prog: () => Math.min(3, Object.keys(s.realFriends).length) + " / 3 friends", done: () => Object.keys(s.realFriends).length >= 3, pay: 1000 }, // social first
-  { i: "⚽", pct: () => (s.qActive ? 1 : 0), t: "Get active: play a sport with someone", hint: "Challenge a player to football or chess from their profile, or score at the Sports ground while another player is there.", prog: () => "Play a match with a player", done: () => s.qActive, pay: 1500 }, // play together
+  { i: "💼", pct: () => (Object.values(s.jobs || {}).some((v) => v > 0) ? 1 : 0), t: "Work your first shift", hint: "Open Jobs, or walk into the Bazaar, a restaurant or the bakery and tap Work a shift.", prog: () => (Object.values(s.jobs || {}).some((v) => v > 0) ? "Done" : "Not yet"), done: () => Object.values(s.jobs || {}).some((v) => v > 0), pay: 1500 }, // earn your first wage
   { i: "🏖️", pct: () => Math.min(1, s.beachMin / 30), t: "Go to the beach with someone", hint: "Hang out on the sand or in the lagoon next to another player.", prog: () => Math.min(30, Math.floor(s.beachMin)) + " / 30 min together", done: () => s.beachMin >= 30, pay: 1500 }, // beach time
-  { i: "🎉", pct: () => (s.parties > s.qParty0 ? 1 : 0), t: "Go to the next big party", hint: "WTF MAURITIUS on Friday, AFTER on Saturday, or any house party.", prog: () => "Next: " + EVENTS.map((e) => DAYS[e.d] + " " + e.h + ":00").join(" or "), done: () => s.parties > s.qParty0, pay: 3000 }, // party
-  { i: "🍔", pct: () => (s.bigBoys ? 1 : Math.min(0.95, s.money / 10000)), t: "Chill with the big boys at Maravan Burgers", hint: "Once you have Rs 10,000, sit at the Big Boys table inside Maravan Burgers, in the middle of town.", prog: () => (s.money >= 10000 ? "You can afford it now" : rs(s.money) + " / Rs 10,000"), done: () => !!s.bigBoys, pay: 1000 } // flex
+  { i: "📚", pct: () => ((s.reads || 0) >= 1 ? 1 : 0), t: "Read for an hour at the library", hint: "Walk to the library in Grand Baie, go in and tap Read for an hour.", prog: () => ((s.reads || 0) >= 1 ? "Done" : "Not yet"), done: () => (s.reads || 0) >= 1, pay: 1500 }, // a quiet hour
+  { i: "💰", pct: () => Math.min(1, netWorth() / 10000), t: "Save up Rs 10,000", hint: "Work shifts, buy cheap food at the Bazaar and keep your money.", prog: () => rs(Math.min(10000, netWorth())) + " of Rs 10,000", done: () => netWorth() >= 10000, pay: 3000 } // your first Rs 10,000
 ]; // end QUESTS
 const realNear = (r) => Object.values(others).some((o) => !o.p.in && !o.p.hid && Math.hypot(o.x - s.x, o.y - s.y) < r); // is a real player close to you outdoors?
 const realOnGround = () => Object.values(others).some((o) => !o.p.in && o.x > 34 && o.x < 56 && o.y > 36 && o.y < 45); // is a real player on the sports ground?
@@ -6626,7 +6548,6 @@ const JOURNEY = [ // each chapter: what you must reach, things you can tap to do
   { id: "first", i: "💵", t: "Your first Rs 10,000", story: "Every big fortune starts small. Get some cash together!", goal: () => ({ have: netWorth(), need: 10000, rs: true }), steps: [["💼 Find a job", () => openPhone("jobs")], ["🗺️ Open the map", () => openPhone("maps")]], pay: 2000, unlock: "Studio apartments are now within reach" },
   { id: "studio", i: "🏠", t: "Move into a Studio apartment", story: "Time to leave the small room. A studio at Pasadena Flats needs a deposit and rent.", goal: () => ({ have: s.home | 0, need: 1, rs: false, word: "Moved in" }), steps: [["🏠 Open the Home app", () => openPhone("house")]], pay: 5000, unlock: "Room for 14 pieces of furniture and house parties" },
   { id: "baller", i: "💰", t: "Become a Big Baller", story: "Reach Rs 50,000 and the VIP doors start to open.", goal: () => ({ have: netWorth(), need: 50000, rs: true }), steps: [["💼 Work shifts", () => openPhone("jobs")], ["🏢 Check your businesses", () => openPhone("biz")]], pay: 10000, unlock: "VIP: free entry to every party" },
-  { id: "bambous", i: "🏚️", t: "Pass the Bambous checkpoint", story: "Bambous Town is rough and risky. Its checkpoint only lets in players worth Rs 500,000.", goal: () => ({ have: netWorth(), need: 500000, rs: true }), steps: [["🏢 Grow your businesses", () => openPhone("biz")], ["🗺️ Find Bambous", () => openPhone("maps")]], pay: 25000, unlock: "Bambous Town opens its gate to you" },
   { id: "tycoon", i: "🎩", t: "Rise to Tycoon", story: "Rs 3,000,000 makes you a Tycoon. Maybe a private jet next?", goal: () => ({ have: netWorth(), need: 3000000, rs: true }), steps: [["✈️ Look at jets", () => openPhone("ride")], ["🏴‍☠️ Protect your wealth", () => openPhone("raids")]], pay: 100000, unlock: "Tycoon status and the private jet showroom" },
   { id: "majesty", i: "🏛️", t: "Reach Majesty", story: "Rs 20,000,000. The whole town will bow.", goal: () => ({ have: netWorth(), need: 20000000, rs: true }), steps: [["🏆 See the Rich list", () => openPhone("rich")]], pay: 500000, unlock: "His or Her Majesty: the whole town bows" }
 ];
@@ -7242,13 +7163,13 @@ async function shopStart() { // load shop news and offers once your character ex
 }
 function shopOfferCard(owner, name) { // a job offer: accept or decline
   if (!$("sheet").hidden || !$("phone").hidden || busy || ride || introOn) return; if (s.role !== "student") { toast("🥪 Only students can take snack shop jobs."); return; }
-  openMenu("🥪 " + name + " offers you a job", [{ label: "✅ Accept the job", info: "Work shifts at Snack Chez Ram · " + rs(1100) + " a shift · up to 6 a day", go: () => { closeMenu(); shopApi().accept(owner).then((r) => { if (r.ok) { SHOP.job = { owner: r.owner, name: r.name, wage: r.wage, left: 6 }; toast("🥪 You work for " + r.name + " now. Do shifts at Snack Chez Ram."); } else toast(r.error); }); } }, { label: "✖ No thanks", info: "They'll be told", go: () => { closeMenu(); shopApi().decline(owner); } }], "You can quit any time from the Business app.");
+  openMenu("🥪 " + name + " offers you a job", [{ label: "✅ Accept the job", info: "Work shifts at Dholl Puri Corner · " + rs(1100) + " a shift · up to 6 a day", go: () => { closeMenu(); shopApi().accept(owner).then((r) => { if (r.ok) { SHOP.job = { owner: r.owner, name: r.name, wage: r.wage, left: 6 }; toast("🥪 You work for " + r.name + " now. Do shifts at Dholl Puri Corner."); } else toast(r.error); }); } }, { label: "✖ No thanks", info: "They'll be told", go: () => { closeMenu(); shopApi().decline(owner); } }], "You can quit any time from the Business app.");
 }
-function shopShiftAct() { // the shift a hired student works at Snack Chez Ram
+function shopShiftAct() { // the shift a hired student works at Dholl Puri Corner
   if (!shopApi() || !SHOP.job) return null; const j = SHOP.job;
   return A("🥪 Work a shift for " + j.name, "3 hours · " + rs(j.wage) + " · students only", 180, 0, { energy: -18, hunger: -10, bladder: -15, hygiene: -10, fun: -8, social: 8 }, { why: s.role !== "student" ? "Students only" : s.energy < 20 ? "Too tired to work" : j.left <= 0 ? "That's enough shifts for today" : "", run() {
     shopApi().work().then((r) => { if (r && r.ok) { s.money += r.wage; txn("Snack shift for " + r.name, r.wage); if (SHOP.job) SHOP.job.left = r.left; save(); toast("🥪 Shift done: +" + rs(r.wage) + ". " + r.name + " earns from it too. " + r.left + " left today."); } else { toast("🥪 " + ((r && r.error) || "The shift didn't count.")); if (r && /enough shifts/.test(r.error || "") && SHOP.job) SHOP.job.left = 0; } }).catch(() => toast("🥪 Couldn't reach the server."));
-    return "You worked the counter at Snack Chez Ram for " + j.name + "."; } });
+    return "You worked the counter at Dholl Puri Corner for " + j.name + "."; } });
 }
 function snackStaffUI(box, prow, link) { // the staff section of the Business app
   const sh = SHOP.owned; box.append(el("p", "psec", "🥪 Snack shop staff"));
@@ -7283,7 +7204,7 @@ function bizApp(box, prow, link) { // the Business phone app: your empire, each 
   { const unowned = Object.keys(BIZ).filter((k) => !BIZ[k].shady && !(s.biz || {})[k] && peak >= (BIZ_TIERS.find((q) => q.id === (BIZ[k].t || "s")) || { need: 0 }).need).sort((x, y) => BIZ[x].p - BIZ[y].p), nx = unowned[0];
     if (nx) { const b = BIZ[nx], pct = Math.min(100, Math.round(s.money / b.p * 100)), g = el("div", "bzgoal"); g.append(el("small", "", "🎯 Your next business"), el("b", "", b.i + " " + b.n + " · " + rs(b.p)), el("span", "", s.money >= b.p ? "You can afford it now. It pays itself back in about " + Math.ceil(b.p / b.h) + " hours." : "You have " + pct + "% of the price. " + rs(b.p - s.money) + " to go.")); const gb = el("div", "bzfill"), gi = el("i"); gi.style.width = pct + "%"; gb.append(gi); g.append(gb); box.append(g); } }
   if ((s.biz || {}).snack) snackStaffUI(box, prow, link); // hire students for your snack shop
-  if (SHOP.job && shopApi()) { box.append(el("p", "psec", "🎓 Your snack job")); prow(box, "Works for " + SHOP.job.name, rs(SHOP.job.wage) + " a shift", SHOP.job.left + " shift" + (SHOP.job.left === 1 ? "" : "s") + " left today · at Snack Chez Ram"); link("Quit this job", "You can be hired again later", () => { if (confirm("Quit your snack job?")) shopApi().quit().then(() => { SHOP.job = null; phoneRender(); }); }); } // your own job, as a student
+  if (SHOP.job && shopApi()) { box.append(el("p", "psec", "🎓 Your snack job")); prow(box, "Works for " + SHOP.job.name, rs(SHOP.job.wage) + " a shift", SHOP.job.left + " shift" + (SHOP.job.left === 1 ? "" : "s") + " left today · at Dholl Puri Corner"); link("Quit this job", "You can be hired again later", () => { if (confirm("Quit your snack job?")) shopApi().quit().then(() => { SHOP.job = null; phoneRender(); }); }); } // your own job, as a student
   const nxt = BIZ_TIERS.find((q) => q.need > peak); if (nxt) { const prev = BIZ_TIERS.slice().reverse().find((q) => q.need <= peak) || { need: 0 }, pc = Math.round((peak - prev.need) / (nxt.need - prev.need) * 100), u = el("div", "bzgoal gold"); u.append(el("small", "", "🔓 Next rank"), el("b", "", nxt.i + " " + nxt.n + " · " + rs(nxt.need) + " net worth"), el("span", "", "Unlocks " + Object.keys(BIZ).filter((k) => (BIZ[k].t || "s") === nxt.id).map((k) => BIZ[k].i).join(" ") + ". " + rs(Math.max(0, nxt.need - peak)) + " to go.")); const ub = el("div", "bzfill"), ui = el("i"); ui.style.width = Math.max(3, pc) + "%"; ub.append(ui); u.append(ub); box.append(u); }
   box.append(el("p", "psec", "Business shop"));
   for (const tr of BIZ_TIERS) { const ks = Object.keys(BIZ).filter((k) => (BIZ[k].t || "s") === tr.id && !BIZ[k].shady && !(s.biz || {})[k]); if (!ks.length) continue; const open = peak >= tr.need; box.append(el("p", "bztier", tr.i + " " + tr.n + (tr.need ? " · worth " + rs(tr.need) + "+" : "") + (open ? "" : " · 🔒 locked"))); const grid = el("div", "bzshop");
@@ -7308,13 +7229,13 @@ const STRUGGLE = [ // meals for broke days: no groceries needed, but you won't b
 function cookActs() { // the stove: real cooking, struggle meals, and fixing the gas
   const m = s.meals || 0, gas = probOn("gas"), acts = [];
   if (gas) acts.push(A("🔥 Buy a new gas bottle", "Rs 650 · delivered and connected now", 5, 650, {}, { run() { probClear("gas"); return "New gas bottle connected. Cook away! 🍳"; } }));
-  for (const [ic, n, min, use, food, fun, line, left] of RECIPES) acts.push(A(ic + " " + n, min + " min · uses " + use + " grocery meal" + (use > 1 ? "s" : "") + (left ? " · makes " + left + " portions for later" : "") + " (" + m + " left)", min, 0, { hunger: food, fun }, { why: gas ? "The gas has finished. Buy a new bottle first" : m >= use ? "" : "Not enough groceries. Buy some at Super U or Jumbo, or order delivery", run() { s.meals -= use; if (left) s.meals += left; return line; } }));
+  for (const [ic, n, min, use, food, fun, line, left] of RECIPES) acts.push(A(ic + " " + n, min + " min · uses " + use + " grocery meal" + (use > 1 ? "s" : "") + (left ? " · makes " + left + " portions for later" : "") + " (" + m + " left)", min, 0, { hunger: food, fun }, { why: gas ? "The gas has finished. Buy a new bottle first" : m >= use ? "" : "Not enough groceries. Buy some at Supermarché Baie or Jumbo, or order delivery", run() { s.meals -= use; if (left) s.meals += left; return line; } }));
   for (const [ic, n, min, food, fun, line, needsGas] of STRUGGLE) acts.push(A(ic + " " + n, min + " min · free · +" + food + " food, a bit sad", min, 0, { hunger: food, fun }, { why: needsGas && gas ? "No gas. Only bread and tea tonight" : "", run() { addMoodlet("struggle", "Ate a struggle meal", -1, 180, "sad"); return line; } }));
   return acts;
 } // end cookActs
 function fridgeActs() { // grab something quick, have a drink, or get groceries delivered
   const m = s.meals || 0, d = s.drinks || 0; return [
-    A("🥪 Grab a quick snack", "10 min · +25 food · uses 1 of " + m + " meals", 10, 0, { hunger: 25, fun: 3 }, { why: m > 0 ? "" : "The fridge is empty: buy groceries at Super U or Jumbo", run() { s.meals--; return "Leftover rougaille and bread, eaten standing at the fridge."; } }),
+    A("🥪 Grab a quick snack", "10 min · +25 food · uses 1 of " + m + " meals", 10, 0, { hunger: 25, fun: 3 }, { why: m > 0 ? "" : "The fridge is empty: buy groceries at Supermarché Baie or Jumbo", run() { s.meals--; return "Leftover rougaille and bread, eaten standing at the fridge."; } }),
     A("🧃 Cold drink", "5 min · +8 food, +6 fun · " + d + " in the fridge", 5, 0, { hunger: 8, fun: 6, bladder: -8 }, { why: d > 0 ? "" : "No drinks left: groceries come with drinks", run() { s.drinks--; return "Ice-cold juice. Perfect in this heat."; } }),
     ...(onPeriod() ? [A("🍫 Comfort food: chocolate and tea", "20 min · uses 1 meal · eases cramps for 3 hours", 20, 0, { hunger: 20, fun: 15 }, { why: m > 0 ? "" : "Nothing in the fridge", run() { s.meals--; periodRelief(3, "Chocolate and a warm tea", 2); return "Chocolate and ginger tea. Exactly what you needed."; } })] : []),
     { label: "🍳 Cook something", info: "Indomie, hot dogs, fried rice, curry and more", go: () => openMenu("🍳 What are we cooking?", cookActs(), m + " grocery meals in the fridge" + (probOn("gas") ? " · ⚠️ the gas has finished" : "")) },
@@ -7328,19 +7249,19 @@ function cycleDay() { if (s.cyc0 == null) { s.cyc0 = day() - Math.floor(Math.ran
 const onPeriod = () => cycleOn() && cycleDay() < PERIOD; // on her period now?
 const crampsNow = () => onPeriod() && (s.cramps || 0) > 0 && !(s.reliefUntil > s.t); // cramps that haven't been eased
 function periodRelief(hours, text, v) { s.reliefUntil = s.t + hours * 60; addMoodlet("relief", text, v || 2, hours * 60, "happy"); save(); } // something helped
-function takePainkiller() { if (!(s.pills > 0)) { toast("No painkillers. Get some at Super U or the Hospital pharmacy."); return; } s.pills--; periodRelief(4, "Painkiller kicked in", 1); toast("💊 Painkiller taken. The cramps ease off in a bit."); } // from the Health app
+function takePainkiller() { if (!(s.pills > 0)) { toast("No painkillers. Get some at Supermarché Baie or the Hospital pharmacy."); return; } s.pills--; periodRelief(4, "Painkiller kicked in", 1); toast("💊 Painkiller taken. The cramps ease off in a bit."); } // from the Health app
 function periodStep() { // once a day: start or end the period, use supplies, cramps on the first days
   if (!cycleOn() || s.perDay === day()) return; const first = s.perDay == null; s.perDay = day(); const cd = cycleDay(); // a new day
   if (cd < PERIOD) { // on her period today
     s.cramps = cd === 0 ? 2 : cd === 1 ? 1 : 0; // heaviest at the start
     if ((s.pads || 0) > 0) { s.pads--; s.noPads = false; } else s.noPads = true; // a day's pads
-    if (!first) toast(cd === 0 ? "🩸 Your period started. " + (s.noPads ? "You're out of pads: get some at Super U or Jumbo." : "Look after yourself: rest, warm drinks, a hot water bottle.") : s.noPads ? "🩸 You're out of pads and tampons. Super U and Jumbo have them." : s.cramps ? "🩸 Period cramps today. A hot water bottle, a warm shower or a painkiller will help." : "🩸 Day " + (cd + 1) + " of your period. Feeling a bit better.");
-  } else { s.cramps = 0; s.noPads = false; if (cd === CYCLE - 1 && !first) toast("📅 Heads up: your period is likely to start tomorrow." + (s.pads > 0 ? "" : " Get pads at Super U or Jumbo.")); } // between periods: a warning the day before
+    if (!first) toast(cd === 0 ? "🩸 Your period started. " + (s.noPads ? "You're out of pads: get some at Supermarché Baie or Jumbo." : "Look after yourself: rest, warm drinks, a hot water bottle.") : s.noPads ? "🩸 You're out of pads and tampons. Supermarché Baie and Jumbo have them." : s.cramps ? "🩸 Period cramps today. A hot water bottle, a warm shower or a painkiller will help." : "🩸 Day " + (cd + 1) + " of your period. Feeling a bit better.");
+  } else { s.cramps = 0; s.noPads = false; if (cd === CYCLE - 1 && !first) toast("📅 Heads up: your period is likely to start tomorrow." + (s.pads > 0 ? "" : " Get pads at Supermarché Baie or Jumbo.")); } // between periods: a warning the day before
   save();
 } // end periodStep
 function periodSoon() { // a second reminder a few hours before it starts
   if (!cycleOn() || cycleDay() !== CYCLE - 1 || hour() < 20 || s.perWarn === day()) return; s.perWarn = day(); save();
-  toast("🩸 Your period starts in a few hours." + (s.pads > 0 ? " You have pads, you're ready." : " You're out of pads: Super U and Jumbo are open until 20:00."));
+  toast("🩸 Your period starts in a few hours." + (s.pads > 0 ? " You have pads, you're ready." : " You're out of pads: Supermarché Baie and Jumbo are open until 20:00."));
 } // end periodSoon
 const CARE = [ // [id, icon, what you do, minutes, hours of relief, needs friendship, what she hears]
   ["tea", "🫖", "Make her a cup of tea", 10, 3, 15, "made you a cup of tea"], ["choc", "🍫", "Bring her chocolate", 10, 3, 15, "brought you chocolate"],
@@ -9233,7 +9154,7 @@ function upNext() { // the most useful thing to do right now, for the home scree
   if (onPeriod() && crampsNow()) return ["🩸 Period cramps", "Hot water bottle, warm shower or a painkiller", () => openPhone("health")];
   if (s.job && !careerWhy()) return ["💼 Time for work", careerTitle() + " · " + rs(careerPayNow()) + " a shift", () => openPhone("jobs")];
   const low = NEEDS.filter((k) => s[k] < 30).sort((a, b) => s[a] - s[b])[0]; if (low) return [NEED_ICON[low] + " " + NEED_LABEL[low] + " is low", Math.round(s[low]) + "% · look after yourself", () => openPhone("health")];
-  if (cycleOn() && cycleDay() === CYCLE - 1) return ["📅 Period due tomorrow", (s.pads > 0 ? "You have pads" : "Get pads at Super U or Jumbo"), () => openPhone("health")];
+  if (cycleOn() && cycleDay() === CYCLE - 1) return ["📅 Period due tomorrow", (s.pads > 0 ? "You have pads" : "Get pads at Supermarché Baie or Jumbo"), () => openPhone("health")];
   const ev = EVENTS.find(evOn); if (ev) return ["🎉 " + ev.org + " is on now", doorOf(ev.venue).name, () => openPhone("events")];
   return null;
 } // end upNext
@@ -10042,7 +9963,7 @@ function pregRoll(partnerProtected) { // after intimacy: use a condom, then mayb
 }
 function pregTick() { // checked now and then: the first signs, symptoms, and the birth
   if (!s.made) return;
-  if (s.pregRoll && s.t - s.pregRoll.at >= TEST_AFTER) { s.preg = { at: s.pregRoll.at, known: false, checks: 0, sick: s.t }; s.pregRoll = null; save(); toast("🤢 You feel a bit off today. A pregnancy test from Super U or the Hospital will tell you."); }
+  if (s.pregRoll && s.t - s.pregRoll.at >= TEST_AFTER) { s.preg = { at: s.pregRoll.at, known: false, checks: 0, sick: s.t }; s.pregRoll = null; save(); toast("🤢 You feel a bit off today. A pregnancy test from Supermarché Baie or the Hospital will tell you."); }
   const P = s.preg; if (!P) return;
   if (s.t - P.sick >= 1440 && s.t - P.at >= 2 * 1440) { P.sick = s.t; s.energy = clamp(s.energy - 12); s.hunger = clamp(s.hunger - 8); addMoodlet("preg", "Pregnancy symptoms", -1, 600, "tense"); save(); toast("🤢 Morning sickness. Rest and eat well."); } // a rough day now and then
   if (s.t - P.at >= PREG_MIN) birth();
@@ -10458,7 +10379,7 @@ const PROBS = { // what can go wrong, and how to fix it
   stolen: { ok: () => s.money >= 1500, icon: "👛", title: "Your money was stolen!", text: () => "You reached into your pocket and it was lighter. " + rs(s.prob.amt) + " is gone. Someone took it while you weren't looking.", opts: () => [{ label: "🔍 Investigate who did it", sub: "Look for clues and point the finger", pri: 1, go: stolenInvestigate }, { label: "🚓 Report it to the police", sub: "They'll ask who you suspect", go: () => stolenInvestigate(true) }, { label: "Let it go", sub: "Lesson learned", go: () => probClear("stolen") }] }
 };
 for (const k in PROBS) { const o0 = PROBS[k].opts; if (o0 && k !== "stolen") PROBS[k].opts = () => o0().map((o) => Object.assign({}, o, { label: (o.label || "").replace(/\(Rs ([\d,]+)\)/, (m, n) => "(" + rs(richBill(+n.replace(/,/g, ""))) + ")") })); } // the repair prices climb with your wealth
-const SUS_LOOK = ["a red cap", "a blue hoodie", "a yellow football shirt", "green flip-flops"], SUS_SEEN = ["near the beach", "outside Snack Chez Ram", "by your building", "at the bus stop"];
+const SUS_LOOK = ["a red cap", "a blue hoodie", "a yellow football shirt", "green flip-flops"], SUS_SEEN = ["near the beach", "outside Dholl Puri Corner", "by your building", "at the bus stop"];
 function probStart(k) { // something goes wrong
   const P = PROBS[k]; s.prob = { k, at: s.t, real: Date.now() };
   if (k === "stolen") { const amt = Math.min(15000, Math.max(300, Math.floor(s.money * (0.1 + Math.random() * 0.1)))); s.money -= amt; txn("Stolen", -amt); s.prob.amt = amt;
@@ -10558,6 +10479,11 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.05", "2 Nov 2026", "Grand Baie fills up", [
+    ["🫓", "Eat the Mauritian way", "Dholl puri, faratha, gato piment and alouda at the corner stall. Briyani and fish vindaye at the restaurants. Fresh fruit and samoussa at the Bazaar.", null],
+    ["🏪", "14 places are open", "Two supermarkets, a mini market, a bakery, the fish market, two restaurants, a petrol station, a boutique, a library and a temple, plus the bazaar and the bar.", () => openPhone("maps")],
+    ["💼", "New jobs", "Work at the Bazaar, the restaurants, the bakery or the fish market. Goals in Goals are new too: first shift, an hour at the library, and your first Rs 10,000.", () => openPhone("jobs")]
+  ]],
   ["2027.03.04", "2 Nov 2026", "A new start in Grand Baie", [
     ["🏝️", "Welcome to Mauritius Life", "A brand new game. You start in Grand Baie, drawn from the real bay: its beach, coast road, bazaar and shopping centres.", () => openPhone("maps")],
     ["🫓", "Two shops are open", "Dholl Puri Corner and Sega Bar: eat, have a drink, or work a shift. More places open over the coming weeks.", null],
@@ -10942,7 +10868,7 @@ const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where 
     ["👑", "A golden statue of the richest player", "A golden statue with a crown and a coin stands in a marble plaza beside the Grand Casino, with the richest player's name and net worth on the plate. It lights up at night.", () => navTo(STATUE.x, STATUE.y + 4.4, "The richest player's statue")],
     ["🔔", "Everyone hears when the crown moves", "When someone new becomes the richest, the statue changes and everybody gets a notification and a line in town chat.", null]]],
   ["2026.10.28", "28 Oct 2026", "Snack shop jobs, bets with friends and family life", [
-    ["🥪", "Own a snack shop and hire students", "Buy the Snack shop in the Business app, then hire real student players. They work shifts at Snack Chez Ram for Rs 1,100, and you earn Rs 700 from every shift.", () => openPhone("biz")],
+    ["🥪", "Own a snack shop and hire students", "Buy the Snack shop in the Business app, then hire real student players. They work shifts at Dholl Puri Corner for Rs 1,100, and you earn Rs 700 from every shift.", () => openPhone("biz")],
     ["🃏", "Whot fixed, and play it live with a friend", "Whot no longer gets stuck: the market reshuffles, old timers can't jump in, and a safety net keeps the table moving. Challenge a friend to a live game from their profile or the Whot menu.", () => whotMenu()],
     ["💰", "Bet money against friends", "Challenge a friend to Whot, football or chess and bet Rs 500 to Rs 10,000 each. The winner takes the pot.", null],
     ["🏠", "Homes look the same to visitors", "When you visit a home you now see it exactly as the owner arranged it: paint, floors, bed, furniture and fittings.", null],
@@ -11040,7 +10966,7 @@ const FD = [ // each step: what Marie says, a hint, when it is done, and how "Sh
   { say: () => "Ahh, smell that sea air! To walk, just tap the ground where you want to go. Walk down to the beach, on the left.", hint: "Tap the sand on the left side of town", done: () => !s.inside && s.x < 13.5, show: () => walkTo(11.5, Math.max(2.5, Math.min(56.5, s.y))) },
   { say: () => "Town is big, so don't walk everywhere! Grab a free 🛴 e-scooter from a stand (there's one on the beach road). Tap the 🛴 icon, then 'Take a free e-scooter'. Tap the 🛴 button when you want to park.", hint: "Tap a 🛴 stand → Take a free e-scooter", start: () => { s.fdv.sc = 0; }, done: () => scoot || !!s.scootTried, show: () => walkTo(SCOOT_STANDS[0][0], SCOOT_STANDS[0][1] + 0.8) },
   { say: () => "See those bars? They drop as time passes: a game hour is only 30 seconds. 🔋 Stamina makes them drop slower. Train it with cardio at the Lagoon Gym: treadmill, spin class or boxing. Let's go and look.", hint: "Walk into the Lagoon Gym", done: () => s.inside === "gym" || (s.cardioSt || 0) > 0 || (s.stamina || 0) > 0, show: () => walkToPlace("gym") },
-  { say: () => "Eh! Your tummy is rumbling: see the 🍔 Food bar going down? Bars are your needs. Go eat: tap Snack Chez Ram, then pick a meal.", hint: "Get your Food bar back up to 60%", start: () => { s.hunger = Math.min(s.hunger, 30); }, done: () => s.hunger >= 60, show: () => walkToPlace("snack"), glow: "#needs" },
+  { say: () => "Eh! Your tummy is rumbling: see the 🍔 Food bar going down? Bars are your needs. Go eat: tap Dholl Puri Corner, then pick a meal.", hint: "Get your Food bar back up to 60%", start: () => { s.hunger = Math.min(s.hunger, 30); }, done: () => s.hunger >= 60, show: () => walkToPlace("snack"), glow: "#needs" },
   { say: () => "Good! Almost everything in life starts on your phone. Tap Phone at the bottom of the screen.", hint: "Tap 📱 Phone", done: () => !$("phone").hidden, glow: "#navPhone", show: () => openPhone("home") },
   { say: () => s.role === "tourist" ? "Tourists can't take local jobs, but you can buy a business that earns money even while you're away. Open the Business app and have a look." : "Now let's earn some rupees. Open the 💼 Jobs app and apply for a career.", hint: () => (s.role === "tourist" ? "Open 🏢 Business" : "Jobs → tap Apply on any career"), done: () => (s.role === "tourist" ? pv.app === "biz" && !$("phone").hidden : !!s.job), app: () => (s.role === "tourist" ? "biz" : "jobs"), show: () => openPhone(s.role === "tourist" ? "biz" : "jobs") },
   { skip: () => s.role === "tourist", say: () => "You got the job! Do your first shift now: in the Jobs app, tap Go to work. It takes one game hour.", hint: "Jobs → Go to work", start: () => { s.fdv.rest = (s.job && s.job.rest) || 0; }, done: () => !!s.job && (s.job.rest || 0) > (s.fdv.rest || 0), app: () => "jobs", show: () => openPhone("jobs") },
@@ -11092,7 +11018,7 @@ function whatNow() { // up to three suggestions: [icon + title, why, go]
   if (fdOn()) add(GUIDE.face + " Carry on with your first day", FD[s.fd].say().slice(0, 80) + "…", () => { closeMenu(); fdRender(true); });
   if (!scoot && !s.inside && !s.scootTried) { const st = SCOOT_STANDS.reduce((a, q) => (Math.hypot(q[0] - s.x, q[1] - s.y) < Math.hypot(a[0] - s.x, a[1] - s.y) ? q : a)); add("🛴 Take a free e-scooter", "Twice as fast as walking, and free. Nearest stand: " + st[2] + ".", () => { closeMenu(); walkTo(st[0], st[1]); }); }
   if (s.energy < 30) add("😴 Get some sleep", "Your Sleep bar is at " + Math.round(s.energy) + "%. Go home and sleep, or you'll faint.", () => { closeMenu(); goHome(); });
-  if (s.hunger < 30) add("🍔 Eat something", "Food is at " + Math.round(s.hunger) + "%. Snack Chez Ram is cheap, or use your fridge at home.", () => { closeMenu(); walkToPlace("snack"); });
+  if (s.hunger < 30) add("🍔 Eat something", "Food is at " + Math.round(s.hunger) + "%. Dholl Puri Corner is cheap, or use your fridge at home.", () => { closeMenu(); walkToPlace("snack"); });
   if (s.hygiene < 25) add("🚿 Take a shower", "You're getting smelly. Shower at home or at the beach shower.", () => { closeMenu(); goHome(); });
   if (s.bladder < 25) add("🚽 Find a toilet", "Use the toilet at home or the public toilet by the beach.", () => { closeMenu(); goHome(); });
   if (s.job && !careerWhy()) add("💼 Go to work", careerTitle() + " · earns " + rs(careerPayNow()) + " a shift.", () => { closeMenu(); openPhone("jobs"); });
@@ -12502,7 +12428,7 @@ const ODD_JOBS = [ // the quick gigs someone might offer you on the street
   { t: "Clean up after a beach party", pay: [250, 450], min: 50, fx: { energy: -18, hygiene: -20 } },
   { t: "Push a stalled car off the road", pay: [150, 350], min: 20, fx: { energy: -20 } },
   { t: "Move furniture at the Yasmina flats", pay: [350, 650], min: 70, fx: { energy: -28, hunger: -12 } },
-  { t: "Stack crates behind Super U", pay: [250, 450], min: 50, fx: { energy: -20, hygiene: -8 } }
+  { t: "Stack crates behind Supermarché Baie", pay: [250, 450], min: 50, fx: { energy: -20, hygiene: -8 } }
 ]; // end odd jobs
 function offerOddJob() { // pop a one-off cash gig
   const j = ODD_JOBS[rnd(0, ODD_JOBS.length - 1)], pay = rnd(j.pay[0], j.pay[1]); // pick a job and a price
@@ -12703,7 +12629,7 @@ function decorDrop() { // let go of the held piece
 
 // ================= careers: apply, get paid per shift, climb the ranks =================
 const CAREERS = { // pick one career; each has five ranks you get promoted through
-  civil:  { name: "Civil Service", icon: "🏛️", skill: "cha", req: 0, blurb: "A desk at the town hall. From Admin Officer to Director, one file at a time.",
+  civil:  { name: "Civil Service", icon: "🏛️", skill: "cha", req: 0, blurb: "A desk in the Grand Baie offices. From Admin Officer to Director, one file at a time.",
             ranks: [["Admin Officer", 1400], ["Senior Officer", 2200], ["Principal Officer", 3200], ["Assistant Director", 4600], ["Director", 7000]] },
   tech:   { name: "Software Agency", icon: "💻", skill: "cha", req: 0, blurb: "Build sites and apps for clients. Ship work, earn trust, grow the studio.",
             ranks: [["Junior Dev", 1600], ["Developer", 2600], ["Senior Dev", 3800], ["Tech Lead", 5500], ["Studio Founder", 8500]] },
@@ -12711,7 +12637,7 @@ const CAREERS = { // pick one career; each has five ranks you get promoted throu
             ranks: [["Pool Waiter", 1100], ["Head Waiter", 1800], ["Supervisor", 2700], ["Duty Manager", 4000], ["General Manager", 6500]] },
   dive:   { name: "Dive & Tours", icon: "🤿", skill: "fit", req: 3, blurb: "Lead dives and boat tours on the lagoon. Needs real fitness.",
             ranks: [["Tank Carrier", 1300], ["Dive Guide", 2200], ["Instructor", 3400], ["Head Instructor", 4800], ["Centre Owner", 7500]] },
-  retail: { name: "Fashion Retail", icon: "👗", skill: "style", req: 0, blurb: "Work the Cascavelle Mall floor. Style sense turns into sales.",
+  retail: { name: "Fashion Retail", icon: "👗", skill: "style", req: 0, blurb: "Work the shopping centre floor. Style sense turns into sales.",
             ranks: [["Sales Assistant", 1000], ["Stylist", 1700], ["Floor Lead", 2500], ["Store Manager", 3800], ["Area Manager", 6000]] }
 }; // end CAREERS
 const PROMO_SHIFTS = 5; // good shifts needed for each promotion

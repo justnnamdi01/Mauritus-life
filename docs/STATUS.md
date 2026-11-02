@@ -18,6 +18,22 @@ Keep this file current. Claude reads it at the start of every session and update
 - `game/test/regions.test.js`: all checks pass.
 - Headless browser: new character starts in a Grand Baie house, walks out, all 36 apps open, both shops open and close, no page errors, daytime screenshots look right.
 
+## Done, session 4 (2 Nov 2026)
+- **14 places open in Grand Baie**, from one table (`GBKIND`, `GBNAMES`, `GBACTS` in `game/public/index.html`): Mauritian food and prices (dholl puri, faratha, gato piment, alouda, briyani, fish vindaye, baguette, samoussa), groceries, pads, medicine, haircuts, the library, a temple, the petrol station and Sega Bar. Names for generic shops are made up (Boutik Soleil, Resto Kreol...). Four jobs added: Bazaar, restaurant, bakery, fish market.
+- Which building gets which template comes from its name in the map (`GBKIND`). Buildings without a template (electronics shop, phone shop, hardware shop, police station) stay "opening soon".
+- Old place names in tasks and hints (Snack Chez Ram, Super U, Kafe Wifi...) now point to the Grand Baie place of the same kind (`OLDKIND`).
+- **Guide rewritten**: 187 answers cut to 94 with no Flic en Flac/Tamarin/Bambous/Trianon/partner text, plus new Grand Baie answers. What's new updated.
+- Starter goals changed: first shift, an hour at the library, save Rs 10,000. The Bambous mission is gone. HUD title, page descriptions and student role text no longer mention Flic en Flac.
+
+## Tested, session 4
+- Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
+
+## Not done / known gaps, session 4
+- Student role: classes at "Middlesex University" are gone (no building), so students only get the allowance and part-time shifts. Decide if students should exist or get a Grand Baie school.
+- Prices, wages and rent are still the old game's numbers and are not retuned. Do an economy pass on paper before launch.
+- Home tiers, the Government/Parliament apps, raids and heists still use the old game's wording and (for government) palace buildings that no longer exist. Check each before launch.
+- No mascot yet, no new share image, icons still old.
+
 ## Not done / known gaps, session 3
 - **Not tested on a real phone.** The 3D look in daylight was only checked in the headless browser.
 - **The Guide still has many answers about Flic en Flac, Tamarin and Trianon** (the old game's places). They need rewriting, and so do the missions and tutorial text that mention old places.
@@ -70,8 +86,9 @@ Keep this file current. Claude reads it at the start of every session and update
 - Graphics aim: stylized, polished, built one street at a time.
 
 ## Next step
-1. Redeploy on Railway and walk around Grand Baie on a real phone (also check the Guide and the intro screens for old Flic en Flac wording).
-2. Rewrite the Guide, missions and tutorial text for Grand Baie; open more places there with Mauritian content and retuned prices.
-3. Build Port Louis with `tools/build-region.mjs` (add it to `REGIONS`, set its entry point), then Flic en Flac.
+1. Redeploy on Railway and walk around Grand Baie on a real phone.
+2. Economy pass: retune prices, wages, rent and money sinks on paper; decide on students, government and raids.
+3. Mascot, icons and share image.
+4. Build Port Louis with `tools/build-region.mjs` (add it to `REGIONS`, set its entry point), then Flic en Flac.
 4. Remove the dead old-world code and split `index.html` into modules.
 5. Phase 2 graphics on one Grand Baie street; Phase 3 driving.
