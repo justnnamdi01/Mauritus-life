@@ -1,13 +1,201 @@
 {
   "_about": "The island's regions. Each island tile belongs to the region with the nearest seed point (lon, lat). 'open' is the default; the admin card can override it and set an opening date without a deploy. 'map' is the detailed walkable map a region uses, if it has one yet.",
   "regions": [
-    { "id": "grandbaie", "name": "Grand Baie", "open": true, "opensAt": "", "color": "#f2b544", "map": "", "seeds": [[57.585, -20.012], [57.612, -19.985], [57.565, -20.035]] },
-    { "id": "portlouis", "name": "Port Louis", "open": true, "opensAt": "", "color": "#e8664a", "map": "", "seeds": [[57.502, -20.162], [57.520, -20.140]] },
-    { "id": "west", "name": "Flic en Flac and the west", "open": true, "opensAt": "", "color": "#4cb8c4", "map": "fef", "seeds": [[57.370, -20.275], [57.368, -20.330], [57.405, -20.300], [57.420, -20.225]] },
-    { "id": "north", "name": "Pamplemousses and the north", "open": false, "opensAt": "", "color": "#7cc36a", "map": "", "seeds": [[57.560, -20.100], [57.650, -20.045], [57.600, -20.080]] },
-    { "id": "east", "name": "Flacq and Belle Mare", "open": false, "opensAt": "", "color": "#56a3e0", "map": "", "seeds": [[57.715, -20.190], [57.775, -20.190], [57.740, -20.120], [57.700, -20.270]] },
-    { "id": "southeast", "name": "Mahébourg and Grand Port", "open": false, "opensAt": "", "color": "#9a7ad8", "map": "", "seeds": [[57.700, -20.405], [57.660, -20.440], [57.735, -20.340]] },
-    { "id": "south", "name": "Le Morne, Chamarel and the south", "open": false, "opensAt": "", "color": "#d97aa6", "map": "", "seeds": [[57.525, -20.505], [57.325, -20.455], [57.395, -20.430], [57.450, -20.480], [57.590, -20.470]] },
-    { "id": "plateau", "name": "Curepipe, Quatre Bornes and Moka", "open": false, "opensAt": "", "color": "#c9a46b", "map": "", "seeds": [[57.520, -20.318], [57.478, -20.262], [57.560, -20.225], [57.445, -20.300], [57.590, -20.300]] }
+    {
+      "id": "grandbaie",
+      "name": "Grand Baie",
+      "open": true,
+      "opensAt": "",
+      "color": "#f2b544",
+      "map": "grandbaie",
+      "seeds": [
+        [
+          57.585,
+          -20.012
+        ],
+        [
+          57.612,
+          -19.985
+        ],
+        [
+          57.565,
+          -20.035
+        ]
+      ]
+    },
+    {
+      "id": "portlouis",
+      "name": "Port Louis",
+      "open": false,
+      "opensAt": "",
+      "color": "#e8664a",
+      "map": "",
+      "seeds": [
+        [
+          57.502,
+          -20.162
+        ],
+        [
+          57.52,
+          -20.14
+        ]
+      ]
+    },
+    {
+      "id": "west",
+      "name": "Flic en Flac and the west",
+      "open": false,
+      "opensAt": "",
+      "color": "#4cb8c4",
+      "map": "",
+      "seeds": [
+        [
+          57.37,
+          -20.275
+        ],
+        [
+          57.368,
+          -20.33
+        ],
+        [
+          57.405,
+          -20.3
+        ],
+        [
+          57.42,
+          -20.225
+        ]
+      ]
+    },
+    {
+      "id": "north",
+      "name": "Pamplemousses and the north",
+      "open": false,
+      "opensAt": "",
+      "color": "#7cc36a",
+      "map": "",
+      "seeds": [
+        [
+          57.56,
+          -20.1
+        ],
+        [
+          57.65,
+          -20.045
+        ],
+        [
+          57.6,
+          -20.08
+        ]
+      ]
+    },
+    {
+      "id": "east",
+      "name": "Flacq and Belle Mare",
+      "open": false,
+      "opensAt": "",
+      "color": "#56a3e0",
+      "map": "",
+      "seeds": [
+        [
+          57.715,
+          -20.19
+        ],
+        [
+          57.775,
+          -20.19
+        ],
+        [
+          57.74,
+          -20.12
+        ],
+        [
+          57.7,
+          -20.27
+        ]
+      ]
+    },
+    {
+      "id": "southeast",
+      "name": "Mahébourg and Grand Port",
+      "open": false,
+      "opensAt": "",
+      "color": "#9a7ad8",
+      "map": "",
+      "seeds": [
+        [
+          57.7,
+          -20.405
+        ],
+        [
+          57.66,
+          -20.44
+        ],
+        [
+          57.735,
+          -20.34
+        ]
+      ]
+    },
+    {
+      "id": "south",
+      "name": "Le Morne, Chamarel and the south",
+      "open": false,
+      "opensAt": "",
+      "color": "#d97aa6",
+      "map": "",
+      "seeds": [
+        [
+          57.525,
+          -20.505
+        ],
+        [
+          57.325,
+          -20.455
+        ],
+        [
+          57.395,
+          -20.43
+        ],
+        [
+          57.45,
+          -20.48
+        ],
+        [
+          57.59,
+          -20.47
+        ]
+      ]
+    },
+    {
+      "id": "plateau",
+      "name": "Curepipe, Quatre Bornes and Moka",
+      "open": false,
+      "opensAt": "",
+      "color": "#c9a46b",
+      "map": "",
+      "seeds": [
+        [
+          57.52,
+          -20.318
+        ],
+        [
+          57.478,
+          -20.262
+        ],
+        [
+          57.56,
+          -20.225
+        ],
+        [
+          57.445,
+          -20.3
+        ],
+        [
+          57.59,
+          -20.3
+        ]
+      ]
+    }
   ]
 }

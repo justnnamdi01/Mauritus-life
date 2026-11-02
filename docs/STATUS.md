@@ -3,11 +3,30 @@
 Keep this file current. Claude reads it at the start of every session and updates it at the end.
 
 ## Where we are
-- **Phase:** Phase 1 of `docs/ROADMAP.md` is done apart from tests on a real phone. Region 1 (Grand Baie) has a first walkable version.
-- **Open regions:** Grand Baie, Port Louis, and Flic en Flac with the west. The other five are locked and grey.
-- **The walkable world:** one grid of 460 x 320 tiles. Rows 0-231 are the starter world (Flic en Flac, Tamarin, Bambous, Trianon). Rows 236-315 are Grand Baie (x 0-123), with deep sea all round. `HO` (232) marks the boundary; the server reads the region from the player's row.
+- **A new game, not Flic en Flac Life.** The world is now only Grand Baie, drawn from the real OpenStreetMap data (`tools/build-region.mjs` makes `game/public/grandbaie-map.js`): the bay, beach, coast road, the Bazaar, shopping centres, library, police station and place of worship, with 58 house plots inland. New players start there.
+- **Open regions:** Grand Baie only. Port Louis and Flic en Flac are "coming soon" until their own maps are built with the same tool (their entries stay in `game/regions.json`).
+- **Removed from the world:** the old Flic en Flac, Tamarin, Bambous, Trianon and Ebène buildings, houses, beach lots, Palm Beach, Tamarin villas, weekly parties, the community WhatsApp promo, and the partner businesses (Belle's Kitchen, A* Cutz, DevCon, Clawed by Taps) behind one switch (`PARTNERS_ON`, off). Halloween and the Treasure Hunt are off.
+- The walkable world is one grid of 460 x 320 tiles. Rows 236-315 are Grand Baie; `HO` (232) marks where the old rows end. The old rows are unreachable and not drawn.
 
-## Done, session 2 (2 Nov 2026)
+## Done, session 3 (2 Nov 2026)
+- Grand Baie rebuilt from real map data; houses, apartments and the bus station placed from it. Landmarks keep their real public names; shops, hotels and restaurants get generic names so no real business is used.
+- Renamed to Mauritius Life everywhere players see it; removed the old support phone number and community promo.
+- Phone: Town map, world map and ride list show Grand Baie only. All 36 phone apps open without errors; both open shops work.
+- Server: Port Louis and Flic en Flac locked; the last region with a walkable map cannot be closed; the phone reports its region correctly when indoors (bug found by the tests).
+
+## Tested, session 3
+- `game/test/regions.test.js`: all checks pass.
+- Headless browser: new character starts in a Grand Baie house, walks out, all 36 apps open, both shops open and close, no page errors, daytime screenshots look right.
+
+## Not done / known gaps, session 3
+- **Not tested on a real phone.** The 3D look in daylight was only checked in the headless browser.
+- **The Guide still has many answers about Flic en Flac, Tamarin and Trianon** (the old game's places). They need rewriting, and so do the missions and tutorial text that mention old places.
+- **Only 2 shops are open**, with the old Flic en Flac prices and menus. The other 16 places show "opening soon". Income is limited to those shifts, delivery, and the other apps for now.
+- **Old code is still in `index.html`** (the old towns' data, partner modules, events). It is unreachable but makes the file big. Remove it (and split the file) before adding much.
+- Port Louis and Flic en Flac need their maps built with `tools/build-region.mjs`.
+- Real-world roads are 1-2 tiles wide and some streets are very close together; the town may feel crowded. Tune the map script if it does.
+
+## History: session 2 (superseded by session 3: the hand-made Grand Baie and the intercity bus to Flic en Flac were replaced)
 - **Grand Baie, first look** (`gbTile`, `GBSOON` in `game/public/index.html`): the SPEC layout. Lagoon, public beach, promenade, coast road, Sunset Boulevard with bars, a club, a cinema and food, the marina jetty, Marché square with the bus station, estate lanes, the red-roof chapel and the hills. Two shops are open: Dholl Puri Corner (reuses the snack menu and kitchen shifts) and Sega Bar (reuses the bar menu and shifts). The other 12 buildings are "opening soon" (signs, no doors yet), like Tamarin's.
 - **Intercity bus:** Rs 75, from the Beach bus stop in Flic en Flac to Marché square and back. It refuses when the destination is locked. Taxis and cars cannot cross between the towns.
 - **The server reads the region from the position** (`walkRegion` in `game/regions.js`), so a phone cannot lie about it. The "put back" message now includes x and y (bug fixed), and closing Grand Baie moves everyone inside back to Flic en Flac.
@@ -23,7 +42,7 @@ Keep this file current. Claude reads it at the start of every session and update
 - **The 3D look of Grand Baie on a real phone.** In the headless browser I saw the beach, promenade, road, buildings and name pills render correctly (screenshots at night). Not checked: daytime, the lagoon, the chapel and hills, or how it looks on a phone. (An earlier note here said the headless browser crashes: that was wrong. The game just waits at character creation.)
 - Performance with the bigger world on a mid-range phone.
 
-## Done (2 Nov 2026)
+## History: session 1
 - OpenStreetMap extract of Mauritius in `tools/osm/` (dated 1 Nov 2026, uploaded by hand because the download sites drop the connection from the cloud sessions).
 - `tools/build-island.mjs` turns it into `game/public/island.json`: 370 x 502 tiles, 81 KB. Its land area matches the real island (about 1,865 km²).
 - `game/regions.json` (8 regions, seed points, colours) and `game/regions.js` (the server lock).
@@ -51,8 +70,8 @@ Keep this file current. Claude reads it at the start of every session and update
 - Graphics aim: stylized, polished, built one street at a time.
 
 ## Next step
-1. Deploy to a test server and walk around Grand Baie on a real phone. Fix whatever looks wrong in 3D.
-2. Open more Grand Baie shops with their own Mauritian content (the first two reuse Flic en Flac's menus). Pereybere Estate homes with 3-tile gaps (SPEC). Retune prices for the new economy.
-3. Phase 2 graphics on one Grand Baie street (Sunset Boulevard).
-4. Port Louis is open on the island map but has no streets yet: build it, or lock it until it does.
-5. Confirm hosting (Railway service, volume, domain).
+1. Redeploy on Railway and walk around Grand Baie on a real phone (also check the Guide and the intro screens for old Flic en Flac wording).
+2. Rewrite the Guide, missions and tutorial text for Grand Baie; open more places there with Mauritian content and retuned prices.
+3. Build Port Louis with `tools/build-region.mjs` (add it to `REGIONS`, set its entry point), then Flic en Flac.
+4. Remove the dead old-world code and split `index.html` into modules.
+5. Phase 2 graphics on one Grand Baie street; Phase 3 driving.

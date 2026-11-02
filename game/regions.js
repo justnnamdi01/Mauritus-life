@@ -15,10 +15,11 @@ const W = ISL.w, H = ISL.h;
 const unrle = (a, n) => { const out = new Uint8Array(n); let i = 0; for (let k = 0; k < a.length; k += 2) { out.fill(a[k], i, i + a[k + 1]); i += a[k + 1]; } return out; };
 const REGION_AT = unrle(ISL.region, W * H);
 const BY_ID = Object.fromEntries(DEF.map((r) => [r.id, r]));
-const DEFAULT_RG = "west"; // the map every player starts on today
-const GB_ROW = 232; // the walkable map: Grand Baie starts at this row (see HO in public/index.html)
-const STOPS = { west: { x: 17.5, y: 12.5 }, grandbaie: { x: 22.5, y: 292.5 } }; // the intercity bus stops: safe places to put someone back
-const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= GB_ROW ? "grandbaie" : DEFAULT_RG) : ""; }; // "" indoors or with no place
+const DEFAULT_RG = "grandbaie"; // the map every player starts on
+const GB_ROW = 232; // the walkable map: rows from here down are Grand Baie (HO in public/index.html); its first tile row is GBY = 236
+const GBM = (() => { try { const t = fs.readFileSync(path.join(__dirname, "public", "grandbaie-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } })(); // the walkable Grand Baie map built from OpenStreetMap
+const STOPS = { grandbaie: GBM ? { x: GBM.stop.x, y: GB_ROW + 4 + GBM.stop.y } : { x: 30.5, y: 260.5 } }; // the bus station: where to put someone back (GB_ROW + 4 is the map's first row, see GBY in public/index.html)
+const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= GB_ROW ? "grandbaie" : "west") : ""; }; // rows above GB_ROW are the old Flic en Flac map, which is no longer open // "" indoors or with no place
 
 let db = null, persist = () => {}, onChange = () => {};
 function init(theDb, persistFn, changed) { // call once the save has loaded
@@ -42,8 +43,8 @@ function list() { // what every phone may know
   return DEF.map((r) => ({ id: r.id, name: r.name, color: r.color, map: r.map || "", open: isOpen(r.id), opensAt: db.regions[r.id].opensAt || 0 }));
 }
 function spawn() { // somewhere safe: the first seed of the first open region
-  const r = DEF.find((q) => isOpen(q.id)) || BY_ID[DEFAULT_RG], [lo, la] = r.seeds[0];
-  const rg = STOPS[r.id] ? r.id : DEFAULT_RG; return { rg, x: STOPS[rg].x, y: STOPS[rg].y, ix: (lo - ISL.lon0) * ISL.kx / ISL.tileM, iy: (ISL.lat0 - la) * ISL.ky / ISL.tileM };
+  const r = DEF.find((q) => isOpen(q.id) && STOPS[q.id]) || BY_ID[DEFAULT_RG], [lo, la] = r.seeds[0]; // an open region that has a walkable map
+  const rg = STOPS[r.id] ? r.id : "grandbaie"; return { rg, x: STOPS[rg].x, y: STOPS[rg].y, ix: (lo - ISL.lon0) * ISL.kx / ISL.tileM, iy: (ISL.lat0 - la) * ISL.ky / ISL.tileM };
 }
 function placeOk(p) { // is a presence somewhere it is allowed to be? returns "" or the locked region's id
   const rg = walkRegion(p) || (p.rg === undefined || p.rg === "" ? DEFAULT_RG : String(p.rg)); // where they stand decides, not what the phone says
@@ -65,6 +66,7 @@ function info(id) { const r = BY_ID[id]; return r ? { id, name: r.name, opensAt:
 // The admin card: open or close a region, or set when it opens (ms since 1970, 0 for no date).
 function adminSet(b) {
   const s = db.regions[String(b.id || "")]; if (!s) return { ok: false, error: "No such region." };
+  if (b.open === false && STOPS[String(b.id)] && !DEF.some((q) => q.id !== b.id && STOPS[q.id] && isOpen(q.id))) return { ok: false, error: "Keep at least one region with a walkable map open: players need somewhere to stand." };
   if (b.open !== undefined) { s.open = b.open === true; if (s.open) s.opensAt = 0; }
   if (b.opensAt !== undefined) { const t = Number(b.opensAt) || 0; if (t && !(t > Date.now())) return { ok: false, error: "Pick an opening date in the future." }; s.opensAt = t; }
   persist(); onChange(); return { ok: true, regions: list() };

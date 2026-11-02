@@ -92,6 +92,7 @@
 
 .housepic { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto 10px; border-radius: 16px; border: 2px solid rgba(255, 255, 255, 0.25); }
 </style>
+<script src="grandbaie-map.js"></script>
 <script src="net-adapter.js?v=8"></script>
 </head>
 <body>
@@ -1129,7 +1130,7 @@ html[data-theme="light"] .chat, html[data-theme="light"] .chatform input { color
     <div class="slotbtns"><button class="go" id="surfPop" type="button">🏄 Pop up!</button><button class="pill" id="surfOut" type="button">Paddle in</button></div>
   </div>
   <div class="tamtitle" id="tamTitle" hidden><p>Welcome to</p><h1>Tamarin</h1><span>Surf village · West coast</span></div>
-  <div class="intro" id="intro" role="dialog" aria-label="Welcome to Flic en Flac Life">
+  <div class="intro" id="intro" role="dialog" aria-label="Welcome to Mauritius Life">
     <div class="introSun"></div>
     <div class="introText">
       <p class="introEyebrow">Welcome to</p>
@@ -1148,6 +1149,7 @@ html[data-theme="light"] .chat, html[data-theme="light"] .chatform input { color
 <script>
 // ================= basics =================
 const W = 460, H = 320, NH = 60, HO = 232, GBY = 236, GBH = 80, GBW = 124; // HO: the old bottom edge (Tamarin ends there); Grand Baie is rows GBY to GBY+GBH-1, x 0 to GBW-1, with deep sea all round so nobody walks there from Tamarin; // map size in tiles: rows 0-59 are Flic en Flac on the west, Cascavelle and the new estates in the middle and Bambous Town behind its roadblock in the far east; rows 60-231 are the coast road south and Tamarin (with its new Heights district)
+const GBM = (window.REGION_MAPS || {}).grandbaie; // Grand Baie as built from OpenStreetMap by tools/build-region.mjs (real coast, roads, landmarks and house plots)
 const ELEV = 2.6; // Tamarin stands on a bluff this high above the sea and the plain around Flic en Flac
 const smooth = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); }; // an S-shaped ramp from 0 to 1
 const elevAt = (x, z) => { if (z < 96 || z >= HO) return 0; const w = smooth(112, 118, x); return ELEV * smooth(10.5, 14.5, x) * ((1 - w) * smooth(96, 124, z) + w * smooth(102, 110, z)); }; // the ground rises on the way into Tamarin, and from the beach up to the village; east of x 118 the Trianon plateau is flat from row 110 (3D only)
@@ -1216,7 +1218,7 @@ function fresh() { // a brand new life
     inv: { save: 0, fund: 0, crypto: 0 }, px: { fund: 100, crypto: 100 }, invDay: 1, txns: [], club: false, runs: 0, bigBoys: false, // investments, market prices, bank history, run club, Maravan big boys table
     course: "cs", credits: 0, lastClass: 0, skips: 0, study: 0, grad: false, // university: course, credits, last class day, missed classes, library sessions, graduated
     bitten: 0, sick: false, zoom: 0.5, zv: 1, mv2: 1, // dog bite time, infection, and map zoom
-    inside: "home", ox: 22.5, oy: 10.8, // building you are in, and where you were outside
+    inside: "home", ox: GBM.plots[0].x + 1.5, oy: GBY + GBM.plots[0].y + 3.8, // building you are in, and where you were outside
     home: 0, decor: [], decorXY: [], decorRot: [], petXY: null, petRot: 0, musOpen: false, ambClaimed: false, title: "", king: false, pet: null, petFood: 0, genre: "afro", radio: true, mute: false, req: null, cover: "", bottles: 0, dc: null, reads: 0, // apartment tier, furniture, pet, music and nightlife
     parents: 70, fails: 0, failAt: 0, askAt: -99999, // how happy a student's parents are, class tests failed
     team: "", rent: 3500, made: false, face: 0, parties: 0 // football team, weekly rent, character created?, facing, parties attended
@@ -1395,65 +1397,35 @@ const TAMSOON = (() => { // the Tamarin places that are not open yet: you can se
   B("Barber Shop · coming soon", 56, 45, 5, 4, "#e8ecef", "#1f3a6b", { awn: "#c8102e", icon: "💈", door: "S" }); // the men's barber shop, on the main street next to Burgo Burgers
   return o;
 })();
-// ---------- Grand Baie (Region 1): the layout from docs/SPEC.md, local rows 0-79 ----------
+// ---------- Grand Baie (Region 1): the real town, from OpenStreetMap (see tools/build-region.mjs) ----------
 const inGB = (x, y) => y >= HO; // anywhere south of the old map edge is the Grand Baie region (the server works this out too)
-const GB_STREETS = [20, 34, 50, 62]; // east-west streets (local rows, two tiles wide): La Cuvette edge, the marina street, Sunset Boulevard's south end, Marché square
-function gbTile(x, y) { // the terrain of Grand Baie
-  const ly = y - GBY; if (ly < 0 || ly >= GBH || x >= GBW) return 0; // deep sea around the town
-  if (x < 4) return 0; if (x < 8) return ly === 34 ? 7 : 1; if (x < 13) return ly === 34 ? 7 : 2; // deep sea, lagoon and the public beach (the marina jetty at row 34)
-  if (x < 15) return 22; if (x < 17) return 4; // the promenade and the coast road
-  if (x >= 104) return x >= 120 ? 0 : 15; // the hills (blocked) at the east edge
-  if (GB_STREETS.some((r) => ly === r || ly === r + 1) && x <= 100) return 4; // the cross streets
-  if ((x === 40 || x === 41 || x === 60 || x === 61) && ly >= 2 && ly <= 77) return 4; // two avenues running north-south
-  if (x >= 64 && x <= 100 && (ly % 10 === 5) && ly >= 5 && ly <= 75) return 4; // estate lanes on a grid
-  if (x >= 18 && x <= 36 && ly >= 52 && ly <= 61) return 22; // Marché square (paved)
-  if (x >= 20 && x <= 26 && ly >= 70 && ly <= 74) return 12; // a five-a-side pitch by the market
-  return 3; // grass
-}
-const GBSOON = (() => { // Grand Baie's places: you can walk the streets and read the signs; the doors open as the region fills up
-  const o = [], B = (name, lx, ly, w, h, col, roofCol, extra) => o.push(Object.assign({ name, x: lx, y: GBY + ly, w, h, col, roof: "flat", roofCol, sign: roofCol, door: "S", soon: 1, gb: 1 }, extra));
-  B("Dive & Kayak Centre · opening soon", 18, 6, 6, 4, "#e2f0f6", "#1f6fa8", { roof: "thatch", roofCol: "#c9a45a", awn: "#1f6fa8", icon: "🤿", door: "W" }); // La Cuvette
-  B("Beach Snacks · opening soon", 18, 13, 5, 4, "#fdf0c7", "#d9482b", { awn: "#d9482b", icon: "🌭", door: "W" });
-  B("Supermarché · opening soon", 20, 24, 10, 6, "#f3f3ef", "#2f6b9a", { awn: "#2f6b9a", icon: "🛒" }); // Sunset Boulevard
-  B("Ciné Baie · coming soon", 44, 24, 9, 6, "#2a2e35", "#c9a227", { awn: "#8b0f1f", icon: "🎬", tall: 3.8 });
-  B("Sega Bar", 20, 37, 6, 4, "#f2cfa6", "#c9a45a", { roof: "thatch", awn: "#c8102e", icon: "🍹", id: "gbbar", gbOpen: "bar", soon: 0 }); // open: same drinks and bar shifts as the Sunset Bar
-  B("Club Lagon · opening soon", 30, 37, 8, 5, "#1c2a33", "#7a4fd1", { awn: "#7a4fd1", icon: "🪩", tall: 3.6 });
-  B("Dholl Puri Corner", 44, 37, 5, 4, "#fde6c2", "#b5482f", { roof: "tile", awn: "#e2a21b", icon: "🫓", id: "gbdholl", gbOpen: "snack", soon: 0 }); // open: same food and kitchen shifts as Snack Chez Ram
-  B("Gato Piment Kiosk · opening soon", 52, 37, 4, 3, "#fff3d6", "#c2457a", { awn: "#c2457a", icon: "🌶️" });
-  B("Restaurant Les Pêcheurs · opening soon", 20, 43, 8, 5, "#eef6f3", "#3f9a8a", { roof: "tile", roofCol: "#b5482f", awn: "#3f9a8a", icon: "🐟" });
-  B("Boat Trips & Dolphins · opening soon", 18, 30, 6, 3, "#f2f6fa", "#1f6fa8", { awn: "#1f6fa8", icon: "🐬", door: "W" }); // by the marina jetty
-  B("Marché Central · opening soon", 44, 53, 10, 7, "#f7f1e4", "#2f6b45", { awn: "#e2a21b", icon: "🥭", door: "W" }); // Marché square
-  B("Post Office · coming soon", 28, 65, 6, 4, "#f1ece4", "#c8102e", { awn: "#c8102e", icon: "📮", door: "N" });
-  B("Taxi Rank", 44, 65, 6, 3, "#e8ecef", "#e2a21b", { awn: "#e2a21b", icon: "🚕", door: "N" });
-  B("Red-Roof Chapel", 96, 2, 5, 6, "#f4efe6", "#c8202c", { roof: "tile", icon: "⛪", tall: 4.2 }); // the Cap Malheureux idea: a landmark and photo spot
-  return o;
-})();
+const GBT = (() => { const o = new Uint8Array(GBM.w * GBM.h); let i = 0; for (let k = 0; k < GBM.terr.length; k += 2) { o.fill(GBM.terr[k], i, i + GBM.terr[k + 1]); i += GBM.terr[k + 1]; } return o; })();
+function gbTile(x, y) { const ly = y - GBY; if (ly < 0 || ly >= GBM.h || x < 0 || x >= GBM.w) return 0; return GBT[ly * GBM.w + x]; } // the terrain of Grand Baie (deep sea round the edge)
+const GBPAL = [["#f3efe4", "#b5482f"], ["#f1dfc4", "#8d6a3a"], ["#e6edf2", "#4a6b9a"], ["#f4e3e3", "#a8433d"], ["#e9f1e2", "#3f7a4a"], ["#f2ead6", "#c9a45a"]]; // wall and roof colours, picked by position
+const GBSOON = (() => { // Grand Baie's places: the real landmarks and generic shops. Two are open; the rest show a sign and open over the coming weeks
+  const o = []; GBM.buildings.forEach((q, k) => { const pal = GBPAL[(q.x * 7 + q.y * 3 + k) % GBPAL.length], lm = /⛪|📚|🚓|🥭/.test(q.icon || ""), b = Object.assign({ name: q.name + (lm ? "" : q.open ? "" : " · opening soon"), x: q.x, y: GBY + q.y, w: q.w, h: q.h, col: pal[0], roof: "flat", roofCol: pal[1], awn: pal[1], sign: pal[1], door: "S", soon: 1, gb: 1, icon: q.icon }, q.open ? { id: q.open === "snack" ? "gbdholl" : "gbbar", gbOpen: q.open, soon: 0, roof: q.open === "bar" ? "thatch" : "tile", roofCol: q.open === "bar" ? "#c9a45a" : "#b5482f" } : {}); if (gbTile(b.x + (b.w >> 1), b.y + b.h - GBY) === 0 || ![3, 4, 9, 22].includes(gbTile(b.x + (b.w >> 1), b.y + b.h - GBY))) b.door = "N"; o.push(b); }); return o; })();
+const PARTNERS_ON = false; // Belle's Kitchen, A* Cutz, DevCon and Clawed by Taps belong to other businesses (and to the old Flic en Flac game): off until they agree to be in Mauritius Life
+const PARTNER_IDS = ["belle", "cutz", "devcon", "salon"];
+if (!PARTNERS_ON) for (const id of PARTNER_IDS) { const i = BUILD.findIndex((q) => q.id === id); if (i >= 0) BUILD.splice(i, 1); } // their buildings are not in the world
 const GBSHOPS = GBSOON.filter((b) => b.gbOpen); for (const b of GBSHOPS) { GBSOON.splice(GBSOON.indexOf(b), 1); BUILD.push(b); } // the first Grand Baie shops you can walk into
-const GB_STOP = { x: 22.5, y: GBY + 56.5 }; // where the intercity bus drops you in Grand Baie (Marché square)
-const FEF_STOP = { x: 17.5, y: 12.5 }; // and in Flic en Flac (by the Beach bus stop)
-const SOONB = BAMBOUS.concat(TAMSOON, GBSOON); // every building you can see but not enter
+const GB_STOP = { x: GBM.stop.x, y: GBY + GBM.stop.y }; // the bus station, beside the bazaar
+BUILD.splice(0, BUILD.length, ...BUILD.filter((q) => q.gb)); // the old Flic en Flac, Tamarin, Bambous and Trianon buildings are not in Mauritius Life
+const SOONB = GBSOON; // every building you can see but not enter
 
 const FB = { x0: 36, x1: 49, y0: 38, y1: 44, gy0: 40, gy1: 42 }; // football pitch edges and the goal mouth
 const CT = { x0: 50, x1: 55, y0: 38, y1: 44, hx: 52.5, hy: 38.55 }; // basketball court edges and the hoop
 // a little more breathing room: the busiest buildings lose a tile on the outside (their rooms inside are unchanged), so the streets between them are wider
 for (const [id, dx, dw, dh] of [["snack", 0, 1, 0], ["cafe", 1, 1, 0], ["shop", 1, 1, 1], ["dive", 0, 1, 0], ["bar", 1, 1, 0], ["gym", 0, 1, 0], ["jumbo", 1, 1, 1], ["sapphire", 0, 1, 0], ["tigers", 0, 1, 0], ["hospital", 1, 1, 1], ["uni", 0, 1, 1], ["mall", 1, 1, 1], ["immig", 0, 1, 0], ["police", 0, 1, 0], ["slr", 1, 1, 1], ["resort", 0, 1, 0]]) { const b = BUILD.find((q) => q.id === id); if (b) { b.x += dx; b.w -= dw; b.h -= dh; } }
-const APTS = { x: 99, y: 50, w: 6, h: 7, name: "Flamboyants Apartments" }; // when every plot is taken, newer players get a private flat here
+const APTS = GBM.apts ? { x: GBM.apts.x, y: GBY + GBM.apts.y, w: GBM.apts.w, h: GBM.apts.h, name: "Grand Baie Apartments" } : { x: 2, y: GBY + 2, w: 6, h: 7, name: "Grand Baie Apartments" }; // when every plot is taken, newer players get a private flat here
 const PLOTS = []; // house plots in the players' estate: every player gets one address, in this order (the numbers never change, so nobody loses their house)
 const plotBlock = (x0, y0, cols, rows, px, py) => { const o = []; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) o.push({ x: x0 + c * px, y: y0 + r * py }); return o; }; // a grid of plots: where it starts, how many across and down, and the spacing
-PLOTS.push(...plotBlock(59, 31, 9, 2, 6, 6), ...plotBlock(59, 43, 4, 1, 6, 6)); // the first estate south of Cascavelle: three empty tiles between neighbours (22 houses)
-PLOTS.push(...plotBlock(70, 50, 7, 2, 6, 6).filter((q) => !(q.x + 3 > APTS.x - 1 && q.x < APTS.x + APTS.w + 1 && q.y + 3 > APTS.y - 1 && q.y < APTS.y + APTS.h + 1))); // the south end, past Jamal's, leaving the apartment block its space (12 houses)
-// further out the houses sit on a 5-tile grid, two empty tiles between them
-PLOTS.push(...plotBlock(112, 15, 13, 3, 5, 5)); // Coral Heights, between the two main streets (39)
-PLOTS.push(...plotBlock(112, 31, 13, 3, 5, 5)); // Palm Grove, south of Wolmar street (39)
-PLOTS.push(...plotBlock(112, 1, 13, 2, 5, 5)); // Hillside, north of the top street (26)
-PLOTS.push(...plotBlock(112, 46, 13, 3, 5, 5).slice(0, 155 - PLOTS.length)); // Sunrise Bay, the far south-east (the rest of it stays open for the future)
-{ const dest = [[175, 56], [138, 51], [144, 51], [150, 51], [159, 51], [165, 51], [171, 51], [130, 56], [146, 56], [152, 56], [159, 56], [169, 56], [111, 55], [125, 55], [134, 55], [176, 31], [176, 7], [176, 1], [83, 1], [88, 1]]; // twenty houses that stood right against the airport fence (and along the runway) now stand on open ground in the south-east; their addresses stay the same
-  [99, 100, 101, 102, 138, 139, 140, 141, 24, 25, 26, 27, 13, 14, 15, 16, 17, 12, 21, 23].forEach((i, k) => { PLOTS[i] = { x: dest[k][0], y: dest[k][1] }; }); }
+PLOTS.push(...GBM.plots.map((q) => ({ x: q.x, y: GBY + q.y }))); // the real Grand Baie estate: 3x3 houses with three empty tiles between neighbours, inland, never on the beach
 const TAM_BASE = 1000; // addresses from 1000 up are villas in the Tamarin Crown Estate
 const BEACH_BASE = 2000; // addresses from 2000 up are lots on the Palm Beach sand
 const BPLOTS = [64, 71, 78, 85, 92, 99, 106].map((y) => ({ x: 8, y, w: 4, h: 4 })); // seven beach lots in the quiet Palm Beach Estate on the south sand, well away from the stalls, the club and the resort: three empty tiles between neighbours, and clear of the coast road where it bends onto the sand
 const addrZone = (i) => (i >= BEACH_BASE ? "beach" : i >= TAM_BASE ? "tam" : "fef");
 const TPLOTS = []; for (const y of [199, 211]) for (const x of [69, 77, 85, 93, 101]) TPLOTS.push({ x, y, w: 6, h: 5 }); // ten villas on two rows
+TPLOTS.length = 0; BPLOTS.length = 0; // the Flic en Flac beach lots and Tamarin villas are not part of Mauritius Life
 const CROWN = { x0: 64, x1: 108, y0: 196, y1: 220, gy: 205 }; // the gated estate: a wall round this rectangle, the gate on the west side
 const inCrown = (x, y) => x >= CROWN.x0 && x <= CROWN.x1 && y >= CROWN.y0 && y <= CROWN.y1;
 const onCrown = (x, y) => inCrown(x, y) && (x === CROWN.x0 || x === CROWN.x1 || y === CROWN.y0 || y === CROWN.y1);
@@ -1565,9 +1537,9 @@ function buildMap() { // fill the terrain and collision grids
     terr[y * W + x] = 8; solid[y * W + x] = 1; // mark the tree and block it
   } // end tree loop
   for (const [x, y] of [[28, 21], [37, 21], [28, 25], [35, 26]]) { terr[y * W + x] = 8; solid[y * W + x] = 1; } // shade trees in the park
-  for (let y = GBY; y < GBY + GBH; y++) for (let x = 13; x < 104; x++) { // Grand Baie: filao trees behind the beach, sparse palms in town, clear of buildings and the bus stops
-    if (terr[y * W + x] !== 3 || solid[y * W + x] || hash(x, y) % (x < 18 ? 4 : 13) !== 0) continue;
-    if (GBSOON.some((b) => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2)) continue; if (OBJ.some((o) => Math.abs(o.x - x - 0.5) < 2.2 && Math.abs(o.y - y - 0.5) < 2.2)) continue;
+  for (let y = GBY; y < GBY + GBH; y++) for (let x = 0; x < GBM.w; x++) { // Grand Baie: palms and trees on free grass, clear of buildings, house plots (and their doors) and the bus stops
+    if (terr[y * W + x] !== 3 || solid[y * W + x] || hash(x, y) % 9 !== 0) continue;
+    if (GBSOON.concat(BUILD.filter((q) => q.gb)).some((b) => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2)) continue; if (PLOTS.some((q) => x >= q.x - 1 && x < q.x + 4 && y >= q.y - 1 && y < q.y + 5)) continue; if (OBJ.some((o) => Math.abs(o.x - x - 0.5) < 2.2 && Math.abs(o.y - y - 0.5) < 2.2)) continue;
     terr[y * W + x] = 8; solid[y * W + x] = 1;
   }
   for (let y = 0; y < H; y++) for (let x = GATE + 2; x < W; x++) { // palms in Bambous Town, off the roads and clear of its buildings
@@ -1814,9 +1786,7 @@ for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" 
 
 OBJ.push({ x: 60.5, y: 14.5, icon: "🚏", stop: true, name: "Cascavelle bus stop", acts: busActs }); // bus stop for the mall and the university
 // (Flic Motors is now a real building with a car lot: see BUILD "motors" and motorsActs)
-OBJ.push({ x: 17.5, y: 11.5, icon: "🚏", stop: true, name: "Beach bus stop", acts: () => busActs().concat(intercityActs("grandbaie")) }); // bus stop by the public beach (and the intercity bus to Grand Baie)
-OBJ.push({ x: GB_STOP.x, y: GB_STOP.y - 2, icon: "🚌", name: "Grand Baie bus station", acts: () => intercityActs("west") }); // Marché square: the intercity bus back to Flic en Flac
-OBJ.push({ x: 15.5, y: GBY + 34.5, icon: "⚓", name: "Marina jetty", acts: () => [{ label: "Boat trips and the dolphin tour", info: "Opening soon in Grand Baie", go: () => { closeMenu(); toast("🐬 Boat trips from the marina open soon. Watch What's new!"); } }] }); // the jetty (trips come later)
+OBJ.push({ x: GB_STOP.x, y: GB_STOP.y, icon: "🚌", stop: true, name: "Grand Baie bus station", acts: () => busActs().concat(intercityActs("portlouis"), intercityActs("west")) }); // beside the bazaar: local rides, and the intercity buses (closed until those regions open)
 OBJ.push({ x: 17.5, y: 27.5, icon: "🚏", stop: true, name: "Wolmar bus stop", acts: busActs }); // bus stop for the hotels
 OBJ.push({ x: 46.5, y: 27.5, icon: "🚏", stop: true, name: "Jumbo bus stop", acts: busActs }); // bus stop by the hypermarket
 OBJ.push({ x: 28.5, y: 23.5, icon: "⛲", name: "Park fountain", acts: () => [A("Sit by the fountain", "45 min · +18 fun, +10 people", 45, 0, { fun: 18, social: 10, energy: 5 }, { msg: "Kids on bikes, old men playing dominoes." }), A("Picnic", "Uses 1 grocery meal · +40 food, +15 fun", 40, 0, { hunger: 40, fun: 15 }, { why: s.meals > 0 ? "" : "No groceries", run() { s.meals--; return "Picnic on the grass."; } })] }); // chill in the park
@@ -2226,9 +2196,9 @@ function lawMenu(T, row) { const [key, ic, name, info, vals, fmt] = row, now = l
 // ---------- vote links, embezzling, arson and the new-apps tip ----------
 const VOTE_LINK = (() => { try { const m = /[?&]vote=(fef|tam)\.([a-z0-9]{6,40})/.exec(location.search); if (m) { history.replaceState(null, "", location.pathname + location.hash); return { T: m[1], uid: m[2] }; } } catch (e) {} return null; })(); // someone sent you a link to vote for them
 function shareVote(T, c) { // copy or share a link that asks people to vote for a candidate
-  const url = location.origin + "/?vote=" + T + "." + c.uid, mine = c.uid === uid, text = mine ? "Vote for me for President of " + TOWN_NAME[T] + " in Flic en Flac Life!" : "Vote for " + c.name + " for President of " + TOWN_NAME[T] + " in Flic en Flac Life!";
+  const url = location.origin + "/?vote=" + T + "." + c.uid, mine = c.uid === uid, text = mine ? "Vote for me for President of " + TOWN_NAME[T] + " in Mauritius Life!" : "Vote for " + c.name + " for President of " + TOWN_NAME[T] + " in Mauritius Life!";
   const done = () => toast("🔗 Link copied. Send it to your friends: " + url.replace(/^https?:\/\//, ""));
-  if (navigator.share) navigator.share({ title: "Flic en Flac Life election", text, url }).catch(() => {}); else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text + " " + url).then(done, () => prompt("Copy this link:", url)); else prompt("Copy this link:", url);
+  if (navigator.share) navigator.share({ title: "Mauritius Life election", text, url }).catch(() => {}); else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text + " " + url).then(done, () => prompt("Copy this link:", url)); else prompt("Copy this link:", url);
 }
 function voteLinkTick() { // after you open a vote link, ask once whether to vote
   if (!VOTE_LINK || !s || !s.made || !s.nameV2 || introOn || !welcomeShown || fdOn() || Date.now() - bootAt < 15000 || !$("sheet").hidden || !$("phone").hidden || busy || ride || !govApi()) return;
@@ -2426,7 +2396,7 @@ function bellePrice(name, p) { // what a dish costs you: 50% off your first joll
   const first = !s.belleFirst && /^(Jollof|Fried Rice)/.test(name), pct = Math.max(first ? 50 : 0, bellPerkPct()); return { price: Math.round(p * (1 - pct / 100)), pct, first: first && pct === 50 }; }
 function belleDish([ic, name, p, f, fun, line], drink) { const q = bellePrice(name, p), tag = q.pct ? " (was " + rs(p) + ", " + q.pct + "% off" + (q.first ? " · first order" : " · booked guest") + ")" : "";
   return A(ic + " " + name, rs(q.price) + tag + " · +" + f + " food" + (fun ? ", +" + fun + " fun" : ""), drink ? 5 : 25, q.price, drink ? { hunger: f, fun: fun, bladder: -4 } : { hunger: f, fun: fun, social: 4 }, { why: openAt(10, 23), msg: name + ". " + line, run() { if (q.first) { s.belleFirst = 1; return name + " at half price. Welcome to Belle's Kitchen!"; } } }); }
-function belleWA(text) { belleAd("click"); const u = "https://wa.me/" + BELLE.wa + "?text=" + encodeURIComponent(text || "Hi Belle's Kitchen! I found you in Flic en Flac Life."); try { window.open(u, "_blank", "noopener"); } catch (e) { location.href = u; } toast("💬 Opening WhatsApp: " + BELLE.show); }
+function belleWA(text) { belleAd("click"); const u = "https://wa.me/" + BELLE.wa + "?text=" + encodeURIComponent(text || "Hi Belle's Kitchen! I found you in Mauritius Life."); try { window.open(u, "_blank", "noopener"); } catch (e) { location.href = u; } toast("💬 Opening WhatsApp: " + BELLE.show); }
 function bellDayName(ds) { const d = new Date(ds + "T12:00:00Z"); return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getUTCDay()] + " " + d.getUTCDate() + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()]; }
 const bellHour = (h) => (h % 12 || 12) + ":00 " + (h < 12 ? "am" : "pm");
 async function bellBook() { // pick a day, a time and how many of you
@@ -2438,7 +2408,7 @@ function bellHours(r, d) { const hrs = Object.keys(d.slots).map(Number).filter((
   openMenu("🕐 " + bellDayName(d.date), hrs.map((h) => ({ label: bellHour(h), info: d.slots[h] + " table" + (d.slots[h] > 1 ? "s" : "") + " left", go: () => bellSize(r, d, h) })), "Pick a time."); }
 function bellSize(r, d, h) { openMenu("👥 How many of you?", [1, 2, 3, 4, 5, 6, 8].filter((n) => n <= r.maxSize).map((n) => ({ label: n + (n === 1 ? " person" : " people"), info: bellDayName(d.date) + " at " + bellHour(h), go: () => bellConfirm(d, h, n) })), "Pick the table size."); }
 async function bellConfirm(d, h, n) { const a = belleApi(); let r; try { r = await a.book(d.date, h, n, ""); } catch (e) { r = null; } if (!r || !r.ok) { toast((r && r.error) || "Could not book. Try again."); return; } BELLE.last = 0; bellSync(true); const b = r.booking;
-  const msg = "Hi Belle's Kitchen! I booked a table in Flic en Flac Life. Code " + b.code + ", " + bellDayName(b.date) + " at " + bellHour(b.hour) + " for " + b.size + ".";
+  const msg = "Hi Belle's Kitchen! I booked a table in Mauritius Life. Code " + b.code + ", " + bellDayName(b.date) + " at " + bellHour(b.hour) + " for " + b.size + ".";
   openMenu("✅ Table booked! " + b.code, [{ label: "💬 Message Belle on WhatsApp", info: BELLE.show + " · say you are coming", go: () => belleWA(msg) }, { label: "🧾 My bookings", info: "See or cancel", go: bellMine }], bellDayName(b.date) + " at " + bellHour(b.hour) + " for " + b.size + ". Walk into Belle's Kitchen from half an hour before until two hours after and everything is " + r.pct + "% off.");
 }
 async function bellMine() { await bellSync(true); const L = BELLE.mine.filter((b) => ["booked", "confirmed"].includes(b.status));
@@ -2518,7 +2488,7 @@ function belleAdCheck() { // when you log in: the restaurant's poster, a few log
   belleAdShown = true; s.belleAds = (s.belleAds || 0) + 1; save(); belleAd("view"); const card = $("card"); card.className = "card seapost bellead"; card.innerHTML = "";
   const img = el("img"); img.src = BELLE_IMG.offer; img.alt = "Belle's Kitchen"; img.loading = "eager"; card.append(img, el("h2", "", "🍛 Belle's Kitchen is open!"), el("p", "wnsub", "African food in Flic en Flac: jollof, fried rice, egusi, grilled fish and more. 50% off your first jollof or fried rice, and 15% off when you book a table."));
   const go = el("button", "start", "📍 Take me there"); go.type = "button"; go.onclick = () => { closeMenu(); belleGo(); }; const ph = el("button", "", "🖼️ See the menu & offers"); ph.type = "button"; ph.onclick = () => bellePhotos(); const wa = el("button", "", "💬 Message Belle on WhatsApp"); wa.type = "button"; wa.onclick = () => belleWA(); const no = el("button", "", "Maybe later"); no.type = "button"; no.onclick = closeMenu; card.append(go, ph, wa, no); addClose(card); $("sheet").hidden = false; }
-setInterval(() => { try { belleAdCheck(); } catch (e) {} }, 2000);
+if (PARTNERS_ON) setInterval(() => { try { belleAdCheck(); } catch (e) {} }, 2000);
 
 // ================= Student drivers: real trips with learner drivers. Hidden until the admin switches it on =================
 const TRP = { on: false, d: null, last: 0, busy: false, places: [], stop: 50, sel: "", list: null, mine: null, ml: 0 };
@@ -2548,7 +2518,7 @@ function tripsRow(r, drv) { // one trip in your list, with what you can do with 
   return { label: pl.name + " · " + rs(r.price) + " · " + st, info: (drv ? r.name + " · " : r.driver ? r.driver + " · " : "") + r.pax + " passenger" + (r.pax > 1 ? "s" : "") + " · " + r.when, go: () => {
     const acts = [];
     if (drv && r.status === "open") { acts.push({ label: "✅ Accept the trip", info: "Then they message you on WhatsApp", go: () => tripsApi().answer(r.id, true).then((x) => { toast(x && x.ok ? "Trip accepted. " + r.name + " will message you on WhatsApp." : (x && x.error) || "Could not accept."); TRP.ml = 0; closeMenu(); }) }, { label: "❌ Decline", info: "", go: () => tripsApi().answer(r.id, false).then(() => { TRP.ml = 0; closeMenu(); }) }); }
-    if (!drv && r.status === "accepted") { acts.push({ label: "💬 Message " + r.driver + " on WhatsApp", info: "Agree the pick-up and how to pay", go: () => tripWA(r.wa, "Hi " + r.driver + "! I booked a trip to " + pl.name + " with you in Flic en Flac Life (" + r.id + "), " + r.when + ", " + r.pax + " passenger(s).") }, { label: "🏁 Trip done: rate the driver", info: "", go: () => { const v = parseInt(prompt("How was the trip? 1 to 5 stars", "5") || "0", 10); tripsApi().done(r.id, v).then((x) => { toast(x && x.ok ? (x.reward > 0 ? "🎉 Trip finished! " + rs(x.reward) + " is on its way to you: collect it in your mail." : "Thanks! Trip finished." + ({ early: " Rewards are paid for trips of at least " + ((TRP.rw || {}).minMin || 10) + " minutes.", cap: " You reached today's reward limit.", pair: " You already earned a reward with this driver today." }[x.why] || "")) : (x && x.error) || "Could not finish."); TRP.ml = 0; closeMenu(); }); } }); }
+    if (!drv && r.status === "accepted") { acts.push({ label: "💬 Message " + r.driver + " on WhatsApp", info: "Agree the pick-up and how to pay", go: () => tripWA(r.wa, "Hi " + r.driver + "! I booked a trip to " + pl.name + " with you in Mauritius Life (" + r.id + "), " + r.when + ", " + r.pax + " passenger(s).") }, { label: "🏁 Trip done: rate the driver", info: "", go: () => { const v = parseInt(prompt("How was the trip? 1 to 5 stars", "5") || "0", 10); tripsApi().done(r.id, v).then((x) => { toast(x && x.ok ? (x.reward > 0 ? "🎉 Trip finished! " + rs(x.reward) + " is on its way to you: collect it in your mail." : "Thanks! Trip finished." + ({ early: " Rewards are paid for trips of at least " + ((TRP.rw || {}).minMin || 10) + " minutes.", cap: " You reached today's reward limit.", pair: " You already earned a reward with this driver today." }[x.why] || "")) : (x && x.error) || "Could not finish."); TRP.ml = 0; closeMenu(); }); } }); }
     if (["open", "accepted"].includes(r.status)) acts.push({ label: "🚫 Cancel this trip", info: "", go: () => tripsApi().cancel(r.id).then(() => { TRP.ml = 0; closeMenu(); }) });
     if (!drv && ["accepted", "done"].includes(r.status)) acts.push({ label: "🚩 Report a problem", info: "The game team reads every report", go: () => { const tx = prompt("What went wrong?", ""); if (tx) tripsApi().report(r.id, "", tx).then(() => toast("Thank you. The team will look at it.")); } });
     openMenu(pl.name + " · " + r.id, acts, st + ". " + r.when + ".");
@@ -2561,7 +2531,7 @@ function tripsDriverSetup() { // become a student driver, or change your profile
   const d = TRP.d; const draft = { wa: d ? d.wa : "", car: d ? d.car : "", stop: d ? d.stop : TRP.stop, online: d ? d.online : false, agree: !!d, prices: d ? Object.assign({}, d.prices) : {} }; if (!d) for (const p of TRP.places) draft.prices[p.id] = p.price;
   const go = () => { const wa = prompt("Your WhatsApp number with the country code, digits only (for example 23057123456). Passengers message you here after you accept a trip.", draft.wa); if (wa === null) return; const car = prompt("Which car do you drive? For example: Toyota Vitz, white", draft.car); if (car === null) return; draft.wa = wa; draft.car = car; tripsPrices(draft); };
   if (d) { go(); return; }
-  openMenu("🚗 Become a student driver", [{ label: "✅ I agree to the safety rules", info: "Then set your WhatsApp, car and prices", go: () => { draft.agree = true; go(); } }], "Before you start: (1) You are a learner and you only drive with a qualified instructor or a licensed adult next to you, as the law in Mauritius requires. (2) Your car is insured for this. (3) You drive safely and never use your phone while driving. (4) Passengers pay you directly. Flic en Flac Life only introduces you; it does not provide transport or insurance. The team can remove anyone who breaks these rules.");
+  openMenu("🚗 Become a student driver", [{ label: "✅ I agree to the safety rules", info: "Then set your WhatsApp, car and prices", go: () => { draft.agree = true; go(); } }], "Before you start: (1) You are a learner and you only drive with a qualified instructor or a licensed adult next to you, as the law in Mauritius requires. (2) Your car is insured for this. (3) You drive safely and never use your phone while driving. (4) Passengers pay you directly. Mauritius Life only introduces you; it does not provide transport or insurance. The team can remove anyone who breaks these rules.");
 }
 function tripsApp(box, link) {
   if (Date.now() - TRP.last > 60000) tripsSync(true); if (Date.now() - TRP.ml > 20000) tripsMineSync().then(() => { if (!$("phone").hidden && pv.app === "trips") phoneRender(); }); const d = TRP.d, M = TRP.mine;
@@ -2605,7 +2575,7 @@ const CUTZ = { wa: "23058493970", show: "+230 5849 3970", disc: 100, mine: [], p
 const cutzApi = () => window.claude && window.claude.cutz;
 async function cutzSync(force) { const a = cutzApi(); if (!a || !s || !s.made || CUTZ.busy || (!force && Date.now() - CUTZ.last < 20000)) return; CUTZ.busy = true; try { const r = await a.mine(); if (r && r.ok) { CUTZ.mine = r.list || []; CUTZ.perk = r.perk || null; CUTZ.disc = r.disc; CUTZ.wa = r.wa || CUTZ.wa; CUTZ.show = r.show || CUTZ.show; CUTZ.last = Date.now(); } } catch (e) {} CUTZ.busy = false; }
 const cutzPerkOn = () => (CUTZ.perk && CUTZ.perk.until > Date.now() ? CUTZ.perk.disc : 0);
-function cutzWA(text) { cutzAd("click"); try { window.open("https://wa.me/" + CUTZ.wa + "?text=" + encodeURIComponent(text || "Hi A* Cutz! I found you in Flic en Flac Life."), "_blank", "noopener"); } catch (e) {} toast("💬 Opening WhatsApp: " + CUTZ.show); }
+function cutzWA(text) { cutzAd("click"); try { window.open("https://wa.me/" + CUTZ.wa + "?text=" + encodeURIComponent(text || "Hi A* Cutz! I found you in Mauritius Life."), "_blank", "noopener"); } catch (e) {} toast("💬 Opening WhatsApp: " + CUTZ.show); }
 function cutzPhotos() { cutzAd("open"); closeMenu(); const card = $("card"); card.className = "card belleimgs"; card.innerHTML = ""; card.append(el("h2", "", "✂️ A* Cutz price list"), el("p", "wnsub", "Book from the game for Rs " + CUTZ.disc + " off and a medal. Tap the picture to see it bigger.")); const im = el("img"); im.src = BELLE_IMG.cutz; im.alt = "A* Cutz price list"; im.onclick = () => { try { window.open(BELLE_IMG.cutz, "_blank", "noopener"); } catch (e) {} }; card.append(im);
   const bk = el("button", "start", "📅 Book a cut"); bk.type = "button"; bk.onclick = () => { closeMenu(); cutzBook(); }; const wa = el("button", "", "💬 Message A* Cutz on WhatsApp"); wa.type = "button"; wa.onclick = () => cutzWA(); card.append(bk, wa); addClose(card); $("sheet").hidden = false; }
 async function cutzBook() { const a = cutzApi(); if (!a) { toast("Booking needs the online version of the game."); return; } toast("Checking free chairs…"); let r; try { r = await a.get(); } catch (e) { r = null; } if (!r || !r.ok) { toast((r && r.error) || "Could not reach A* Cutz. Try again."); return; } CUTZ.disc = r.disc; CUTZ.wa = r.wa; CUTZ.show = r.show;
@@ -2614,7 +2584,7 @@ function cutzDays(r, sv) { const days = r.days.filter((d) => Object.keys(d.slots
 function cutzHours(r, sv, d) { const hrs = Object.keys(d.slots).map(Number).filter((h) => d.slots[h] > 0); openMenu("🕐 " + bellDayName(d.date), hrs.map((h) => ({ label: bellHour(h), info: d.slots[h] + " chair" + (d.slots[h] > 1 ? "s" : "") + " free", go: () => cutzConfirm(sv, d, h) })), "Pick a time."); }
 async function cutzConfirm(sv, d, h) { let r; try { r = await cutzApi().book(d.date, h, sv.id); } catch (e) { r = null; } if (!r || !r.ok) { toast((r && r.error) || "Could not book. Try again."); return; } CUTZ.last = 0; cutzSync(true); const b = r.booking;
   if (!s.cutzMedal) { s.cutzMedal = 1; save(); banner("🏅 MEDAL EARNED", "A* Cutz Regular"); }
-  const msg = "Hi A* Cutz! I booked in Flic en Flac Life. Code " + b.code + ": " + b.svcName + ", " + bellDayName(b.date) + " at " + bellHour(b.hour) + ".";
+  const msg = "Hi A* Cutz! I booked in Mauritius Life. Code " + b.code + ": " + b.svcName + ", " + bellDayName(b.date) + " at " + bellHour(b.hour) + ".";
   openMenu("✅ Booked! " + b.code, [{ label: "💬 Message A* Cutz on WhatsApp", info: CUTZ.show + " · tell them you are coming", go: () => cutzWA(msg) }, { label: "🧾 My bookings", info: "See or cancel", go: cutzMine }], b.svcName + " · " + bellDayName(b.date) + " at " + bellHour(b.hour) + ". Show code " + b.code + " at the shop for Rs " + r.disc + " off (" + rs(Math.max(0, b.price - r.disc)) + " instead of " + rs(b.price) + ")." + (r.first ? " You earned the 🏅 A* Cutz Regular medal." : "")); }
 async function cutzMine() { await cutzSync(true); const L = CUTZ.mine.filter((b) => ["booked", "confirmed"].includes(b.status));
   const rows = L.map((b) => ({ label: b.code + " · " + b.svcName, info: bellDayName(b.date) + " " + bellHour(b.hour) + " · " + (b.status === "confirmed" ? "✅ confirmed" : "booked") + (b.reply ? " · " + b.reply : ""), go: () => openMenu("🧾 " + b.code, [{ label: "💬 Message A* Cutz on WhatsApp", info: CUTZ.show, go: () => cutzWA("Hi A* Cutz! About my booking " + b.code + " on " + bellDayName(b.date) + " at " + bellHour(b.hour) + ".") }, { label: "❌ Cancel this booking", info: "Free", go: async () => { const r = await cutzApi().cancel(b.code); toast(r && r.ok ? "Booking cancelled." : (r && r.error) || "Could not cancel."); CUTZ.last = 0; cutzSync(true); closeMenu(); } }], b.svcName + " · " + bellDayName(b.date) + " at " + bellHour(b.hour) + ".") }));
@@ -3028,6 +2998,7 @@ function devconBuild3d() { // the effects: cracks in the ground that glow, code 
   DVC.fx.light = new THREE.PointLight(0x6fd8ff, 0, 16); DVC.fx.light.position.set(0, 3, 3); g.add(DVC.fx.light); R.world.add(g);
 }
 function devconBill3d(now) { // every frame: breathe the glow, lift the code off the cracks, size the billboard to the screen
+  if (!PARTNERS_ON) return;
   if (!DVC.g) { if (!R.ok || !R.world) return; devconBuild3d(); if (!DVC.g) return; }
   DVC.g.visible = !introOn && !s.inside; if (!DVC.g.visible) return; const t = now / 1000, F = DVC.fx, night = hour() >= 18 || hour() < 6; if (Math.hypot(DVC.g.position.x - s.x, DVC.g.position.z - s.y) < 40 && !DVC.seen) { DVC.seen = 1; devconAd("view"); }
   const vh = R.renderer.domElement.clientHeight || innerHeight, per = 2 * Math.tan(R.camera.fov * Math.PI / 360) / vh, dist = R.camera.position.distanceTo(DVC.g.position), hgt = Math.min(Math.max(5, 150 * per * dist), 0.28 * vh * per * dist) * (1 + 0.05 * Math.pow(Math.max(0, Math.sin(t * 3)), 8));
@@ -3697,7 +3668,7 @@ function feedbackSend() {
 // ================= the Guide: how to play, how to do things, and every update =================
 const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (add to this whenever the game changes; the Updates section fills itself from UPDATES)
   ["🚀", "Getting started", [
-    ["What is Flic en Flac Life?", "A life game on the west coast of Mauritius. Make a character, earn money, make friends, party, surf, drive, build a home and meet real players online."],
+    ["What is Mauritius Life?", "A life game set across Mauritius. Make a character, earn money, make friends, party, surf, drive, build a home and meet real players online."],
     ["How do I move?", "Tap the ground to walk there, or use the arrow keys or WASD on a computer. Tap a building door or a glowing object to use it. Pinch or use + and − to zoom."],
     ["What are the bars on the right?", "Your six needs: food, sleep, clean, toilet, fun and people. Keep them high. When one runs out you feel it, and you may faint, get sick or lose time. Eat, sleep, shower and see people to refill them."],
     ["How do I use things?", "Walk next to an object or building door and tap it. A menu of actions appears. Each action shows its price, how long it takes, and why it is blocked if you cannot do it yet."],
@@ -3723,8 +3694,8 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
   ["🗺️", "Places and travel", [
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
     ["How do I see the whole of Mauritius?", "Phone → Maps → Island. Open regions are in colour: Grand Baie, Port Louis, and Flic en Flac with the west. Tap a region to see whether it is open.", "maps"],
-    ["How do I get to Grand Baie?", "Walk to the Beach bus stop in Flic en Flac and take the intercity bus (Rs 75). It drops you on Marché square. Take it back from the bus station there. Taxis and cars cannot drive between the two towns yet.", "maps"],
-    ["What is in Grand Baie?", "The public beach at La Cuvette, Sunset Boulevard, the marina jetty, Marché square and the red-roof chapel. Open now: Dholl Puri Corner (food and kitchen shifts) and Sega Bar (drinks and bar shifts). The other shops show 'opening soon' and open over the coming weeks.", "maps"],
+    ["Where does the game start?", "In Grand Baie, on the real bay: your house is in the estate near the bazaar and the bus station. Walk out of your front door and explore. More regions open one at a time.", "maps"],
+    ["What is in Grand Baie?", "The map follows the real town: the bay and beach, the coast road, the Bazaar, the shopping centres, the library, the police station, the mosque and the temple. Open now: Dholl Puri Corner (food and kitchen shifts) and Sega Bar (drinks and bar shifts). The other places show their name and open over the coming weeks.", "maps"],
     ["Why are some regions grey?", "They are not open yet. Nobody can go in, on foot, by car, by ride or by air, until they open. When a region gets an opening date, the map shows it. New regions open over time.", "maps"],
     ["How do I get around quickly?", "Rent or buy a car or a motorbike at Flic Motors, ride the bus, call a taxi, or use a scooter. A car is the fastest way between Flic en Flac, Cascavelle and Tamarin."],
     ["What are the towns?", "Flic en Flac and Cascavelle in the north, with the new Civic Quarter to the south, then Tamarin (a surf village that grows into a city with the Heights), Trianon on the plateau east of Tamarin (with Tribeca Mall), and Bambous Town in the east."],
@@ -4073,17 +4044,17 @@ function salonMenu(kind) { // the salon's price list
 
 // ================= transport =================
 const INTERCITY_FARE = 75; // the intercity bus between Flic en Flac and Grand Baie
+const RG_NAME = { grandbaie: "Grand Baie", portlouis: "Port Louis", west: "Flic en Flac" }, RG_ENTRY = { grandbaie: GB_STOP }; // only regions with a walkable map have an arrival point
 function intercityActs(to) { // what the intercity bus offers at a stop
-  const nm = to === "grandbaie" ? "Grand Baie" : "Flic en Flac", rg = (ISL.regions || []).find((r) => r.id === to), shut = rg && !rg.open;
-  return [{ label: (shut ? "🔒 " : "🚌 ") + "Intercity bus to " + nm, info: shut ? nm + " is not open yet" + (rg.opensAt ? ": it opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : "") : rs(INTERCITY_FARE) + " · about 2 minutes", go: () => intercityGo(to) }];
+  const nm = RG_NAME[to] || "another region", rg = (ISL.regions || []).find((r) => r.id === to), ready = !!(rg && rg.open && RG_ENTRY[to]);
+  return [{ label: (ready ? "🚌 " : "🔒 ") + "Intercity bus to " + nm, info: ready ? rs(INTERCITY_FARE) + " · about 2 minutes" : nm + (rg && !rg.open && rg.opensAt ? " opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : " is coming soon"), go: () => intercityGo(to) }];
 }
 async function intercityGo(to) { // take the intercity bus (the server refuses a locked region, so we ask first)
-  closeMenu(); const nm = to === "grandbaie" ? "Grand Baie" : "Flic en Flac"; ISL.at = 0; await islandLoad(); const rg = (ISL.regions || []).find((r) => r.id === to);
-  if (!rg || !rg.open) { toast("🔒 " + nm + " is not open yet." + (rg && rg.opensAt ? " It opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); return; }
+  closeMenu(); const nm = RG_NAME[to] || "that region"; ISL.at = 0; await islandLoad(); const rg = (ISL.regions || []).find((r) => r.id === to);
+  if (!rg || !rg.open || !RG_ENTRY[to]) { toast("🔒 " + nm + " is not open yet." + (rg && rg.opensAt ? " It opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); return; }
   if (s.money < INTERCITY_FARE) { toast("The intercity bus costs " + rs(INTERCITY_FARE) + ". Do a shift first."); return; }
   if (s.inside || (ride && ride.on)) { toast("Get to the bus stop first."); return; }
-  s.money -= INTERCITY_FARE; txn("Intercity bus to " + nm, -INTERCITY_FARE); const at = to === "grandbaie" ? GB_STOP : FEF_STOP; s.x = at.x; s.y = at.y; path = []; pending = null; keys = {}; save();
-  toast(to === "grandbaie" ? "🚌 Welcome to Grand Baie! Walk the beach at La Cuvette, Sunset Boulevard and the marina. The shops open soon." : "🚌 Back in Flic en Flac.");
+  const at = RG_ENTRY[to]; s.money -= INTERCITY_FARE; txn("Intercity bus to " + nm, -INTERCITY_FARE); s.x = at.x; s.y = at.y; path = []; pending = null; keys = {}; save(); toast("🚌 Welcome to " + nm + "!");
 }
 function busActs() { return [{ label: "Get a ride from here", info: "Public bus, student driver or taxi", go: rideMenu }]; } // what a bus stop offers
 function nearestStop(x, y) { return OBJ.filter((o) => o.stop).sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0]; } // closest bus stop to a point
@@ -4123,7 +4094,7 @@ const RIDE_CAT = [ // destination groups in the Rides app: [icon, title, buildin
   ["👗", "Tamarin fashion", ["maison", "atelier", "solegem"]]];
 const RIDE_ICON = { cutz: "✂️", belle: "🍛", casino: "🎰", snack: "🌯", cafe: "☕", gelato: "🍨", maravan: "🍔", coq: "🍗", burgo: "🍔", sapphire: "🍽️", bar: "🍹", saxo: "🏖️", tigers: "🎶", club69: "🪩", dive: "🤿", sugar: "🏝️", resort: "🏨", shop: "🛒", jumbo: "🛒", mall: "🛍️", salon: "💅", motors: "🚗", hospital: "🏥", mcb: "🏦", police: "🚓", immig: "🛂", uni: "🎓", gym: "🏋️", sports: "⚽", estate: "🏘️", coral: "🏘️", palmgrove: "🏘️", hillside: "🏘️", sunrise: "🏘️", slr: "🏢", yasmina1: "🏢", yasmina2: "🏢", jamal: "🏠", dal: "🏄", blackstone: "🏄", surfshop: "🏄", surfschool: "🏫", tjetty: "🐬", brewery: "🍺", tamcafe: "☕", tmarket: "🛒", saltpans: "🧂", golf: "⛳", gas1: "⛽", gas2: "⛽", airport: "✈️", court: "⚖️", maison: "👗", atelier: "🏖️", solegem: "👠" };
 const rideFrom = () => (s.inside && Number.isFinite(s.ox) ? { x: s.ox, y: s.oy } : { x: s.x, y: s.y }); // where a ride picks you up (the street outside, if you are indoors)
-const rideDests = () => OBJ.filter((o) => (o.id || o.stop || o.name === "Front door") && !triLocked(o.x, o.y)); // every place a ride can go
+const rideDests = () => OBJ.filter((o) => (o.id || o.stop || o.name === "Front door") && inGB(o.x, o.y) && !triLocked(o.x, o.y)); // every place a ride can go
 const rideName = (o) => (o.name === "Front door" ? "Home" : o.name); // what a place is called in the app
 const rideIcon = (o) => (o.name === "Front door" ? "🏠" : o.stop ? "🚏" : RIDE_ICON[o.id] || "📍");
 function rideOpts(dest) { // the ways to get somewhere: [{ act, icon, name, eta, badge, col }]
@@ -4378,6 +4349,7 @@ const EVENTS = [ // weekly parties: organiser, venue, weekday (0 = Monday), star
   { org: "CLUB 69 SUNDAY SESSIONS", venue: "club69", d: 6, h: 21, len: 300, fee: 300 }, // Sunday night at Club 69
   { org: "FLIC MOTORS CAR MEET", venue: "motors", d: 5, h: 17, len: 240, fee: 0 } // Saturday evening car meet on the lot
 ]; // end EVENTS
+EVENTS.length = 0; // the weekly parties were at Flic en Flac venues; Grand Baie gets its own when its clubs open
 const evStart = (ev) => ev.d * 1440 + ev.h * 60; // minute of the week the party starts
 const evOn = (ev) => { const w = s.t % 10080; return w >= evStart(ev) && w < evStart(ev) + ev.len; }; // is the party on right now?
 const doorOf = (id) => OBJ.find((o) => o.id === id); // the door object of a building
@@ -5007,7 +4979,7 @@ const peerName = (o) => String(o.p.name || "Player").slice(0, 14); // another pl
 function peerLook(p) { return { g: p.g === "f" ? "f" : "m", skin: safeHex(p.skin, SKINS[2]), hair: safeHex(p.hcol, "#17100c"), hs: ["short", "fade", "afro", "long", "braids", "bun", "bald"].includes(p.hs) ? p.hs : "", nails: p.nails ? safeHex(p.nails, "") : "", shirt: p.shirt === "" ? "" : safeHex(p.shirt, SHIRTS[3]), pants: p.pants === "" ? "" : safeHex(p.pants, "#22364a"), cap: p.cap ? safeHex(p.cap, "") : "", shades: !!p.shades, role: ROLE[p.role] ? p.role : "resident", head: String(p.hd || "").slice(0, 20), top: String(p.tp || "").slice(0, 20), legs: String(p.lg || "").slice(0, 20), feet: String(p.ft || "").slice(0, 20), bag: BAGS[p.bg] ? p.bg : "", chain: p.ch ? safeHex(p.ch, "") : "", shadesCol: p.sc ? safeHex(p.sc, "") : "" }; } // build a safe look from what a player sent
 function netSend() { // tell everyone where you are
   if (!room || !s.made) return; // offline, or still creating your character
-  const me = hwPres({ sc: scoot ? 1 : 0, bk: cyc ? 1 : 0, pd: onPeriod() ? 1 : 0, name: s.name, g: s.g, skin: s.skin, shirt: s.shirt, pants: s.pants, cap: s.cap || "", shades: !!s.shades, role: s.role, x: Math.round(s.x * 50) / 50, y: Math.round(s.y * 50) / 50, rg: !s.inside && inGB(s.x, s.y) ? "grandbaie" : "west", face: s.face, mv: meMoving, in: roomKey(), hid: !!((ride && ride.on) || s.jf), jf: s.jf ? { a: s.jf.a, b: s.jf.b, st: s.jf.st, t0: s.jf.t0, m: s.jf.m, c: s.jf.c, nm: s.jf.nm } : null, uid, hl: govHeliState(), hs: s.hs, hcol: s.hcol, nails: s.nails, md: moodLevel(), hd: s.head || "", tp: s.top || "", lg: s.legs || "", ft: s.feet || "", bg: s.bag || "", ch: s.chain || "", sc: s.shadesCol || "", hp: hostingNow() ? s.hostEnd : 0, cls: myClass(), po: curPose() ? curPose().k : "", pz: curPose() ? curPose().h : 0, dn: dancing || "", pet: s.pet ? s.pet.k : "", hg: hostingNow() ? s.genre : "", hm: s.home || 0, tm: s.team || "", mt: matchMsg() }); // your public state, including any house party you host or attend
+  const me = hwPres({ sc: scoot ? 1 : 0, bk: cyc ? 1 : 0, pd: onPeriod() ? 1 : 0, name: s.name, g: s.g, skin: s.skin, shirt: s.shirt, pants: s.pants, cap: s.cap || "", shades: !!s.shades, role: s.role, x: Math.round(s.x * 50) / 50, y: Math.round(s.y * 50) / 50, rg: (s.inside ? s.oy : s.y) >= HO ? "grandbaie" : "west", /* indoors, ox and oy say which region the door is in */ face: s.face, mv: meMoving, in: roomKey(), hid: !!((ride && ride.on) || s.jf), jf: s.jf ? { a: s.jf.a, b: s.jf.b, st: s.jf.st, t0: s.jf.t0, m: s.jf.m, c: s.jf.c, nm: s.jf.nm } : null, uid, hl: govHeliState(), hs: s.hs, hcol: s.hcol, nails: s.nails, md: moodLevel(), hd: s.head || "", tp: s.top || "", lg: s.legs || "", ft: s.feet || "", bg: s.bag || "", ch: s.chain || "", sc: s.shadesCol || "", hp: hostingNow() ? s.hostEnd : 0, cls: myClass(), po: curPose() ? curPose().k : "", pz: curPose() ? curPose().h : 0, dn: dancing || "", pet: s.pet ? s.pet.k : "", hg: hostingNow() ? s.genre : "", hm: s.home || 0, tm: s.team || "", mt: matchMsg() }); // your public state, including any house party you host or attend
   for (const k of ["fb", "bb"]) if (ballDirty[k] && Date.now() - ballSent[k] > 130) { // a ball you touched needs sharing (at most 7 times a second)
     const b = BALL[k], r2 = (v) => Math.round(v * 100) / 100; // the ball and a rounding helper
     room.presence({ [k]: k === "fb" ? { x: r2(b.x), y: r2(b.y), vx: r2(b.vx), vy: r2(b.vy), t: b.t, a: b.a, b: b.b } : { x: r2(b.x), y: r2(b.y), vx: r2(b.vx), vy: r2(b.vy), t: b.t, h: b.h } }).catch(() => {}); // send where it is and how it moves
@@ -5332,7 +5304,7 @@ async function dbStart() { // connect to the shared records if this view allows 
   db.collection("players").limit(1000).onSnapshot((snap) => { players = snap.docs.map((d) => cleanPlayer(d.id, d.data() || {})); for (const d of snap.docs) { const dd = d.data() || {}; if (typeof dd.save === "string") rawSaves[d.id] = dd.save; if (dd.hv) homeViews[d.id] = dd.hv; if (dd.lk) lookViews[d.id] = dd.lk; } /* how homes and people look, for visiting */ for (const d of snap.docs) if (d.id === uid) maybeLoadCloud(d.data() || {}); if (!$("phone").hidden && (pv.app === "rich" || pv.app === "send" || pv.app === "settings") && !(document.activeElement && document.activeElement.tagName === "INPUT" && $("phone").contains(document.activeElement))) phoneRender(); }, () => { db = null; }); // everyone's records, live
   if (uid) db.collection("mail").where("to", "==", uid).onSnapshot((snap) => { for (const d of snap.docs) claimMail(d); }, () => {}); // money sent to you
   setInterval(syncPlayer, 4000); // check every 4 seconds whether your record needs saving
-  window.addEventListener("fef-raidhit", () => setTimeout(rdClaimTick, 800));   setTimeout(devconTeamHello, 14000); setTimeout(() => teamLoad(), 7000); setTimeout(rdClaimTick, 9000); setInterval(rdClaimTick, 120000); // raids: pay what raiders took while you were away (never below zero)
+  window.addEventListener("fef-raidhit", () => setTimeout(rdClaimTick, 800));   if (PARTNERS_ON) setTimeout(devconTeamHello, 14000); setTimeout(() => teamLoad(), 7000); setTimeout(rdClaimTick, 9000); setInterval(rdClaimTick, 120000); // raids: pay what raiders took while you were away (never below zero)
   homesStart().catch(() => {}); // your private home
   shopStart().catch(() => {}); // snack shop jobs
   richStart(); // the richest player's statue
@@ -5896,7 +5868,7 @@ function salonPrices(box) { // the price list, like her poster
 function salonBook(box) {
   const c = SALON.cfg, a = salonApi(), sel = SALON.sel;
   if (SALON.last) { const b = SALON.last, card = el("div", "salonconf"); card.append(el("i", "", "🎉"), el("b", "", "You're booked!"), el("small", "", salonWhen(b) + " · " + b.svcName), el("div", "salonuc", b.code), el("small", "", "Your booking code. Show it to Taps or send it to her. Taps will confirm it soon.")); if (b.reward) card.append(el("small", "", "🎁 " + rs(b.reward) + " reward is on its way to your wallet."));
-    if (SALON.wa) { const w = el("button", "pbtn wa", "💬 Send the code to Taps on WhatsApp"); w.type = "button"; w.onclick = () => window.open(waLink(SALON.wa, "Hi Taps! I booked through Flic en Flac Life. My booking code is " + b.code + " (" + salonWhen(b) + ")." + " Order: " + b.svcName + " (" + rs(b.price) + ")" + (b.size > 1 ? " for " + b.size + " people." : ".")), "_blank", "noopener"); card.append(w); }
+    if (SALON.wa) { const w = el("button", "pbtn wa", "💬 Send the code to Taps on WhatsApp"); w.type = "button"; w.onclick = () => window.open(waLink(SALON.wa, "Hi Taps! I booked through Mauritius Life. My booking code is " + b.code + " (" + salonWhen(b) + ")." + " Order: " + b.svcName + " (" + rs(b.price) + ")" + (b.size > 1 ? " for " + b.size + " people." : ".")), "_blank", "noopener"); card.append(w); }
     const m = el("button", "pbtn", "💌 Message Taps in the game"); m.type = "button"; m.onclick = () => { SALON.tab = "mine"; SALON.open = b.code; SALON.last = null; SALON.list = null; phoneRender(); }; card.append(m); box.append(card); return; }
   salonPick(box);
   box.append(el("p", "psec", "2 · Pick a day")); const days = Object.keys(SALON.avail).sort(), dr = el("div", "salondays"); if (!days.length) box.append(el("p", "pnote", "No days are open right now. Check back soon."));
@@ -5948,7 +5920,7 @@ function salonTick() { // once a day, tell the people allowed in that the salon 
   const cd = $("card"), im = el("div", "evphoto"); im.style.backgroundImage = "url(/taps/1.jpg)"; cd.insertBefore(im, cd.firstChild);
 }
 setInterval(salonTick, 5000);
-const APPS = [["msgs", "💬", "Messages", "#1f8f4e"], ["maps", "🗺️", "Maps", "#3d9be9"], ["wardrobe", "👕", "Wardrobe", "#7a4fd1"], ["people", "👥", "Contacts", "#c2457a"], ["ride", "🚕", "Rides", "#f2b430"], ["cars", "🚗", "Cars", "#3d9be9"], ["delivery", "🛵", "Delivery", "#1f8f4e"], ["wallet", "💳", "Wallet", "#7a4fd1"], ["jobs", "💼", "Jobs", "#d9482b"], ["biz", "🏢", "Business", "#1f6fa8"], ["goals", "🎯", "Goals", "#e4572e"], ["parties", "🎗️", "Parties", "#8a55c8"], ["parliament", "🏛️", "Parliament", "#2b5d8f"], ["events", "🎉", "Events", "#c2457a"], ["health", "❤️", "Health", "#ef4f6a"], ["juice", "🧃", "Juice", "#c8102e"], ["campus", "🎓", "Campus", "#7a2f2f"], ["salon", "💅", "Clawed by Taps", "#ff2e88"], ["devcon", "💻", "DevCon 2026", "#2b8fe0"], ["rich", "🏆", "Rich list", "#d4a017"], ["raids", "🏴‍☠️", "Raids", "#b71c1c"], ["heists", "🕶️", "Heists", "#2b3340"], ["trips", "🚗", "Student drivers", "#1f6f8f"], ["flex", "📣", "Flex feed", "#e4572e"], ["chals", "⚔️", "Challenges", "#8e44ad"], ["players", "👥", "Players", "#2a9d8f"], ["gossip", "🗞️", "Gossip", "#d62828"],["house", "🏠", "Home", "#b5482f"], ["halloween", "🎃", "Halloween", "#e0620d"], ["court", "⚖️", "Court", "#5a4a8a"], ["gov", "🏛️", "Government", "#1f4fbf"], ["sugar", "💎", "Sugar", "#c2457a"], ["guide", "📖", "Guide", "#0f6f8f"], ["feedback", "📝", "Feedback", "#e4572e"], ["games", "🎮", "Games", "#8e44ad"], ["alerts", "🔔", "Alerts", "#e4572e"], ["invite", "📨", "Invite", "#2a9d8f"], ["staff", "🧑‍💼", "Staff", "#b8860b"], ["settings", "⚙️", "Settings", "#6c7781"]]; // apps on the home screen
+const APPS = [["msgs", "💬", "Messages", "#1f8f4e"], ["maps", "🗺️", "Maps", "#3d9be9"], ["wardrobe", "👕", "Wardrobe", "#7a4fd1"], ["people", "👥", "Contacts", "#c2457a"], ["ride", "🚕", "Rides", "#f2b430"], ["cars", "🚗", "Cars", "#3d9be9"], ["delivery", "🛵", "Delivery", "#1f8f4e"], ["wallet", "💳", "Wallet", "#7a4fd1"], ["jobs", "💼", "Jobs", "#d9482b"], ["biz", "🏢", "Business", "#1f6fa8"], ["goals", "🎯", "Goals", "#e4572e"], ["parties", "🎗️", "Parties", "#8a55c8"], ["parliament", "🏛️", "Parliament", "#2b5d8f"], ["events", "🎉", "Events", "#c2457a"], ["health", "❤️", "Health", "#ef4f6a"], ["juice", "🧃", "Juice", "#c8102e"], ["campus", "🎓", "Campus", "#7a2f2f"], ["rich", "🏆", "Rich list", "#d4a017"], ["raids", "🏴‍☠️", "Raids", "#b71c1c"], ["heists", "🕶️", "Heists", "#2b3340"], ["trips", "🚗", "Student drivers", "#1f6f8f"], ["flex", "📣", "Flex feed", "#e4572e"], ["chals", "⚔️", "Challenges", "#8e44ad"], ["players", "👥", "Players", "#2a9d8f"], ["gossip", "🗞️", "Gossip", "#d62828"],["house", "🏠", "Home", "#b5482f"], ["court", "⚖️", "Court", "#5a4a8a"], ["gov", "🏛️", "Government", "#1f4fbf"], ["sugar", "💎", "Sugar", "#c2457a"], ["guide", "📖", "Guide", "#0f6f8f"], ["feedback", "📝", "Feedback", "#e4572e"], ["games", "🎮", "Games", "#8e44ad"], ["alerts", "🔔", "Alerts", "#e4572e"], ["invite", "📨", "Invite", "#2a9d8f"], ["staff", "🧑‍💼", "Staff", "#b8860b"], ["settings", "⚙️", "Settings", "#6c7781"]]; // apps on the home screen
 const themeOf = () => s.theme || "dark"; // "dark", "light" or "auto" (follow the phone)
 function applyTheme() { const t = themeOf(), dark = t === "dark" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.theme = dark ? "dark" : "light"; try { const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? "#06202b" : "#e9f1f5"; } catch (e) {} }
 try { if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (themeOf() === "auto") applyTheme(); }); } catch (e) {}
@@ -6123,11 +6095,11 @@ function phoneRender0() { // draw the current phone screen
   } // end invite
   if (pv.app === "island") { islandApp(box); } // the whole island: open regions in colour, locked ones grey
   if (pv.app === "maps") { // town map
-    const c = el("canvas"); c.width = W * 5; c.height = H * 5; box.append(c); const m = c.getContext("2d"); // small map canvas
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { m.fillStyle = COL[terr[y * W + x]]; m.fillRect(x * 5, y * 5, 5, 5); } // terrain
+    const c = el("canvas"); c.width = GBM.w * 5; c.height = (H - HO) * 5; box.append(c); const m = c.getContext("2d"); m.translate(0, -HO * 5); // small map canvas: Grand Baie only
+    for (let y = HO; y < H; y++) for (let x = 0; x < GBM.w; x++) { m.fillStyle = COL[terr[y * W + x]]; m.fillRect(x * 5, y * 5, 5, 5); } // terrain
     for (const b of BUILD) { m.fillStyle = b.roofCol; m.fillRect(b.x * 5, b.y * 5, b.w * 5, b.h * 5); } // buildings
     m.globalAlpha = 0.45; for (const b of SOONB) { m.fillStyle = b.roofCol; m.fillRect(b.x * 5, b.y * 5, b.w * 5, b.h * 5); } m.globalAlpha = 1; m.fillStyle = "#ffffff"; m.font = "700 15px sans-serif"; m.textAlign = "center"; m.fillText("🏚️ Bambous Town", (GATE + (W - GATE) / 2) * 5, 20 * 5); // Bambous Town
-    m.font = "700 18px sans-serif"; m.lineWidth = 4; m.strokeStyle = "rgba(0,0,0,0.55)"; for (const [txt, tx, ty] of [["🏝️ Grand Baie", 55, GBY + 10], ["🏄 Tamarin", 50, 124], ["🧂 Salt pans", 46, 92], ["⛰️ Trois Mamelles", 104, 66], ["⛳ Golf", 84, 150], ["🏙️ Trianon", 280, 140], ["🛍️ Tribeca Mall", 258, 108], ["🛣️ Trianon highway", 170, 128], ["🌃 Ebène Cyber City", 285 + CXO, 3], ["✈️ Tribeca Airport", 285, 176]]) { m.strokeText(txt, tx * 5, ty * 5); m.fillText(txt, tx * 5, ty * 5); } // the new south: Tamarin and its landmarks
+    m.font = "700 18px sans-serif"; m.lineWidth = 4; m.strokeStyle = "rgba(0,0,0,0.55)"; for (const [txt, tx, ty] of GBSOON.filter((b) => b.w >= 5).map((b) => [(b.icon || "") + " " + b.name.replace(/ · .*/, ""), b.x + b.w / 2, b.y - 0.6])) { m.strokeText(txt, tx * 5, ty * 5); m.fillText(txt, tx * 5, ty * 5); } // the new south: Tamarin and its landmarks
     for (const k in others) if (!others[k].p.in) { m.fillStyle = "#ffd23c"; m.beginPath(); m.arc(others[k].x * 5, others[k].y * 5, 4, 0, 7); m.fill(); } // other players
     const me = s.inside ? { x: s.ox, y: s.oy } : s; m.fillStyle = "#ffffff"; m.beginPath(); m.arc(me.x * 5, me.y * 5, 6, 0, 7); m.fill(); m.fillStyle = "#e4572e"; m.beginPath(); m.arc(me.x * 5, me.y * 5, 4, 0, 7); m.fill(); // you
     { const md = doorAt(homeIdxOf(uid || "me")); if (md) { m.fillStyle = "#ff9f1a"; m.strokeStyle = "#fff"; m.lineWidth = 2; m.beginPath(); m.arc(md.x * 5, md.y * 5, 7, 0, 7); m.fill(); m.stroke(); m.fillStyle = "#fff"; m.font = "700 13px sans-serif"; m.textAlign = "center"; m.fillText("🏠 You live here", md.x * 5, md.y * 5 - 12); }
@@ -6136,7 +6108,7 @@ function phoneRender0() { // draw the current phone screen
       if (NAV) { m.strokeStyle = "#ffa733"; m.lineWidth = 3; m.beginPath(); m.arc(NAV.x * 5, NAV.y * 5, 9, 0, 7); m.stroke(); } // your home, house parties and where you are heading
     }
     box.append(el("p", "pnote", "Red dot: you. Yellow dots: other players. Orange dot: your house. 🎉: a house party.")); const fh = el("button", "prow"); fh.type = "button"; fh.append(el("span", "", "🔎 Find a house"), el("b", "", "›")); fh.onclick = () => openPhone("houses"); box.append(fh); // legend, and a way to find a home
-    for (const b of BUILD) prow(box, b.name, Math.round(Math.hypot(b.x + b.w / 2 - me.x, b.y + b.h - me.y)) + " blocks"); // distance to every place
+    for (const b of BUILD.concat(GBSOON)) prow(box, (b.icon || "") + " " + b.name, Math.round(Math.hypot(b.x + b.w / 2 - me.x, b.y + b.h - me.y)) + " blocks"); // distance to every place
   } // end maps
   if (pv.app === "wallet") { // money
     appHero(box, "💳", "Juice balance", rs(s.money), "Net worth " + rs(netWorth()) + " · rent " + rs(s.rent) + " a week"); if (s.fz) prow(box, "🧊 Frozen by the court", rs(s.fz.amt), "Released when the court rules · open the Court app"); loansSection(box); if (isResident()) residentCard(box); box.append(el("p", "psec", "Your money")); // balance, and your Resident Card
@@ -6229,7 +6201,7 @@ function phoneRender0() { // draw the current phone screen
     if (s.scandals) box.append(el("p", "pnote", "You've been exposed " + s.scandals + " time" + (s.scandals === 1 ? "" : "s") + ".")); // your record
   } // end gossip
   if (pv.app === "players") { // everyone online now, then everyone who has played
-    if (playedTotal) { const st = el("div", "playedbig"); st.append(el("b", "", playedTotal.toLocaleString()), el("span", "", "people have played Flic en Flac Life")); box.append(st); } // the all-time player count
+    if (playedTotal) { const st = el("div", "playedbig"); st.append(el("b", "", playedTotal.toLocaleString()), el("span", "", "people have played Mauritius Life")); box.append(st); } // the all-time player count
     box.append(el("p", "pnote", room ? (Object.keys(others).length + 1) + " in town now, you included (💤 = phone asleep). Tap someone to message or interact." : "You are offline. Players appear here when the game is open with a live connection.")); // count
     for (const k in others) { const o = others[k], b = BUILD.find((q) => q.id === o.p.in) || ROOMDEF[o.p.in], P = peerLook(o.p); link((o.p.away ? "💤 " : "🟢 ") + peerName(o) + relTag(o) + (NEWS.some((q) => q.uid && q.uid === o.p.uid && Date.now() - q.at < 864e5) ? " 🚩" : ""), ROLE[P.role].label + clsTag(o.p.cls) + " · " + (GENRES[o.p.dn] ? "💃 dancing" + (b ? " at " + b.name : "") : /^(home|visit|away)/.test(o.p.in || "") ? "at a house" : b ? "at " + b.name : "out in town") + (o.p.hp > Date.now() ? " · 🎉 hosting" : ""), () => openPhone("player", k)); } // each player online
     const off = players.filter((p) => p.id !== uid && !Object.values(others).some((o) => o.p.uid === p.id)); // offline players
@@ -7111,7 +7083,7 @@ function namePicker(after) { // older characters stuck with the old default name
 } // end namePicker
 function openCreate() { // the "who are you" screen
   const card = $("card"); // sheet body
-  card.innerHTML = '<h2>Who are you in Flic en Flac?</h2><div class="mk"><div class="pvbox" id="pvbox"><canvas id="pv" width="220" height="280"></canvas></div><div class="mkf"><label for="nm">Name</label><input id="nm" type="text" maxlength="14" placeholder="Your name"><h3>Gender</h3><div class="opts" id="og"></div><h3>Status</h3><div class="opts" id="or"></div><p id="ri"></p><h3 id="ch">Course</h3><div class="opts" id="oco"></div><h3>Skin</h3><div class="opts" id="os"></div><h3>Hair</h3><div class="opts" id="ohd"></div><h3>Hair colour</h3><div class="opts" id="ohc"></div><h3>Outfit</h3><div class="opts" id="oot"></div><h3>Top colour</h3><div class="opts" id="oc"></div></div></div>'; // layout
+  card.innerHTML = '<h2>Who are you in Mauritius?</h2><div class="mk"><div class="pvbox" id="pvbox"><canvas id="pv" width="220" height="280"></canvas></div><div class="mkf"><label for="nm">Name</label><input id="nm" type="text" maxlength="14" placeholder="Your name"><h3>Gender</h3><div class="opts" id="og"></div><h3>Status</h3><div class="opts" id="or"></div><p id="ri"></p><h3 id="ch">Course</h3><div class="opts" id="oco"></div><h3>Skin</h3><div class="opts" id="os"></div><h3>Hair</h3><div class="opts" id="ohd"></div><h3>Hair colour</h3><div class="opts" id="ohc"></div><h3>Outfit</h3><div class="opts" id="oot"></div><h3>Top colour</h3><div class="opts" id="oc"></div></div></div>'; // layout
   if (accApi()) { const lb = el("button", "loginlink", "🔐 Already playing? Log in to your character"); lb.type = "button"; lb.onclick = () => accountSheet("login"); card.insertBefore(lb, card.children[1]); } // a new device: carry on with your saved character
   const redo = () => { // refresh choices and preview
     const g = s.g === "f" ? "f" : "m"; if (s.head && !hasPiece(g, "head", s.head)) s.head = ""; // hair must exist for this body
@@ -7150,7 +7122,7 @@ function openCreate() { // the "who are you" screen
 
 // ================= first-time tutorial: a short guided tour of the screen =================
 const TUT = [ // [what to highlight (or ""), icon, title, text, bullet points]
-  ["", "🌴", () => "Bonzour " + (s.name || "") + "!", "Welcome to Flic en Flac Life: live your island life on Mauritius' west coast, alongside real players. Here's a quick tour.", []],
+  ["", "🌴", () => "Bonzour " + (s.name || "") + "!", "Welcome to Mauritius Life: live your island life, one region at a time, alongside real players. Here's a quick tour.", []],
   [".zoom", "👆", "Getting around", "", ["Tap the ground to walk there", "Tap any icon or building to use it. No need to stand in a circle", "Drag to look around · pinch or + / − to zoom", "On a keyboard: arrows or WASD to walk, E to use"]],
   ["#needs", "❤️", "Look after yourself", "These bars are your food, sleep, hygiene, bladder, fun and social life. They drop slowly as the hours pass. Eat, sleep, shower and see people before they run low, or you'll faint and pay the clinic.", []],
   ["", "🛴", "Free e-scooters", "Town is big. Take a free e-scooter from any 🛴 stand: on the beach road, in the town centre and by every estate. It's more than twice as fast as walking, and everyone sees you riding.", ["Tap a 🛴 stand → Take a free e-scooter", "Tap the 🛴 button at the top to park it", "Scooters are for the open road, not inside buildings"]],
@@ -7954,7 +7926,7 @@ function sunDir(h) { // where the sun is (the moon at night): up in the east (+x
 
 function buildGround() { // the ground as painted pictures (the north, then the south with Tamarin), plus water and lamps
   const P = 16, gparts = [];
-  for (const [gx0, gx1, gy0, gy1] of [[0, BZS_X1 + 1, 0, NH], [BZS_X1 + 1, W, 0, NH], [0, TAM_W + 4, NH, HO], [TAM_W + 4, 340, BZ_Y1, TRI.y1 + 2], [BZS_X1 + 1, W, NH, BZ_Y1], [BZS_X1 + 1, 340, TRI.y1 + 2, 196], [0, GBW, HO, H]]) { // seven textures (the last is Grand Baie), each under 4,096 pixels wide so phones keep them sharp: the north, the far north-east (Ebène), the south and Tamarin, Trianon, the M1 north, and Tribeca Airport
+  for (const [gx0, gx1, gy0, gy1] of [[0, BZS_X1 + 1, 0, NH], [BZS_X1 + 1, W, 0, NH], [0, TAM_W + 4, NH, HO], [TAM_W + 4, 340, BZ_Y1, TRI.y1 + 2], [BZS_X1 + 1, W, NH, BZ_Y1], [BZS_X1 + 1, 340, TRI.y1 + 2, 196], [0, GBW, HO, H]]) { if (gy1 <= HO) continue; // only Grand Baie is painted: the old Flic en Flac, Tamarin and Trianon ground is not in Mauritius Life, each under 4,096 pixels wide so phones keep them sharp: the north, the far north-east (Ebène), the south and Tamarin, Trianon, the M1 north, and Tribeca Airport
   const c = document.createElement("canvas"); c.width = (gx1 - gx0) * P; c.height = (gy1 - gy0) * P; const x2 = c.getContext("2d"); // 16 pixels per tile
   for (let y = gy0; y < gy1; y++) for (let x = gx0; x < gx1; x++) { // every tile
     const t2 = terr[y * W + x], X = (x - gx0) * P, Y = (y - gy0) * P; const bzg = x > GATE && x <= BZS_X1 && y < BZ_Y1 && (t2 === 3 || t2 === 8 || t2 === 9); x2.fillStyle = bzg ? "#4a7d3f" : t2 === 8 ? COL[3] : t2 === 6 ? "#8a6a48" : COL[t2]; x2.fillRect(X, Y, P, P); // base colour (grass under trees, floor under walls); Bambous has its own rough village green
@@ -7997,13 +7969,11 @@ function buildGround() { // the ground as painted pictures (the north, then the 
   const south = gy0 >= NH && gy0 < HO, gw = gx1 - gx0, gh = gy1 - gy0, gg = new THREE.PlaneGeometry(gw, gh, south ? gw : 1, south ? gh : 1); if (south) { const ps = gg.attributes.position; for (let i = 0; i < ps.count; i++) ps.setZ(i, elevAt((gx0 + gx1) / 2 + ps.getX(i), (gy0 + gy1) / 2 - ps.getY(i))); gg.computeVertexNormals(); } // the southern ground follows the rise into Tamarin
   const ground = mesh(gg, new THREE.MeshLambertMaterial({ map: tex }), (gx0 + gx1) / 2, 0, (gy0 + gy1) / 2, R.world, false); ground.rotation.x = -Math.PI / 2; ground.userData.noLift = true; if (gx0 > 0) ground.position.y = 0.02; // lay it flat (Trianon's picture sits just above the hills)
   } // end the two ground pictures
-  { const hw = W - TAM_W - 4, hh = HO - NH, hg = new THREE.PlaneGeometry(hw, hh, hw / 2, hh / 2), ps = hg.attributes.position; for (let i = 0; i < ps.count; i++) ps.setZ(i, elevAt((TAM_W + 4 + W) / 2 + ps.getX(i), (NH + HO) / 2 - ps.getY(i))); hg.computeVertexNormals(); const hills = mesh(hg, new THREE.MeshLambertMaterial({ color: 0x4a7d3f }), (TAM_W + 4 + W) / 2, -0.005, (NH + HO) / 2, R.world, false); hills.rotation.x = -Math.PI / 2; hills.material.color.convertSRGBToLinear(); hills.userData.noLift = true; } // the wooded hills in the south east, one flat colour
+  if (false) { const hw = W - TAM_W - 4, hh = HO - NH, hg = new THREE.PlaneGeometry(hw, hh, hw / 2, hh / 2), ps = hg.attributes.position; for (let i = 0; i < ps.count; i++) ps.setZ(i, elevAt((TAM_W + 4 + W) / 2 + ps.getX(i), (NH + HO) / 2 - ps.getY(i))); hg.computeVertexNormals(); const hills = mesh(hg, new THREE.MeshLambertMaterial({ color: 0x4a7d3f }), (TAM_W + 4 + W) / 2, -0.005, (NH + HO) / 2, R.world, false); hills.rotation.x = -Math.PI / 2; hills.material.color.convertSRGBToLinear(); hills.userData.noLift = true; } // the wooded hills in the south east, one flat colour
   const sea = mesh(new THREE.PlaneGeometry(700, 700), makeWater(false), W / 2, -0.03, H / 2, R.scene, false); sea.rotation.x = -Math.PI / 2; R.sea = sea; // the ocean beyond the map
-  R.water = mesh(new THREE.PlaneGeometry(8.3, HO), makeWater(true), 4.15, 0.04, HO / 2, R.world, false); R.water.rotation.x = -Math.PI / 2; // the sea inside the map: reef, lagoon and foam on the beach
-  { const gw = mesh(new THREE.PlaneGeometry(8.3, GBH), makeWater(true), 4.15, 0.04, GBY + GBH / 2, R.world, false); gw.rotation.x = -Math.PI / 2; } // Grand Baie's lagoon
   R.sky = makeSky(); R.scene.add(R.sky); // the sky dome
   const lamps = []; for (let x = 18; x < GATE - 2; x += 8) lamps.push([x + 0.5, 11.25], [x + 0.5, 27.25]); for (let y = 2; y < 230; y += 8) lamps.push([y < NH ? 14.6 : tamRoad(y) - 0.4, y + 0.5]); // street lamp spots
-  for (const [lx, lz] of lamps) { if (solid[Math.floor(lz) * W + Math.floor(lx)]) continue; cyl(0.04, 0.05, 2.4, "#3a4147", lx, 1.2, lz, R.world, 6); box(0.3, 0.08, 0.14, "#3a4147", lx, 2.4, lz, R.world); box(0.18, 0.06, 0.1, R.lampMat, lx, 2.34, lz, R.world); } // pole, arm and bulb
+  for (const [lx, lz] of lamps) { if (lz < HO || solid[Math.floor(lz) * W + Math.floor(lx)]) continue; cyl(0.04, 0.05, 2.4, "#3a4147", lx, 1.2, lz, R.world, 6); box(0.3, 0.08, 0.14, "#3a4147", lx, 2.4, lz, R.world); box(0.18, 0.06, 0.1, R.lampMat, lx, 2.34, lz, R.world); } // pole, arm and bulb
 } // end buildGround
 
 // ================= signature looks: every building gets props that say what it is =================
@@ -10588,14 +10558,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
-  ["2027.03.03", "2 Nov 2026", "Grand Baie opens its first two shops", [
-    ["🫓", "Dholl Puri Corner", "Walk in for a mine frite or work a kitchen shift. On Sunset Boulevard in Grand Baie.", null],
-    ["🍹", "Sega Bar", "Drinks with the crowd, or work as a glass collector. Next to the club on Sunset Boulevard.", null]
-  ]],
-  ["2027.03.02", "2 Nov 2026", "Grand Baie: first look", [
-    ["🏝️", "Visit Grand Baie", "Take the intercity bus from the Beach bus stop in Flic en Flac. Walk the beach at La Cuvette, Sunset Boulevard, the marina jetty and Marché square.", () => openPhone("maps", "island")],
-    ["🚌", "The intercity bus", "Rs 75 each way, between the Beach bus stop and the bus station on Marché square.", null],
-    ["⛪", "Shops open soon", "The bars, the cinema, the market and the boat trips are built and open over the coming weeks. Find the red-roof chapel in the north-east for a photo.", null]
+  ["2027.03.04", "2 Nov 2026", "A new start in Grand Baie", [
+    ["🏝️", "Welcome to Mauritius Life", "A brand new game. You start in Grand Baie, drawn from the real bay: its beach, coast road, bazaar and shopping centres.", () => openPhone("maps")],
+    ["🫓", "Two shops are open", "Dholl Puri Corner and Sega Bar: eat, have a drink, or work a shift. More places open over the coming weeks.", null],
+    ["🏠", "Your house is in Grand Baie", "Every player gets a house in the estate near the bazaar, with space between neighbours.", null]
   ]],
   ["2027.03.01", "2 Nov 2026", "The whole island on your phone", [
     ["🏝️", "A map of all of Mauritius", "Maps now has an Island tab: the real island, its roads and towns, with Grand Baie, Port Louis and Flic en Flac open.", () => openPhone("maps", "island")],
@@ -12054,7 +12020,7 @@ function routeToGame(g) { // close the phone and walk you to where a game is pla
 function inviteLink() { try { return location && location.origin ? location.origin + location.pathname + "?ref=friend" + (uid ? "&inv=" + encodeURIComponent(uid) : "") : ""; } catch (e) { return ""; } } // the shareable game URL: tagged for the admin stats, and with your id so you both get coins when a friend joins
 function shareInvite() { // use the phone's native share sheet if it exists
   const url = inviteLink(); // the link
-  try { if (navigator.share) { navigator.share({ title: "Flic en Flac Life", text: "Come live in Flic en Flac with me! Join through my link and we both get free coins 🎁", url }).catch(() => {}); return; } } catch (e) {} // native share
+  try { if (navigator.share) { navigator.share({ title: "Mauritius Life", text: "Come live in Mauritius with me! Join through my link and we both get free coins 🎁", url }).catch(() => {}); return; } } catch (e) {} // native share
   copyInvite(); // otherwise just copy it
 } // end shareInvite
 function copyInvite() { // copy the link to the clipboard, with a fallback message
@@ -12885,13 +12851,13 @@ function wmPins() { // every city and the places people look for
   const ok = triAllowed(), P = [["fef", "🏖️", "Flic en Flac", 48, 26, 1], ["cas", "🛍️", "Cascavelle", 66, 20, 2], ["bam", "🏚️", "Bambous Town", 206, 42, 1], ["tam", "🏄", "Tamarin", 50, 140, 1], ["air1", "✈️", "SSR Airport", 90, 45, 3], ["air2", "✈️", "Tamarin Airport", 150, 176, 3], ["bzs", "⚽", "Bambous South", 205, 80, 3]];
   if (ok) P.push(["tri", "🏙️", "Trianon", 285, 134, 1], ["mall", "🛍️", "Tribeca Mall", 258, 118, 2], ["air3", "✈️", "Tribeca Airport", 316, 176, 3], ["cy", "🌃", "Ebène Cyber City", 285 + CXO, 30, 1], ["hel", "🚁", "Trianon heliport", CHOP_PADS.tri.x, CHOP_PADS.tri.y, 3]);
   P.push(["gb", gbLocked() ? "🔒" : "🏝️", gbLocked() ? "Grand Baie (not open yet)" : "Grand Baie", 60, GBY + 40, 1]); // Region 1: reached by the intercity bus
-  return P;
+  return P.filter((q) => q[4] >= HO); // only the open region has pins
 }
 const gbLocked = () => { const r = (ISL.regions || []).find((q) => q.id === "grandbaie"); return !!r && !r.open; }; // the server decides; this only colours the maps
 function wmBuild() { // paint the map picture once: land, sea, roads, buildings
   const ok = triAllowed(), key = (ok ? "open" : "closed") + (gbLocked() ? "-gbshut" : ""); if (WM.key === key && WM.cv) return; WM.key = key; const S = 3, c = document.createElement("canvas"); c.width = W * S; c.height = H * S; const g2 = c.getContext("2d");
   const hid = (x, y) => !ok && (x > BZS_X1 || (x >= 113 && y >= 106 && y <= 196)); // the closed areas are drawn as plain hills
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let t2 = terr[y * W + x]; if (hid(x, y)) t2 = 15; if (x > BZS_X1 && y < NH && t2 === 15 && ok) t2 = 15; g2.fillStyle = WM_COL[t2] || "#c6e6a8"; if (y >= HO && t2 !== 0 && gbLocked()) g2.fillStyle = "#b9bbbd"; g2.fillRect(x * S, y * S, S, S); } // a locked Grand Baie is grey
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let t2 = y < HO ? 0 : terr[y * W + x]; if (hid(x, y)) t2 = 15; if (x > BZS_X1 && y < NH && t2 === 15 && ok) t2 = 15; g2.fillStyle = WM_COL[t2] || "#c6e6a8"; if (y >= HO && t2 !== 0 && gbLocked()) g2.fillStyle = "#b9bbbd"; g2.fillRect(x * S, y * S, S, S); } // a locked Grand Baie is grey
   g2.fillStyle = "rgba(60,110,70,0.10)"; for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (terr[y * W + x] === 15 && (x + y) % 4 === 0) g2.fillRect(x * S, y * S, S * 2, S * 2); // hill texture
   const bl = (b, col) => { if (hid(b.x, b.y)) return; g2.fillStyle = "rgba(0,0,0,0.12)"; g2.fillRect(b.x * S + 1, b.y * S + 1, b.w * S, b.h * S); g2.fillStyle = col; g2.fillRect(b.x * S, b.y * S, b.w * S, b.h * S); };
   for (const b of SOONB) bl(b, "#efe9de"); for (const b of BUILD) bl(b, "#f4efe6");
@@ -13055,7 +13021,7 @@ function start(data) { // boot the game
   if (!s.zv) { s.zoom = 0.5; s.zv = 1; } if (!s.mv2) { s.radio = true; s.mv2 = 1; } // older saves: start zoomed out, with music on
   for (const o of OBJ) if (["Bed", "Shower", "Toilet", "Stove", "TV"].includes(o.name)) o.show = () => false; // these now live inside your home
   s.t = worldMin(); if (!s.timeReal || !s.day0 || s.day0 > day()) { s.timeReal = 1; s.day0 = day(); if (s.made) s.permit = day() + permDays(); } s.invDay = day(); s.incomeDay = day(); if (!s.permit && s.made) s.permit = day() + permDays(); lastSky = weather().k; // sync to real Mauritius time (migrate old saves to the new clock)
-  buildMap(); if (!s.inside && solid[Math.floor(s.y) * W + Math.floor(s.x)]) { s.inside = "home"; s.ox = 22.5; s.oy = 10.8; s.x = 6; s.y = 6; } // older saves standing somewhere now built over
+  buildMap(); { const d0 = doorAt(0); if (s.inside && s.oy < HO) { s.ox = d0.x; s.oy = d0.y + 0.3; } if (!s.inside && !inGB(s.x, s.y)) { s.x = GB_STOP.x; s.y = GB_STOP.y; } } /* saves from the old Flic en Flac game start again in Grand Baie */ if (!s.inside && solid[Math.floor(s.y) * W + Math.floor(s.x)]) { s.inside = "home"; { const d0 = doorAt(0); s.ox = d0.x; s.oy = d0.y + 0.3; } s.x = 6; s.y = 6; } // older saves standing somewhere now built over
   if (s.inside === "visit") { s.inside = ""; s.x = s.ox; s.y = s.oy; } // a visit does not survive a reload: you are back on their doorstep
   if (s.inside && !ROOMDEF[s.inside]) { s.inside = ""; s.x = s.ox; s.y = s.oy; } // a building that no longer exists: back outside
   if (!Number.isFinite(s.ox) || !Number.isFinite(s.oy)) { s.ox = 22.5; s.oy = 10.8; } outdoorSafe(true); // never start in the sea or off the map
