@@ -55,6 +55,8 @@
       else if (m.t === "salon" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-salon", { detail: m })); } catch (e) {} } // Clawed by Taps: a booking changed or a message arrived
       else if (m.t === "flex" || m.t === "chal" || m.t === "passed") { try { window.dispatchEvent(new CustomEvent("fef-" + m.t, { detail: m })); } catch (e) {} } // competition: a flex post, a challenge update, someone passed you
       else if (m.t === "case" && !m.rid) { try { window.dispatchEvent(new Event("fef-case")); } catch (e) {} } // the agent or the court did something about you: look at your case now
+      else if (m.t === "regions") { try { window.dispatchEvent(new CustomEvent("fef-regions", { detail: m.regions })); } catch (e) {} } // a region of the island opened or closed
+      else if (m.t === "region.locked") { if (myPres && m.back) { for (var rk in m.back) { if (m.back[rk] === undefined) delete myPres[rk]; else myPres[rk] = m.back[rk]; } } try { window.dispatchEvent(new CustomEvent("fef-regionlocked", { detail: m })); } catch (e) {} } // the server would not let us into a locked region: our place was put back
       else if (m.t === "disaster") { try { window.dispatchEvent(new CustomEvent("fef-disaster", { detail: m })); } catch (e) {} } // a disaster is coming, hitting or over
       else if (m.t === "heist" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-heist", { detail: m })); } catch (e) {} } // a heist offer, or how it went
       else if (m.t === "hunt" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-hunt", { detail: m })); } catch (e) {} } // someone dug up the treasure
