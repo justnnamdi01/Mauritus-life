@@ -34,7 +34,17 @@ Sleeps when energy is under 30, eats when food is under 35, otherwise works a sh
 5. **Realism check against Mauritius:** an entry shift is Rs 125 an hour, close to real entry wages. Food is dearer relative to wages than in real life, which acts as a sink and is fine.
 6. **Not modelled:** fun, hygiene and bladder (they cost time and small money), clothes and furniture, taxes, disasters, patron shop, rival raids. They all need measuring in a play test.
 
-## Proposed changes (not applied yet: they need your decision)
+## Decisions made (2 Nov 2026) and applied
+- **Property tax:** 8% of the rent of the Studio, Two-bedroom and Penthouse, taken every Monday with the rent (the small room pays none). Unpaid tax carries to the next week.
+- **15% VAT** on Grand Baie shop prices (shown included; it leaves the game). Shifts and free actions are not taxed.
+- **Cyclone policy:** about 0.25% of your money (at least Rs 200) a week, disasters take 60% less. Disaster bands now start at Rs 100,000 (1% / 3% / 6% of the wealth above Rs 100,000, Rs 1M and Rs 10M), so they matter mid-game. Sandbags and shutters still work during the warning.
+- **Students:** the role stays, with shifts and the allowance only.
+- Money is still handled by the player's phone in this engine; only the cyclone policy and disaster bills are decided by the server. The rates are constants (`PROP_TAX`, `VAT`, `POLICY`); move them to the admin page before launch.
+
+## Still to decide
+- Re-measure after the closed test; then retune the numbers in `game/public/index.html` (`PROP_TAX`, `VAT`) and `game/server.js` (`POLICY`, `disasterBill`).
+
+## Other options considered
 - **A. Mid-game money sinks.** Pick two or three: a weekly **property tax** on homes (Studio/Two-bedroom/Penthouse), **business licences** (a share of each collection), a **VAT** line in shop prices (Mauritius VAT is 15%), a **cyclone-season levy** or paid cover (Jan-Mar, already in the engine as disasters).
 - **B. Costs that scale.** Make rent and food a share of net worth for the better homes only (the game already ties home rent to the home you choose).
 - **C. Students.** The university is gone. Either remove the Student role, or make it "Student: part-time shifts only, Rs 4,500 allowance", with university classes returning when Port Louis opens.

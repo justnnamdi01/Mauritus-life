@@ -28,6 +28,12 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Done, session 5 (2 Nov 2026)
+- `docs/ECONOMY.md`: a paper model of the early game and the problems it showed (costs do not grow with income; weak mid-game sinks).
+- Money sinks you chose: property tax (8% of rent on better homes), 15% VAT on Grand Baie shop prices, weekly cyclone policy (60% off disasters); disaster bills now start at Rs 100,000. Student role kept (shifts and allowance only).
+- Housing ladder renamed for Grand Baie. What's new and Guide updated.
+- Tested: price with VAT is what is charged (Rs 138 for a Rs 120 dholl puri), property tax values, policy bought once and refused twice in a row, lock tests pass. Not tested: a real disaster hitting a player with a policy (needs a live event), the rent-day charge on a real Monday.
+
 ## Not done / known gaps, session 4
 - Student role: classes at "Middlesex University" are gone (no building), so students only get the allowance and part-time shifts. Decide if students should exist or get a Grand Baie school.
 - Prices, wages and rent are still the old game's numbers and are not retuned. Do an economy pass on paper before launch.
@@ -87,7 +93,7 @@ Keep this file current. Claude reads it at the start of every session and update
 
 ## Next step
 1. Redeploy on Railway and walk around Grand Baie on a real phone.
-2. Economy pass: retune prices, wages, rent and money sinks on paper; decide on students, government and raids.
+2. Closed test: measure money over time and retune (see docs/ECONOMY.md); decide on government and raids.
 3. Mascot, icons and share image.
 4. Build Port Louis with `tools/build-region.mjs` (add it to `REGIONS`, set its entry point), then Flic en Flac.
 4. Remove the dead old-world code and split `index.html` into modules.

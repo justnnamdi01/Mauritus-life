@@ -234,6 +234,7 @@
     dis: { // storm cover and the relief fund
       get: function () { return ask({ t: "dis.get" }); },
       prep: function (tier) { return ask({ t: "dis.prep", tier: tier }); },
+      policy: function () { return ask({ t: "dis.policy" }); },
       give: function (amt) { return ask({ t: "dis.give", amt: amt }); }
     },
     hunt: { // the Halloween treasure hunt

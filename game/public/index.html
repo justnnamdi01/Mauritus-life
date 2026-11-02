@@ -1806,6 +1806,9 @@ const GBACTS = { // what each kind of place offers: Mauritian food, Mauritian pr
   clothes: () => [A("Try on outfits", "Free · +fun", 20, 0, { fun: 8 }, { why: openAt(9, 19), msg: "You try everything and buy nothing. For now." })],
   worship: () => [A("A quiet moment", "Free · +calm", 20, 0, { fun: 8, energy: 6 }, { why: openAt(6, 20), msg: "You sit quietly and breathe. The noise of the day falls away." })]
 };
+const VAT = 0.15; // Mauritius VAT: the price shown includes it, and it goes to the state (it leaves the game)
+const vatify = (a) => { if (a && a.cost > 0 && !/^Work|shift/i.test(a.label)) { const net = a.cost; a.cost = Math.round(net * (1 + VAT)); a.vat = a.cost - net; a.info = String(a.info || "").replace(/Rs [\d,]+/, "Rs " + a.cost.toLocaleString("en") + " incl. VAT"); } return a; };
+for (const k in GBACTS) { const f = GBACTS[k]; GBACTS[k] = () => f().map(vatify); }
 for (const b of GBSHOPS) PLACE[b.id] = GBACTS[b.gbKind]; // every open place in Grand Baie offers its kind's actions
 for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" ? b.y + b.h + 0.5 : b.y - 0.5, icon: "", name: b.name, enter: b.id }); // add a door object for every building
 
@@ -2659,6 +2662,7 @@ async function disPrep() { // the warning bar opens this: cover the property, or
   const a = disApi(); if (!a) { toast("Storm cover isn't available right now."); return; } const r = await a.get().catch(() => null); if (!r || !r.ok) { toast((r && r.error) || "Couldn't load that."); return; }
   const left = r.warn ? Math.max(0, Math.round((r.hitAt - (r.now || Date.now()) - 0) / 1000)) : 0, items = [];
   if (r.warn) { if (r.estimate < 1000) items.push({ label: "✅ Your property is safe", info: "Nothing here to damage", why: "Nothing to protect", go: () => {} }); else for (const tr of r.tiers) items.push({ label: tr.icon + " " + tr.name, info: rs(tr.cost) + " · stops " + Math.round(tr.cut * 100) + "% of the damage", why: r.mine ? (r.mine === tr.id ? "Already covered" : "Already covered") : s.money < tr.cost ? "You need " + rs(tr.cost) : "", go: async () => { closeMenu(); const x = await a.prep(tr.id).catch(() => null); if (!x || !x.ok) { toast((x && x.error) || "Couldn't buy that."); return; } s.money -= x.cost; txn("Storm cover: " + tr.name, -x.cost); save(); toast(tr.icon + " " + tr.name + " is up. " + Math.round(x.cut * 100) + "% of the damage is covered."); } }); }
+  { const pol = r.policy && r.policy > Date.now(); items.push({ label: "🌀 Cyclone policy" + (pol ? " ✓" : ""), info: rs(r.premium || 200) + " a week · a disaster takes " + Math.round((r.policyCut || 0.6) * 100) + "% less" + (pol ? " · covered until " + new Date(r.policy).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : ""), why: s.money < (r.premium || 200) ? "You need " + rs(r.premium || 200) : "", go: async () => { closeMenu(); const x = await a.policy().catch(() => null); if (!x || !x.ok) { toast((x && x.error) || "Couldn't buy that."); return; } s.money -= x.cost; txn("Cyclone policy", -x.cost); save(); toast("🌀 You are covered until " + new Date(x.until).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "."); } }); } // pay once a week and every disaster costs 60% less, no warning needed
   for (const g of [10000, 100000, 1000000]) items.push({ label: "❤️ Give " + rs(g) + " to the relief fund", info: "Helps the towns rebuild · counts on the Top patrons board", why: s.money < g ? "You need " + rs(g) : "", go: async () => { closeMenu(); const x = await a.give(g).catch(() => null); if (!x || !x.ok) { toast((x && x.error) || "Couldn't send that."); return; } s.money -= x.paid; txn("Island relief fund", -x.paid); save(); toast("❤️ Thank you! " + rs(x.paid) + " went to the relief fund."); } });
   openMenu(r.warn ? "🌊 Protect your property" : "❤️ Island relief fund", items, r.warn ? "Estimated damage to your property: " + (r.estimate >= 1000 ? rs(r.estimate) : "none") + ". Storm cover costs a share of that and stops most of it." : "Gifts go to the town treasuries and earn patron points.");
 }
@@ -3621,6 +3625,8 @@ function sugarTick() { if (!s.made || introOn || !s.sg) return;
     else if (!st.need && s.t > st.next) { st.need = s.t + 120; st.next = s.t + rnd(240, 600); addMoodlet("sugarpest", "Clingy messages", -1, 180, "tense"); toast("📱 " + p.n.split(" ").slice(0, 2).join(" ") + ": \"" + PEST[rnd(0, PEST.length - 1)] + "\" (open Sugar and reply within 2 hours)"); try { if (navigator.vibrate) navigator.vibrate([120, 80, 120]); } catch (e) {} save(); } } } // they text when they want you, and punish silence
 const wealthLine = () => { const g = govPub(), w = g && g.wt; return w && w.on && Array.isArray(w.b) ? w : null; }; // the country's wealth tax, set by the game's owner
 function wealthTaxDue(nw) { const w = wealthLine(); if (!w) return 0; let tax = 0; for (let i = 0; i < w.b.length; i++) { const lo = w.b[i][0], hi = i + 1 < w.b.length ? w.b[i + 1][0] : Infinity; if (nw > lo) tax += (Math.min(nw, hi) - lo) * w.b[i][1]; } return Math.round(tax); } // each rate applies to the slice of your net worth above its line
+const PROP_TAX = 0.08; // the weekly property tax: a share of the rent of the better homes (the small room pays none)
+const propTaxDue = () => ((s.home | 0) > 0 && HOMES[s.home] ? Math.round(HOMES[s.home].rent * PROP_TAX) : 0);
 function wealthTaxWeekly() { // once a week the rich pay: cash first, then savings; whatever you cannot pay is carried to next week
   const due = wealthTaxDue(netWorth()) + (s.taxOwed | 0); if (due <= 0) return; let pay = Math.min(due, Math.max(0, s.money)); s.money -= pay; let rest = due - pay; if (rest > 0 && s.inv && s.inv.save > 0) { const k = Math.min(rest, s.inv.save); s.inv.save -= k; pay += k; rest -= k; }
   s.taxOwed = Math.round(rest); if (pay > 0) { txn("Wealth tax (rich tax)", -pay); const T = typeof hereTown === "function" ? hereTown() : "fef"; if (GOV.taxQ) GOV.taxQ[T] += pay; toast("🏛️ Wealth tax: " + rs(pay) + " taken this week from your wealth of " + rs(netWorth() + pay) + "." + (s.taxOwed ? " " + rs(s.taxOwed) + " is still owed." : "")); } save();
@@ -3721,6 +3727,9 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["What is in Grand Baie?", "The map follows the real town: the bay and beach, the coast road, the Bazaar, the shopping centres, the library, the police station, the mosque and the temple. Open now: Dholl Puri Corner (food and kitchen shifts) and Sega Bar (drinks and bar shifts). The other places show their name and open over the coming weeks.", "maps"],
     ["What can I eat in Grand Baie?", "Dholl puri, faratha, gato piment and alouda at the Dholl Puri Corner. Briyani, fish vindaye and chicken curry at the Resto. Baguette and gato coco at the bakery. Fruit, samoussa and coconut water at the Bazaar. Fresh fish at the fish market. Food gives you +food and a little fun, and every place has its own prices.", "maps"],
     ["How do I earn money in Grand Baie?", "Open Jobs, or walk into the Bazaar, a restaurant, the bakery or the fish market and tap Work a shift. Students can do part-time shifts at the Bazaar and the supermarket. Work well and you get promoted.", "jobs"],
+    ["What is VAT?", "Mauritius charges 15% VAT on goods. In Grand Baie shops the price shown already includes it, and the VAT leaves the game.", "wallet"],
+    ["Do I pay property tax?", "If you live in a Studio, Two-bedroom or Penthouse you pay 8% of your rent as property tax every Monday with the rent. The small room pays none.", "wallet"],
+    ["How do I get cyclone cover?", "Disasters take a share of your money once you have more than Rs 100,000. Buy a weekly cyclone policy (about 0.25% of your money, at least Rs 200) and they take 60% less. Sandbags and storm shutters can still be bought during the two-minute warning.", "wallet"],
     ["Why are some regions grey?", "They are not open yet. Nobody can go in, on foot, by car, by ride or by air, until they open. When a region gets an opening date, the map shows it. New regions open over time.", "maps"]
   ]],
   ["👗", "Clothes and outfits", [
@@ -6035,7 +6044,7 @@ function phoneRender0() { // draw the current phone screen
   if (pv.app === "wallet") { // money
     appHero(box, "💳", "Juice balance", rs(s.money), "Net worth " + rs(netWorth()) + " · rent " + rs(s.rent) + " a week"); if (s.fz) prow(box, "🧊 Frozen by the court", rs(s.fz.amt), "Released when the court rules · open the Court app"); loansSection(box); if (isResident()) residentCard(box); box.append(el("p", "psec", "Your money")); // balance, and your Resident Card
     { const wt = wealthTaxDue(netWorth()); if (wealthLine()) prow(box, "Wealth tax", wt > 0 ? "~" + rs(wt) + " weekly" : "Not due", wt > 0 ? "A tax on the rich, paid every Monday with rent" : "Starts at net worth Rs " + wealthLine().b[0][0].toLocaleString("en")); }
-    prow(box, "Rent", rs(s.rent) + " weekly", "Due Monday 08:00"); if (s.debt) prow(box, "Owed to landlord", rs(s.debt)); // rent and debt
+    prow(box, "Rent", rs(s.rent) + " weekly", "Due Monday 08:00"); if (propTaxDue() > 0) prow(box, "Property tax", rs(propTaxDue()) + " weekly", "Paid with rent for your home"); // the better homes pay a little more if (s.debt) prow(box, "Owed to landlord", rs(s.debt)); // rent and debt
     prow(box, "In your fridge", s.meals + " meals · " + (s.drinks || 0) + " drinks"); prow(box, "Owned", ["bike", "scooter", "tv", "cooler", "stall"].filter((k) => s[k]).join(", ") || "old laptop"); // what you have
     if (s.stall) prow(box, "Snack stall income", "Rs 1,200 daily"); // business income
     prow(box, "Investments", rs(prodVal("save") + prodVal("fund") + prodVal("crypto")), "Net worth " + rs(netWorth()) + " = cash " + rs(s.money) + (JET_VALUE() ? " + jet " + rs(JET_VALUE()) : "") + (bizValue() ? " + businesses " + rs(bizValue()) : "") + " + investments"); if (JET_VALUE() || bizValue()) prow(box, "What counts in net worth", "Cash, jet, businesses, investments", "The rich list ranks net worth, not just cash"); // savings, fund and crypto
@@ -7293,12 +7302,13 @@ function advance(min, decay) { // move the clock forward
     wealthTaxWeekly(); // the rich pay their weekly wealth tax
     if ((s.kids || 0) > 0) { const kc = Math.min(s.money, KID_WEEK * s.kids); s.money -= kc; txn("Childcare", -kc); toast("👶 Childcare: " + rs(kc) + " this week."); } // children cost money every week
     const rentNow = isPres() && s.palRes ? 0 : Math.round(s.rent * law("rent", "fef")); // the Palace is free, and the President sets everyone else's rent
-    if (s.money >= rentNow) { s.money -= rentNow; if (rentNow) txn("Rent", -rentNow); toast(rentNow ? "Rent paid: " + rs(rentNow) + "." : "The Palace is free. No rent."); } // pay if you can
+    if (s.money >= rentNow) { s.money -= rentNow; if (rentNow) txn("Rent", -rentNow); toast(rentNow ? "Rent paid: " + rs(rentNow) + "." : "The Palace is free. No rent."); // pay if you can
+      { const pt = propTaxDue(); if (pt > 0) { const pp = Math.min(pt, Math.max(0, s.money)); if (pp > 0) { s.money -= pp; txn("Property tax", -pp); toast("🏠 Property tax: " + rs(pp) + " (" + Math.round(PROP_TAX * 100) + "% of your rent)."); } s.taxOwed = (s.taxOwed | 0) + (pt - pp); } } }
     else { // you cannot pay: you get kicked out
       if (s.debt > 0 && (s.tv || s.bed)) { s.tv = false; s.bed = false; toast("Second missed rent. The landlord kept your TV and mattress."); } // a second miss costs you your things
       s.debt += s.rent + 500; toast("You could not pay rent, so you have been kicked out! Pay " + rs(s.debt) + " at your front door or in the Juice app to get back in."); // eviction notice
             if (s.inside === "home") leaveBuilding(); // locked out of your apartment
-      if (!s.inside && terr[Math.floor(s.y) * W + Math.floor(s.x)] === 5) { s.x = 22.5; s.y = 10.5; } // thrown out onto the street
+      if (!s.inside && terr[Math.floor(s.y) * W + Math.floor(s.x)] === 5) { const d0 = myDoor(); s.x = d0.x; s.y = d0.y + 0.3; } // thrown out onto the street
     } // end eviction
   } // end rent
   for (const ev of EVENTS) if (mark(Math.floor(before / 10080) * 10080 + evStart(ev) - 180)) toast("Tonight: " + ev.org + " at " + doorOf(ev.venue).name + ". Doors " + ev.h + ":00."); // party reminder three hours before
@@ -10479,6 +10489,11 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.06", "2 Nov 2026", "Taxes and cyclone cover", [
+    ["🧾", "15% VAT in the shops", "Prices in Grand Baie shops now include Mauritius' 15% VAT. The price you see is the price you pay.", null],
+    ["🏠", "Property tax", "The Studio, Two-bedroom and Penthouse pay a small property tax with the rent, every Monday.", () => openPhone("wallet")],
+    ["🌀", "Cyclone policy", "Pay a small premium once a week and any disaster takes 60% less from your wallet. Disasters now start to cost you from Rs 100,000. Tap the warning bar, or the Juice app, to buy it.", null]
+  ]],
   ["2027.03.05", "2 Nov 2026", "Grand Baie fills up", [
     ["🫓", "Eat the Mauritian way", "Dholl puri, faratha, gato piment and alouda at the corner stall. Briyani and fish vindaye at the restaurants. Fresh fruit and samoussa at the Bazaar.", null],
     ["🏪", "14 places are open", "Two supermarkets, a mini market, a bakery, the fish market, two restaurants, a petrol station, a boutique, a library and a temple, plus the bazaar and the bar.", () => openPhone("maps")],
