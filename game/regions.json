@@ -26,10 +26,10 @@
     {
       "id": "portlouis",
       "name": "Port Louis",
-      "open": false,
+      "open": true,
       "opensAt": "",
       "color": "#e8664a",
-      "map": "",
+      "map": "portlouis",
       "seeds": [
         [
           57.502,

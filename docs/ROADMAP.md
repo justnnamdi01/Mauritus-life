@@ -48,7 +48,7 @@ This is the build order for the three big upgrades. Work one phase at a time. Wh
 
 ## Phase 4: roll it out, region by region
 - Repeat Phase 2 art for each region before opening it.
-- Open regions on a schedule: Region 1 at launch, then one new region per season.
+- Open regions on a schedule: Region 1 at launch, then one new region per season. (Port Louis was built early and is open alongside Grand Baie.)
 
 ## Rules that apply to every phase
 - Read `CLAUDE.md` first. The server decides money, positions and prizes.

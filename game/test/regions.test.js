@@ -14,7 +14,7 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     for (let i = 0; i < 50; i++) { try { await fetch(`http://127.0.0.1:${PORT}/api/regions`); break; } catch (e) { await wait(200); } }
     const pub = await fetch(`http://127.0.0.1:${PORT}/api/regions`).then((r) => r.json());
     const open = pub.regions.filter((r) => r.open).map((r) => r.id).sort().join(",");
-    ok(open === "grandbaie", "open at start: only Grand Baie, the one region with a walkable map (got " + open + ")");
+    ok(open === "grandbaie,portlouis", "open at start: Grand Baie and Port Louis, the two regions with a walkable map (got " + open + ")");
 
     const ws = new WebSocket(`ws://127.0.0.1:${PORT}`), got = [];
     ws.on("message", (d) => { try { got.push(JSON.parse(d)); } catch (e) {} });
@@ -41,12 +41,15 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     a = await admin("POST", { id: "north", open: false }); l = await locked(); ok(l && l.id === "north" && l.back.ix !== undefined, "closing the north walks the player inside to a safe place");
     a = await admin("POST", { id: "east", opensAt: Date.now() - 1000 }); ok(!a.ok, "an opening date in the past is refused");
     a = await admin("POST", { id: "east", opensAt: Date.now() + 86400000 }); ok(a.ok && !a.regions.find((r) => r.id === "east").open, "an opening date tomorrow keeps it closed today");
-    // The walkable map: rows from 232 down are Grand Baie (the old Flic en Flac rows are closed). The server reads the place, not the phone's claim.
-    const stop = { x: 56.5, y: 259.5 };
+    // The walkable maps: rows 236+ are Grand Baie, rows 324+ Port Louis (the old Flic en Flac rows are closed). The server reads the place, not the phone's claim.
+    const stop = { x: 56.5, y: 259.5 }, plStop = { x: 48.5, y: 370.5 };
     pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "standing at the Grand Baie bus station is allowed");
-    pres({ x: 20, y: 30, rg: "grandbaie" }); l = await locked(); ok(l && l.id === "west" && l.back.y > 232, "a phone that claims Grand Baie but stands in the old Flic en Flac map is put back in Grand Baie");
-    pres({ x: stop.x, y: stop.y, rg: "west" }); l = await locked(); ok(!l, "a phone that lies about its region is judged by where it stands");
+    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(!l, "standing at the Port Louis bus station is allowed");
+    pres({ x: 20, y: 30, rg: "grandbaie" }); l = await locked(); ok(l && l.id === "west" && l.back.y > 232, "a phone that claims Grand Baie but stands in the old Flic en Flac map is put back");
+    pres({ x: plStop.x, y: plStop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "a phone that lies about its region is judged by where it stands");
+    a = await admin("POST", { id: "portlouis", open: false }); l = await locked(); ok(a.ok && l && l.id === "portlouis" && l.back.y > 232 && l.back.y < 320, "closing Port Louis moves a player standing there to Grand Baie");
     a = await admin("POST", { id: "grandbaie", open: false }); ok(!a.ok, "the last region with a walkable map cannot be closed");
+    a = await admin("POST", { id: "portlouis", open: true }); ok(a.ok, "Port Louis opens again");
     pres({ x: 3, y: 4, in: "home", rg: "grandbaie" }); l = await locked(); ok(!l, "indoors, room positions are not mistaken for regions");
     pres({ in: "" });
     ws.close();

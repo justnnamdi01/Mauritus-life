@@ -17,9 +17,10 @@ const REGION_AT = unrle(ISL.region, W * H);
 const BY_ID = Object.fromEntries(DEF.map((r) => [r.id, r]));
 const DEFAULT_RG = "grandbaie"; // the map every player starts on
 const GB_ROW = 232; // the walkable map: rows from here down are Grand Baie (HO in public/index.html); its first tile row is GBY = 236
-const GBM = (() => { try { const t = fs.readFileSync(path.join(__dirname, "public", "grandbaie-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } })(); // the walkable Grand Baie map built from OpenStreetMap
-const STOPS = { grandbaie: GBM ? { x: GBM.stop.x, y: GB_ROW + 4 + GBM.stop.y } : { x: 30.5, y: 260.5 } }; // the bus station: where to put someone back (GB_ROW + 4 is the map's first row, see GBY in public/index.html)
-const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= GB_ROW ? "grandbaie" : "west") : ""; }; // rows above GB_ROW are the old Flic en Flac map, which is no longer open // "" indoors or with no place
+const loadMap = (id) => { try { const t = fs.readFileSync(path.join(__dirname, "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } }; // a walkable map built from OpenStreetMap
+const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), PL_ROW = 320; // Port Louis starts at this row (PLO in public/index.html); its first tile row is PLY = 324
+const STOPS = { grandbaie: GBM ? { x: GBM.stop.x, y: GB_ROW + 4 + GBM.stop.y } : { x: 30.5, y: 260.5 }, portlouis: PLM ? { x: PLM.stop.x, y: PL_ROW + 4 + PLM.stop.y } : { x: 48.5, y: 370.5 } }; // the bus stations: where to put someone back
+const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= PL_ROW ? "portlouis" : y >= GB_ROW ? "grandbaie" : "west") : ""; }; // rows above GB_ROW are the old Flic en Flac map, which is no longer open // "" indoors or with no place
 
 let db = null, persist = () => {}, onChange = () => {};
 function init(theDb, persistFn, changed) { // call once the save has loaded
