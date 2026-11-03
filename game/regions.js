@@ -18,9 +18,9 @@ const BY_ID = Object.fromEntries(DEF.map((r) => [r.id, r]));
 const DEFAULT_RG = "grandbaie"; // the map every player starts on
 const GB_ROW = 232; // the walkable map: rows from here down are Grand Baie (HO in public/index.html); its first tile row is GBY = 236
 const loadMap = (id) => { try { const t = fs.readFileSync(path.join(__dirname, "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } }; // a walkable map built from OpenStreetMap
-const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), PL_ROW = 320; // Port Louis starts at this row (PLO in public/index.html); its first tile row is PLY = 324
-const STOPS = { grandbaie: GBM ? { x: GBM.stop.x, y: GB_ROW + 4 + GBM.stop.y } : { x: 30.5, y: 260.5 }, portlouis: PLM ? { x: PLM.stop.x, y: PL_ROW + 4 + PLM.stop.y } : { x: 48.5, y: 370.5 } }; // the bus stations: where to put someone back
-const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= PL_ROW ? "portlouis" : y >= GB_ROW ? "grandbaie" : "west") : ""; }; // rows above GB_ROW are the old Flic en Flac map, which is no longer open // "" indoors or with no place
+const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), FLM = loadMap("west"), PL_ROW = 320, FL_ROW = 408; // Port Louis starts at this row (PLO in public/index.html); its first tile row is PLY = 324
+const STOPS = { grandbaie: GBM ? { x: GBM.stop.x, y: GB_ROW + 4 + GBM.stop.y } : { x: 30.5, y: 260.5 }, portlouis: PLM ? { x: PLM.stop.x, y: PL_ROW + 4 + PLM.stop.y } : { x: 48.5, y: 370.5 }, west: FLM ? { x: FLM.stop.x, y: FL_ROW + 4 + FLM.stop.y } : { x: 52.5, y: 432.5 } }; // the bus stations: where to put someone back
+const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= FL_ROW ? "west" : y >= PL_ROW ? "portlouis" : y >= GB_ROW ? "grandbaie" : "old") : ""; }; // rows above GB_ROW are the first game's old map: no region, never allowed // "" indoors or with no place
 
 let db = null, persist = () => {}, onChange = () => {};
 function init(theDb, persistFn, changed) { // call once the save has loaded

@@ -44,10 +44,10 @@
     {
       "id": "west",
       "name": "Flic en Flac and the west",
-      "open": false,
+      "open": true,
       "opensAt": "",
       "color": "#4cb8c4",
-      "map": "",
+      "map": "west",
       "seeds": [
         [
           57.37,

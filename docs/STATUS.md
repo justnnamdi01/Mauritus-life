@@ -4,9 +4,9 @@ Keep this file current. Claude reads it at the start of every session and update
 
 ## Where we are
 - **A new game, not Flic en Flac Life.** The world is now only Grand Baie, drawn from the real OpenStreetMap data (`tools/build-region.mjs` makes `game/public/grandbaie-map.js`): the bay, beach, coast road, the Bazaar, shopping centres, library, police station and place of worship, with 58 house plots inland. New players start there.
-- **Open regions:** Grand Baie and Port Louis (3 Nov). Flic en Flac and the other regions are "coming soon" until their maps are built with `tools/build-region.mjs`.
+- **Open regions:** Grand Baie, Port Louis and Flic en Flac (3 Nov). The other five are "coming soon" until their maps are built with `tools/build-region.mjs`.
 - **Removed from the world:** the old Flic en Flac, Tamarin, Bambous, Trianon and Ebène buildings, houses, beach lots, Palm Beach, Tamarin villas, weekly parties, the community WhatsApp promo, and the partner businesses (Belle's Kitchen, A* Cutz, DevCon, Clawed by Taps) behind one switch (`PARTNERS_ON`, off). Halloween and the Treasure Hunt are off.
-- The walkable world is one grid of 460 x 404 tiles. Rows 236-315 are Grand Baie and rows 324-403 are Port Louis, with deep sea between; `HO` (232) marks where the old rows end and `PLO` (320) where Port Louis starts. The old rows are unreachable and not drawn.
+- The walkable world is one grid of 460 x 492 tiles: Grand Baie (rows 236-315), Port Louis (324-403) and Flic en Flac (412-491), with deep sea between. The engine reads one table, `WREG` in `game/public/index.html` (and `regions.js` on the server), so a new region is one more row plus a map from `tools/build-region.mjs`. The first game's old rows (0-231) are unreachable, not drawn, and the server treats them as no region.
 
 ## Done, session 3 (2 Nov 2026)
 - Grand Baie rebuilt from real map data; houses, apartments and the bus station placed from it. Landmarks keep their real public names; shops, hotels and restaurants get generic names so no real business is used.
@@ -27,6 +27,13 @@ Keep this file current. Claude reads it at the start of every session and update
 
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
+
+## Done, session 7 (3 Nov 2026): Flic en Flac rebuilt
+- Flic en Flac rebuilt from the real map (`tools/build-region.mjs west`): beach, lagoon, coast road, 32 places. 23 open (restaurants, cafés, a bar, a supermarket, a pharmacy, hotels, snack stalls, boutiques); clubs, clinics, post office, police and tourist office show "opening soon".
+- The engine now reads a region table (`WREG`), so Grand Baie, Port Louis and Flic en Flac share the same code; every region has a bus station and a bus to each of the others; the world map, Town map, ground, rides and island dot follow it.
+- Server: three regions, the first game's old rows are now "no region" (always refused), tests updated (all pass).
+- Longer neutral name lists so shops are not repeated.
+- Not done: Middlesex University (it is in the real Flic en Flac, just outside this crop) so Student classes still have no building; homes only in Grand Baie; not tested on a real phone.
 
 ## Done, session 6 (3 Nov 2026): Port Louis
 - `tools/build-region.mjs portlouis` builds Port Louis (120 x 80 tiles, 12 m) from the OpenStreetMap file: the harbour inlet, Caudan area, museums, cathedrals, temples, banks, courts, 37 places. Real public landmarks keep their names; shops and restaurants get made-up Mauritian names. Point landmarks (shown in OSM as a single point) are now picked up too, and the builder keeps every map point so coastlines are exact (it had cut the island outline wrongly before).
@@ -104,6 +111,6 @@ Keep this file current. Claude reads it at the start of every session and update
 1. Redeploy on Railway and walk around Grand Baie on a real phone.
 2. Closed test: measure money over time and retune (see docs/ECONOMY.md); decide on government and raids.
 3. Mascot, icons and share image.
-4. Build the next region (Flic en Flac) with `tools/build-region.mjs`; banks and the police station in Port Louis.
+4. Build the next region (Pamplemousses or Flacq) with `tools/build-region.mjs`; banks, police and clinics; a university for Students.
 4. Remove the dead old-world code and split `index.html` into modules.
 5. Phase 2 graphics on one Grand Baie street; Phase 3 driving.
