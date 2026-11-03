@@ -72,4 +72,5 @@ function adminSet(b) {
   if (b.opensAt !== undefined) { const t = Number(b.opensAt) || 0; if (t && !(t > Date.now())) return { ok: false, error: "Pick an opening date in the future." }; s.opensAt = t; }
   persist(); onChange(); return { ok: true, regions: list() };
 }
-module.exports = { walkRegion, init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };
+const regionOfPresence = (p) => walkRegion(p || {}); // which region a presence is standing in ("" indoors or with no place yet; "old" = the first game's unreachable rows)
+module.exports = { regionOfPresence, STOPS, walkRegion, init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };

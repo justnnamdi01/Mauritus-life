@@ -9,7 +9,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/regions`, { method, headers: { authorization: "Bearer " + KEY, "content-type": "application/json" }, body: body && JSON.stringify(body) }).then((r) => r.json());
 
 (async () => {
-  const srv = spawn(process.execPath, ["server.js"], { cwd: path.join(__dirname, ".."), env: Object.assign({}, process.env, { PORT, ADMIN_KEY: KEY, DATA_FILE: path.join(dir, "data.json") }), stdio: "ignore" });
+  const srv = spawn(process.execPath, ["server.js"], { cwd: path.join(__dirname, ".."), env: Object.assign({}, process.env, { TRIP_TIME_SCALE: "20", PORT, ADMIN_KEY: KEY, DATA_FILE: path.join(dir, "data.json") }), stdio: "ignore" });
   try {
     for (let i = 0; i < 50; i++) { try { await fetch(`http://127.0.0.1:${PORT}/api/regions`); break; } catch (e) { await wait(200); } }
     const pub = await fetch(`http://127.0.0.1:${PORT}/api/regions`).then((r) => r.json());
@@ -41,16 +41,33 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     a = await admin("POST", { id: "north", open: false }); l = await locked(); ok(l && l.id === "north" && l.back.ix !== undefined, "closing the north walks the player inside to a safe place");
     a = await admin("POST", { id: "east", opensAt: Date.now() - 1000 }); ok(!a.ok, "an opening date in the past is refused");
     a = await admin("POST", { id: "east", opensAt: Date.now() + 86400000 }); ok(a.ok && !a.regions.find((r) => r.id === "east").open, "an opening date tomorrow keeps it closed today");
-    // The walkable maps: rows 236+ are Grand Baie, rows 324+ Port Louis (the old Flic en Flac rows are closed). The server reads the place, not the phone's claim.
+    // The walkable maps and the roads between them. You only change town by travelling; the server times the trip and refuses jumps.
+    const ask = (t, extra) => new Promise((res) => { const rid = "r" + Math.random().toString(36).slice(2, 8), h = (d) => { try { const m = JSON.parse(d); if (m.rid === rid) { ws.off("message", h); res(m); } } catch (e) {} }; ws.on("message", h); ws.send(JSON.stringify(Object.assign({ t, rid }, extra))); });
+    { const uidOf = got.find((m) => m.t === "welcome").uid; ws.send(JSON.stringify({ t: "doc.set", path: "players/" + uidOf, data: { name: "Tester", money: 5000, savedAt: Date.now() }, rid: "d1" })); await wait(400); } // a saved player, so the server knows what they can pay
     const stop = { x: 56.5, y: 259.5 }, plStop = { x: 48.5, y: 370.5 }, flStop = { x: 52.5, y: 428.5 };
-    pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "standing at the Grand Baie bus station is allowed");
-    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(!l, "standing at the Port Louis bus station is allowed");
-    pres({ x: flStop.x, y: flStop.y, rg: "west" }); l = await locked(); ok(!l, "standing at the Flic en Flac bus station is allowed");
-    pres({ x: 20, y: 30, rg: "grandbaie" }); l = await locked(); ok(l && l.back.y > 232, "a phone that claims Grand Baie but stands in the first game's old rows is put back in Grand Baie");
-    pres({ x: plStop.x, y: plStop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "a phone that lies about its region is judged by where it stands");
-    a = await admin("POST", { id: "portlouis", open: false }); l = await locked(); ok(a.ok && l && l.id === "portlouis" && l.back.y > 232 && l.back.y < 320, "closing Port Louis moves a player standing there to Grand Baie");
-    a = await admin("POST", { id: "west", open: false }); ok(a.ok, "Flic en Flac closes"); a = await admin("POST", { id: "grandbaie", open: false }); ok(!a.ok, "the last region with a walkable map cannot be closed");
-    a = await admin("POST", { id: "portlouis", open: true }); ok(a.ok, "Port Louis opens again"); a = await admin("POST", { id: "west", open: true }); ok(a.ok, "Flic en Flac opens again");
+    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "a new player cannot start in Port Louis");
+    pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "a new player starts at the Grand Baie bus station");
+    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel" && l.back.y < 320, "jumping to Port Louis without a trip is refused and put back");
+    pres({ x: flStop.x, y: flStop.y, rg: "west" }); l = await locked(); ok(l && l.why === "travel", "jumping to Flic en Flac without a trip is refused");
+    let pl = await ask("road.plan", { to: "portlouis" }); ok(pl.ok && pl.km > 15 && pl.km < 30 && pl.modes.length === 3 && pl.via.includes("Pamplemousses and the north"), "the plan for Grand Baie to Port Louis follows the real road (" + pl.km + " km via " + (pl.via || []).join(", ") + ")");
+    ok(pl.modes.find((x) => x.id === "bus").fare < pl.modes.find((x) => x.id === "taxi").fare && pl.modes.find((x) => x.id === "bus").minutes > pl.modes.find((x) => x.id === "taxi").minutes, "the bus is cheaper and slower than a taxi");
+    let np = await ask("road.plan", { to: "north" }); ok(!np.ok, "you cannot plan a trip to a region that is not open");
+    let st = await ask("road.start", { to: "portlouis", mode: "car" }); ok(!st.ok, "the car needs a car");
+    st = await ask("road.start", { to: "portlouis", mode: "taxi" }); ok(st.ok && st.fare > 300 && st.secs >= 8, "a taxi to Port Louis starts (Rs " + st.fare + ", " + st.minutes + " min)");
+    const again = await ask("road.start", { to: "west", mode: "bus" }); ok(again.ok && again.again && again.to === "portlouis", "asking again during a trip gives the same trip (safe to repeat)");
+    let ar = await ask("road.arrive"); ok(!ar.ok, "you cannot arrive before the journey is over");
+    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "and a phone that skips the journey is put back");
+    await wait(900); ar = await ask("road.arrive"); ok(ar.ok && ar.to === "portlouis" && ar.y > 320, "you arrive once the time is up");
+    pres({ x: ar.x, y: ar.y, rg: "portlouis" }); l = await locked(); ok(!l, "and then you may stand in Port Louis");
+    pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(l && l.why === "travel", "going back to Grand Baie also needs a trip");
+    pl = await ask("road.plan", { to: "west" }); ok(pl.ok && pl.km > 15 && pl.km < 35, "Port Louis to Flic en Flac is " + pl.km + " km by road");
+    st = await ask("road.start", { to: "west", mode: "bus" }); ok(st.ok && st.wait >= 5, "a bus to Flic en Flac starts and has a wait (" + st.wait + " min)");
+    await wait(900); ar = await ask("road.arrive"); pres({ x: ar.x, y: ar.y, rg: "west" }); l = await locked(); ok(ar.ok && !l, "you arrive in Flic en Flac");
+    pres({ x: 20, y: 30, rg: "grandbaie" }); l = await locked(); ok(l && l.back.y > 232, "a phone that stands in the first game's old rows is put back");
+    a = await admin("POST", { id: "west", open: false }); l = await locked(); ok(a.ok && l && l.id === "west", "closing Flic en Flac sends the player standing there home to Grand Baie");
+    pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "and the server then agrees they are in Grand Baie");
+    a = await admin("POST", { id: "portlouis", open: false }); a = await admin("POST", { id: "grandbaie", open: false }); ok(!a.ok, "the last region with a walkable map cannot be closed");
+    a = await admin("POST", { id: "portlouis", open: true }); a = await admin("POST", { id: "west", open: true }); ok(a.ok, "the regions open again");
     pres({ x: 3, y: 4, in: "home", rg: "grandbaie" }); l = await locked(); ok(!l, "indoors, room positions are not mistaken for regions");
     pres({ in: "" });
     ws.close();

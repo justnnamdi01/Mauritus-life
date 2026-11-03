@@ -1828,7 +1828,8 @@ for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" 
 
 OBJ.push({ x: 60.5, y: 14.5, icon: "🚏", stop: true, name: "Cascavelle bus stop", acts: busActs }); // bus stop for the mall and the university
 // (Flic Motors is now a real building with a car lot: see BUILD "motors" and motorsActs)
-for (const r of WREG) OBJ.push({ x: r.stop.x, y: r.stop.y, icon: "🚌", stop: true, name: r.name + " bus station", acts: () => busActs().concat(...["grandbaie", "portlouis", "west", "north", "east"].filter((id) => id !== r.id).map((id) => intercityActs(id))) }); // every region has a bus station: local rides, and the intercity buses to the other regions (closed until they open)
+for (const r of WREG) OBJ.push({ x: r.stop.x, y: r.stop.y, icon: "🚌", stop: true, travelPoint: true, name: r.name + " bus station", acts: () => busActs().concat([carDeskAct()], ...["grandbaie", "portlouis", "west", "north", "east"].filter((id) => id !== r.id).map((id) => intercityActs(id))) }); // every region has a bus station: local rides, a car desk, and travel by road to the other towns (closed until they open)
+for (const r of WREG) { const used = [[r.stop.x, r.stop.y - r.y0]]; for (const n of WREG) { if (n.id === r.id) continue; const dx = n.isl[0] - r.isl[0], dy = -(n.isl[1] - r.isl[1]) * 0.95, ln = Math.hypot(dx, dy) || 1; let best = null, bs = -1e9; for (let ly = 2; ly < r.M.h - 2; ly++) for (let x = 2; x < r.M.w - 2; x++) { if (r.T[ly * r.M.w + x] !== 4 || used.some(([ux, uy]) => Math.hypot(ux - x, uy - ly) < 9)) continue; const sc = ((x - r.M.w / 2) * dx + (ly - r.M.h / 2) * dy) / ln; if (sc > bs) { bs = sc; best = [x, ly]; } } if (!best) continue; used.push(best); OBJ.push({ x: best[0] + 0.5, y: r.y0 + best[1] + 0.5, icon: "🛣️", travelPoint: true, name: "Road to " + n.name, acts: () => intercityActs(n.id) }); } } // a road sign where the real road leaves each town towards each neighbour
 OBJ.push({ x: 17.5, y: 27.5, icon: "🚏", stop: true, name: "Wolmar bus stop", acts: busActs }); // bus stop for the hotels
 OBJ.push({ x: 46.5, y: 27.5, icon: "🚏", stop: true, name: "Jumbo bus stop", acts: busActs }); // bus stop by the hypermarket
 OBJ.push({ x: 28.5, y: 23.5, icon: "⛲", name: "Park fountain", acts: () => [A("Sit by the fountain", "45 min · +18 fun, +10 people", 45, 0, { fun: 18, social: 10, energy: 5 }, { msg: "Kids on bikes, old men playing dominoes." }), A("Picnic", "Uses 1 grocery meal · +40 food, +15 fun", 40, 0, { hunger: 40, fun: 15 }, { why: s.meals > 0 ? "" : "No groceries", run() { s.meals--; return "Picnic on the grass."; } })] }); // chill in the park
@@ -3737,7 +3738,9 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
   ]],
   ["🗺️", "Places and travel", [
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
-    ["How do I travel between towns?", "Walk to a bus station (Grand Baie by the bazaar, Port Louis by the harbour, Flic en Flac by the coast road), tap it and choose the intercity bus (Rs 75). Taxis and rides only work inside the region you are in. Grey regions on the Island map are not open yet.", "maps"],
+    ["How do I travel between towns?", "Open Maps → Island and tap a town, or walk to a bus station or a road sign (where the real road leaves town) and choose Travel. You can go by bus (cheapest, with a short wait, from a station or sign), taxi (it comes to you, quicker, dearer) or your own car (fuel only). The trip follows the real road, costs money and takes time. The server times it, so there are no shortcuts.", "maps"],
+    ["How do I get a car?", "Rent one by the day or buy one at any bus station: tap it and choose Rent or buy a car. With a car you pay only for fuel on trips between towns.", "maps"],
+    ["How far apart are the towns?", "Grand Baie to Port Louis is about 21 km by road, Port Louis to Flic en Flac about 23 km, so Grand Baie to Flic en Flac is about 44 km. The island map shows the road your trip takes.", "maps"],
     ["What is in Flic en Flac?", "The beach town on the west coast, built from the real map: the long beach and lagoon, restaurants, cafés, hotels, a supermarket and a pharmacy. The clubs, clinics and the post office open soon.", "maps"],
     ["What is in Port Louis?", "The capital, built from the real map: the harbour, the Blue Penny Museum, cafés, restaurants, a cinema, hotels, supermarkets, pharmacies and places of worship. Banks and the police station open soon.", "maps"],
     ["Where does the game start?", "In Grand Baie, on the real bay: your house is in the estate near the bazaar and the bus station. Walk out of your front door and explore. More regions open one at a time.", "maps"],
@@ -3990,19 +3993,42 @@ function salonMenu(kind) { // the salon's price list
 } // end salonMenu
 
 // ================= transport =================
-const INTERCITY_FARE = 75; // the intercity bus between Flic en Flac and Grand Baie
-const RG_NAME = { grandbaie: "Grand Baie", portlouis: "Port Louis", west: "Flic en Flac", north: "Pamplemousses", east: "Flacq and Belle Mare" }, RG_ENTRY = {}; for (const r of WREG) RG_ENTRY[r.id] = r.stop; // only regions with a walkable map have an arrival point
-function intercityActs(to) { // what the intercity bus offers at a stop
+// ---------- travel between towns: the real roads, a bus, a taxi or your own car. The server plans the trip and times it; the phone plays it ----------
+const RG_NAME = { grandbaie: "Grand Baie", portlouis: "Port Louis", west: "Flic en Flac", north: "Pamplemousses and the north", east: "Flacq and Belle Mare", southeast: "Mahébourg and Grand Port", south: "Le Morne and the south", plateau: "Curepipe and the plateau" }, RG_ENTRY = {}; for (const r of WREG) RG_ENTRY[r.id] = r.stop;
+const roadApi = () => { const a = window.claude && window.claude.road; return a && a.plan ? a : null; };
+const nearTravelPoint = () => { const here = regionOfY(s.inside ? s.oy : s.y); return !s.inside && OBJ.some((o) => o.travelPoint && regionOfY(o.y) === here && Math.hypot(o.x - s.x, o.y - s.y) < 7); }; // a bus station or a road sign
+function intercityActs(to) { // a line in a station's or a road sign's menu
   const nm = RG_NAME[to] || "another region", rg = (ISL.regions || []).find((r) => r.id === to), ready = !!(rg && rg.open && RG_ENTRY[to]);
-  return [{ label: (ready ? "🚌 " : "🔒 ") + "Intercity bus to " + nm, info: ready ? rs(INTERCITY_FARE) + " · about 2 minutes" : nm + (rg && !rg.open && rg.opensAt ? " opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : " is coming soon"), go: () => intercityGo(to) }];
+  return [{ label: (ready ? "🛣️ " : "🔒 ") + "Travel to " + nm, info: ready ? "By road · bus, taxi or your own car" : nm + (rg && !rg.open && rg.opensAt ? " opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : " is coming soon"), go: () => travelMenu(to) }];
 }
-async function intercityGo(to) { // take the intercity bus (the server refuses a locked region, so we ask first)
-  closeMenu(); const nm = RG_NAME[to] || "that region"; ISL.at = 0; await islandLoad(); const rg = (ISL.regions || []).find((r) => r.id === to);
-  if (!rg || !rg.open || !RG_ENTRY[to]) { toast("🔒 " + nm + " is not open yet." + (rg && rg.opensAt ? " It opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); return; }
-  if (s.money < INTERCITY_FARE) { toast("The intercity bus costs " + rs(INTERCITY_FARE) + ". Do a shift first."); return; }
-  if (s.inside || (ride && ride.on)) { toast("Get to the bus stop first."); return; }
-  const at = RG_ENTRY[to]; s.money -= INTERCITY_FARE; txn("Intercity bus to " + nm, -INTERCITY_FARE); s.x = at.x; s.y = at.y; path = []; pending = null; keys = {}; save(); toast("🚌 Welcome to " + nm + "!");
+const carDeskAct = () => ({ label: "🔑 Rent or buy a car", info: "To drive yourself between towns and around", go: () => { closeMenu(); openMenu("🔑 Car rental and sales", motorsActs(), "Rent by the day or buy outright. Your own car is the cheapest way between towns."); } });
+async function travelMenu(to) { // the ways to get to another town, with price and time from the server
+  closeMenu(); const nm = RG_NAME[to] || "that town", here = regionOfY(s.inside ? s.oy : s.y), a = roadApi(); if (to === here) { toast("You are already in " + nm + "."); return; } if (!a) { toast("Travel isn't available right now."); return; }
+  await islandLoad(); const rg = (ISL.regions || []).find((r) => r.id === to); if (!rg || !rg.open) { toast("🔒 " + nm + " is not open yet." + (rg && rg.opensAt ? " It opens " + new Date(rg.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); return; }
+  const r = await a.plan(to).catch(() => null); if (!r || !r.ok) { toast((r && r.error) || "Couldn't plan that trip."); return; }
+  const hm = (m) => (m >= 60 ? Math.floor(m / 60) + " h " + (m % 60 ? m % 60 + " min" : "") : m + " min"), items = r.modes.map((m) => { const car = m.id === "car", bus = m.id === "bus", why = s.money < m.fare ? "You need " + rs(m.fare) : bus && !nearTravelPoint() ? "Go to a bus station or a road sign" : car && !hasCar() ? "You need a car: rent or buy one at a bus station" : ""; return { label: m.icon + " " + m.name + " · " + rs(m.fare), info: hm(m.minutes) + (bus ? " + wait 5 to 20 min" : m.id === "taxi" ? " · it comes to you" : " · fuel only"), why, go: () => tripGo(to, m, r) }; });
+  openMenu("🛣️ To " + nm, items, r.km + " km by road" + (r.via && r.via.length > 2 ? " · through " + r.via.slice(1, -1).join(", ") : "") + ". The server times the journey.");
 }
+function tripGo(to, m, plan) { closeMenu(); (async () => { const a = roadApi(); if (!a) return; const r = await a.start(to, m.id, hasCar()).catch(() => null); if (!r || !r.ok) { toast((r && r.error) || "Couldn't start that trip."); return; }
+  if (!r.again && r.fare > 0) { s.money -= r.fare; txn("Trip to " + (RG_NAME[to] || to) + " (" + m.name + ")", -r.fare); }
+  startTransit({ to, mode: m.id, icon: m.icon, secs: r.secs, minutes: r.minutes, path: r.path || plan.path, via: r.via || plan.via, km: r.km || plan.km, startedAt: Date.now() - (r.again ? Math.max(0, (r.minutes ? ROADSECS(r.minutes) : r.secs) - r.secs) * 1000 : 0), endAt: Date.now() + r.secs * 1000 }); })(); }
+const ROADSECS = (minutes) => Math.max(8, Math.min(45, minutes / 4)); // the same journey length the server uses
+let TRN = null; // the journey on screen
+function startTransit(T) { // the journey screen: the island, the real road, and a dot that follows it
+  s.transit = { to: T.to, mode: T.mode, icon: T.icon || "🚌", minutes: T.minutes, path: T.path, via: T.via, km: T.km, startedAt: T.startedAt, endAt: T.endAt }; save(); closeMenu(); closePhone();
+  let ov = $("transit"); if (!ov) { ov = document.createElement("div"); ov.id = "transit"; ov.style.cssText = "position:fixed;inset:0;z-index:99990;background:#0b1e2b;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center;font-family:inherit"; ov.innerHTML = '<div id="trnTitle" style="font-size:1.25rem;font-weight:800"></div><canvas id="trnMap" style="width:min(92vw,420px);height:auto;border-radius:14px;background:#0f3b55"></canvas><div id="trnSub" style="opacity:.85"></div><div style="width:min(92vw,420px);height:10px;border-radius:6px;background:rgba(255,255,255,.15);overflow:hidden"><i id="trnBar" style="display:block;height:100%;width:0;background:#ffa733"></i></div><div id="trnVia" style="opacity:.7;font-size:.85rem"></div>'; document.body.append(ov); }
+  ov.hidden = false; $("trnTitle").textContent = (T.icon || "🚌") + " On the road to " + (RG_NAME[T.to] || T.to); $("trnVia").textContent = T.km + " km" + (T.via && T.via.length > 2 ? " · through " + T.via.slice(1, -1).join(", ") : ""); TRN = { T, last: performance.now(), done: false }; islandLoad().then(() => { if (TRN && !TRN.done) trnFrame(); });
+}
+function trnFrame() { const R0 = TRN; if (!R0 || R0.done) return; const T = R0.T, cv = $("trnMap"), now = Date.now(), total = Math.max(1, T.endAt - T.startedAt), p = Math.max(0, Math.min(1, (now - T.startedAt) / total));
+  if (ISL.d && ISL.regions) { const d = ISL.d; if (cv.width !== d.w * 2) { cv.width = d.w * 2; cv.height = d.h * 2; } const g = cv.getContext("2d"); g.drawImage(islandImage(), 0, 0); g.lineJoin = "round"; g.lineCap = "round"; g.strokeStyle = "rgba(255,255,255,.9)"; g.lineWidth = 5; g.beginPath(); T.path.forEach(([x, y], i) => (i ? g.lineTo(x * 2 + 1, y * 2 + 1) : g.moveTo(x * 2 + 1, y * 2 + 1))); g.stroke(); g.strokeStyle = "#ffa733"; g.lineWidth = 3; g.beginPath(); const k = Math.floor(p * (T.path.length - 1)); T.path.slice(0, k + 1).forEach(([x, y], i) => (i ? g.lineTo(x * 2 + 1, y * 2 + 1) : g.moveTo(x * 2 + 1, y * 2 + 1))); g.stroke(); const q = T.path[Math.min(T.path.length - 1, k)]; g.fillStyle = "#fff"; g.beginPath(); g.arc(q[0] * 2 + 1, q[1] * 2 + 1, 9, 0, 7); g.fill(); g.fillStyle = "#e4572e"; g.beginPath(); g.arc(q[0] * 2 + 1, q[1] * 2 + 1, 6, 0, 7); g.fill(); }
+  $("trnBar").style.width = Math.round(p * 100) + "%"; $("trnSub").textContent = Math.max(0, Math.round(T.km * (1 - p) * 10) / 10) + " km to go"; const dt = Math.min(1, (performance.now() - R0.last) / 1000); R0.last = performance.now(); try { advance(T.minutes * dt / (total / 1000), true); } catch (e) {} // game time passes while you travel
+  if (p >= 1) { R0.done = true; trnArrive(T, 0); return; } requestAnimationFrame(trnFrame);
+}
+async function trnArrive(T, tries) { const a = roadApi(); const r = a ? await a.arrive().catch(() => null) : null;
+  if (r && r.ok) { s.x = r.x; s.y = r.y; s.inside = ""; path = []; pending = null; s.transit = null; save(); const ov = $("transit"); if (ov) ov.hidden = true; TRN = null; toast("🛣️ You arrived in " + (RG_NAME[r.to] || r.to) + "."); return; }
+  if (r && r.wait && tries < 20) { setTimeout(() => trnArrive(T, tries + 1), Math.min(3000, r.wait * 1000 + 200)); return; } // the server wants a few more seconds
+  const ov = $("transit"); if (ov) ov.hidden = true; TRN = null; s.transit = null; save(); toast((r && r.error) || "The trip was cancelled."); }
+function resumeTransit() { const T = s.transit; if (!T || !s.made) return; if (Date.now() >= T.endAt) { trnArrive(T, 0); return; } startTransit(Object.assign({}, T)); } // you reloaded the game mid-trip: carry on
 function busActs() { return [{ label: "Get a ride from here", info: "Public bus, student driver or taxi", go: rideMenu }]; } // what a bus stop offers
 function nearestStop(x, y) { return OBJ.filter((o) => o.stop).sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0]; } // closest bus stop to a point
 const hasCar0 = () => s.car || s.t < s.rentCar, hasCar = () => hasCar0() && !probOn("car"); // do you have a car right now (owned or still rented, and not in for repairs)?
@@ -4132,7 +4158,7 @@ function nearestRoad(x, y) { // closest road tile to a point
   return best; // the pickup or drop-off point
 } // end nearestRoad
 function startRide(kind, dest, mins, msg) { // a vehicle comes to get you
-  if (dest && regionOfY(s.y) !== regionOfY(dest.y)) { toast("🚌 Rides stay inside a region. For another region, take the intercity bus from the Grand Baie bus station when it opens."); return; }
+  if (dest && regionOfY(s.y) !== regionOfY(dest.y)) { toast("🛣️ That is in another town. Choose how to travel there."); travelMenu(regionOfY(dest.y)); return; }
   const P = nearestRoad(s.x, s.y), D = nearestRoad(dest.x, dest.y); // pickup and drop-off points on the road
   let come = []; { const y0 = (regionDef(regionOfY(P.y)) || WREG[0]).block, y1 = regionEnd(regionOfY(P.y)), cand = []; for (let yy = Math.max(y0, Math.floor(P.y) - 24); yy < Math.min(y1, Math.floor(P.y) + 24); yy++) for (let xx = Math.max(0, Math.floor(P.x) - 24); xx < Math.min(120, Math.floor(P.x) + 24); xx++) if (terr[yy * W + xx] === 4) { const d = Math.hypot(xx - P.x, yy - P.y); if (d > 10 && d < 24) cand.push({ x: xx + 0.5, y: yy + 0.5, d }); }
     cand.sort((a, b) => b.d - a.d); for (const c of cand.slice(0, 30)) { const pth = findPath(P.x, P.y, c.x, c.y, true); if (pth.length >= 8) { come = pth.slice(0, 12).reverse(); break; } } if (!come.length) come = [{ x: P.x, y: P.y }]; } // the vehicle starts up to 12 tiles along the road, inside this region
@@ -5252,7 +5278,7 @@ async function dbStart() { // connect to the shared records if this view allows 
   db.collection("players").limit(1000).onSnapshot((snap) => { players = snap.docs.map((d) => cleanPlayer(d.id, d.data() || {})); for (const d of snap.docs) { const dd = d.data() || {}; if (typeof dd.save === "string") rawSaves[d.id] = dd.save; if (dd.hv) homeViews[d.id] = dd.hv; if (dd.lk) lookViews[d.id] = dd.lk; } /* how homes and people look, for visiting */ for (const d of snap.docs) if (d.id === uid) maybeLoadCloud(d.data() || {}); if (!$("phone").hidden && (pv.app === "rich" || pv.app === "send" || pv.app === "settings") && !(document.activeElement && document.activeElement.tagName === "INPUT" && $("phone").contains(document.activeElement))) phoneRender(); }, () => { db = null; }); // everyone's records, live
   if (uid) db.collection("mail").where("to", "==", uid).onSnapshot((snap) => { for (const d of snap.docs) claimMail(d); }, () => {}); // money sent to you
   setInterval(syncPlayer, 4000); // check every 4 seconds whether your record needs saving
-  window.addEventListener("fef-raidhit", () => setTimeout(rdClaimTick, 800));   if (PARTNERS_ON) setTimeout(devconTeamHello, 14000); setTimeout(() => teamLoad(), 7000); setTimeout(rdClaimTick, 9000); setInterval(rdClaimTick, 120000); // raids: pay what raiders took while you were away (never below zero)
+  window.addEventListener("fef-raidhit", () => setTimeout(rdClaimTick, 800));   if (PARTNERS_ON) setTimeout(devconTeamHello, 14000); setTimeout(() => { try { resumeTransit(); } catch (e) {} }, 3500); setTimeout(() => teamLoad(), 7000); setTimeout(rdClaimTick, 9000); setInterval(rdClaimTick, 120000); // raids: pay what raiders took while you were away (never below zero)
   homesStart().catch(() => {}); // your private home
   shopStart().catch(() => {}); // snack shop jobs
   richStart(); // the richest player's statue
@@ -5933,7 +5959,7 @@ async function islandLoad() { if (ISL.busy) return; ISL.busy = true; try {
 } catch (e) {} ISL.busy = false; if (pv && pv.app === "maps" && !$("phone").hidden) phoneRender(); }
 setTimeout(() => { fetch("/api/regions", { cache: "no-store" }).then((r) => r.json()).then((r) => { if (r && r.ok) { ISL.regions = r.regions; ISL.at = Date.now(); } }).catch(() => {}); }, 2500); // which regions are open, for the maps and the bus stops
 window.addEventListener("fef-regions", (e) => { try { WM.key = ""; } catch (er) {} ISL.regions = e.detail || ISL.regions; if (pv && pv.app === "maps" && !$("phone").hidden) phoneRender(); });
-window.addEventListener("fef-regionlocked", (e) => { const d = e.detail || {}; if (d.back && Number.isFinite(d.back.x) && Number.isFinite(d.back.y) && !s.inside) { s.x = d.back.x; s.y = d.back.y; path = []; pending = null; save(); } /* the server put us back where we may be */ toast("🔒 " + (d.name || "That area") + " is not open yet." + (d.opensAt ? " It opens " + new Date(d.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); });
+window.addEventListener("fef-regionlocked", (e) => { const d = e.detail || {}; if (d.why === "travel") { toast("🛣️ " + (d.name || "That town") + " is a trip away: use a bus station, a road sign or the Maps app to travel."); } if (d.back && Number.isFinite(d.back.x) && Number.isFinite(d.back.y) && !s.inside) { s.x = d.back.x; s.y = d.back.y; path = []; pending = null; save(); } /* the server put us back where we may be */ if (d.why === "travel") return; toast("🔒 " + (d.name || "That area") + " is not open yet." + (d.opensAt ? " It opens " + new Date(d.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); });
 const islTile = (lo, la) => [(lo - ISL.d.lon0) * ISL.d.kx / ISL.d.tileM, (ISL.d.lat0 - la) * ISL.d.ky / ISL.d.tileM];
 function islandImage() { // draw the tiles once per change of open regions (2 px a tile)
   const d = ISL.d, key = ISL.regions.map((r) => r.open ? 1 : 0).join(""); if (ISL.img && ISL.imgKey === key) return ISL.img;
@@ -5957,7 +5983,7 @@ function islandApp(box) { // the Island tab of the Maps app
   g.fillStyle = "#ffffff"; g.beginPath(); g.arc(hx * 2, hy * 2, 9, 0, 7); g.fill(); g.fillStyle = "#e4572e"; g.beginPath(); g.arc(hx * 2, hy * 2, 6, 0, 7); g.fill(); // you
   c.onclick = (ev) => { const b = c.getBoundingClientRect(), x = Math.floor((ev.clientX - b.left) / b.width * ISL.d.w), y = Math.floor((ev.clientY - b.top) / b.height * ISL.d.h); if (x < 0 || y < 0 || x >= ISL.d.w || y >= ISL.d.h) return; const i = y * ISL.d.w + x, r = ISL.regions.find((q) => q.id === ISL.d.regions[ISL.rg[i]]); if (!r) return; toast(ISL.t[i] === 0 ? "🌊 The sea off " + r.name : r.open ? "🏝️ " + r.name + " is open." : "🔒 " + r.name + " is not open yet." + (r.opensAt ? " It opens " + new Date(r.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "." : " Coming soon!")); };
   box.append(el("p", "pnote", "Red dot: you. Coloured regions are open. Grey regions are coming soon and closed to everyone until they open. Tap a region to see it."));
-  for (const r of ISL.regions) prow(box, (r.open ? "🟢 " : "🔒 ") + r.name, r.open ? "Open" : r.opensAt ? "Opens " + new Date(r.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : "Coming soon");
+  for (const r of ISL.regions) { const row = prow(box, (r.open ? "🟢 " : "🔒 ") + r.name, r.open ? "Open" : r.opensAt ? "Opens " + new Date(r.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : "Coming soon"); const here = regionOfY(s.inside ? s.oy : s.y); if (r.open && RG_ENTRY[r.id] && r.id !== here) { row.style.cursor = "pointer"; row.querySelector("b").textContent = "Travel ›"; row.onclick = () => { closePhone(); travelMenu(r.id); }; } else if (r.id === here) row.querySelector("b").textContent = "You are here"; }
   box.append(el("p", "pnote", ISL.d.credit || "Map data © OpenStreetMap contributors"));
   if (Date.now() - (ISL.at || 0) > 30000) islandLoad(); // refresh which regions are open (live changes also arrive by message)
 }
@@ -10506,6 +10532,11 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.09", "3 Nov 2026", "The towns are joined by real roads", [
+    ["🛣️", "Travel along the real roads", "Grand Baie to Port Louis is 20 km through the north; Port Louis to Flic en Flac is 23 km. Your trip follows the real road on the island map and takes real time.", () => openPhone("maps", "island")],
+    ["🚌", "Bus, taxi or your own car", "The bus is cheapest and has a wait. The taxi comes to you and is quick. Your own car only costs fuel. Rent or buy one at a bus station.", null],
+    ["🪧", "Road signs and bus stations", "Every town has a bus station and road signs where the real roads leave it. Tap one, or use Maps, to pick a trip.", null]
+  ]],
   ["2027.03.08", "3 Nov 2026", "Flic en Flac is back, on the real map", [
     ["🏖️", "The west coast beach town", "Take the intercity bus (Rs 75) from any bus station. Flic en Flac is built from the real map: the long beach, the coast road, restaurants, cafés, hotels, a pharmacy and a supermarket.", () => openPhone("maps", "island")],
     ["🚌", "Three towns, one bus", "Grand Baie, Port Louis and Flic en Flac are all joined by the intercity bus. More regions open over the coming weeks.", null]

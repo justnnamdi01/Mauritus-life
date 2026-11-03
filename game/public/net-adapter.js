@@ -65,7 +65,7 @@
       else if (m.t === "poll" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-poll", { detail: m })); } catch (e) {} } // a new poll, or it closed
       else if (m.t === "trips" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-trips", { detail: m })); } catch (e) {} } // a trip request or answer
       else if (m.t === "belle" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-belle", { detail: m })); } catch (e) {} } // Belle's Kitchen answered your booking
-      else if (m.t === "cutz" || m.t === "biz" || m.t === "hw" || m.t === "hunt" || m.t === "dis" || m.t === "poll" || m.t === "trips" || m.t === "belle" || m.t === "heist" || m.t === "wealth" || m.t === "parl" || m.t === "party" || m.t === "account" || m.t === "homes" || m.t === "shop" || m.t === "promo" || m.t === "pay" || m.t === "chat.more" || m.t === "reward" || m.t === "fashion" || (m.t === "case" && m.rid) || (m.t === "gov" && m.rid) || (m.t === "ledger" && m.rid) || (m.t === "build" && m.rid) || (m.t === "feedback" && m.rid) || (m.t === "compete" && m.rid) || (m.t === "salon" && m.rid)) { var ar = asks[m.rid]; if (ar) { clearTimeout(ar.timer); delete asks[m.rid]; ar.resolve(m); } } // an answer to a login or home request
+      else if (m.t === "cutz" || m.t === "biz" || m.t === "hw" || m.t === "hunt" || m.t === "dis" || m.t === "road" || m.t === "poll" || m.t === "trips" || m.t === "belle" || m.t === "heist" || m.t === "wealth" || m.t === "parl" || m.t === "party" || m.t === "account" || m.t === "homes" || m.t === "shop" || m.t === "promo" || m.t === "pay" || m.t === "chat.more" || m.t === "reward" || m.t === "fashion" || (m.t === "case" && m.rid) || (m.t === "gov" && m.rid) || (m.t === "ledger" && m.rid) || (m.t === "build" && m.rid) || (m.t === "feedback" && m.rid) || (m.t === "compete" && m.rid) || (m.t === "salon" && m.rid)) { var ar = asks[m.rid]; if (ar) { clearTimeout(ar.timer); delete asks[m.rid]; ar.resolve(m); } } // an answer to a login or home request
       if ((m.t === "welcome" && m.rich) || m.t === "rich") { richNow = m.rich || richNow; richCbs.forEach(function (cb) { try { cb(m.rich, m.prev || null, m.t === "rich"); } catch (e) {} }); } // who is the richest right now, and a change of crown
       if (m.t === "welcome" && m.flex) flexBack = m.flex;
       if (m.t === "welcome" && m.gov) { govNow = m.gov; try { window.dispatchEvent(new Event("fef-gov")); } catch (e) {} }
@@ -230,6 +230,11 @@
       donate: function (town, to, amt) { return ask({ t: "gov.donate", town: town, to: to, amt: amt }); }, // give to a candidate's campaign
       debate: function (town, rival) { return ask({ t: "gov.debate", town: town, rival: rival }); },       // challenge a rival to a TV debate
       debateVote: function (town, uid) { return ask({ t: "gov.debateVote", town: town, for: uid }); },
+    },
+    road: { // trips between towns along the real roads
+      plan: function (to) { return ask({ t: "road.plan", to: to }); },
+      start: function (to, mode, car) { return ask({ t: "road.start", to: to, mode: mode, car: !!car }); },
+      arrive: function () { return ask({ t: "road.arrive" }); }
     },
     dis: { // storm cover and the relief fund
       get: function () { return ask({ t: "dis.get" }); },

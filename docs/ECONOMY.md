@@ -41,6 +41,8 @@ Sleeps when energy is under 30, eats when food is under 35, otherwise works a sh
 - **Students:** the role stays, with shifts and the allowance only.
 - Money is still handled by the player's phone in this engine; only the cyclone policy and disaster bills are decided by the server. The rates are constants (`PROP_TAX`, `VAT`, `POLICY`); move them to the admin page before launch.
 
+- **Travel fares (3 Nov):** a new money sink with the real distances: bus Rs 25 + 5 a km, taxi Rs 150 + 20 a km, own car Rs 3 a km (Grand Baie to Port Louis: bus Rs 129, taxi Rs 564, car Rs 62). Re-measure in the closed test: if players rarely leave Grand Baie, lower the fares; if they commute constantly, raise them. Constants are in `game/roads.js` (`MODES`).
+
 ## Still to decide
 - Re-measure after the closed test; then retune the numbers in `game/public/index.html` (`PROP_TAX`, `VAT`) and `game/server.js` (`POLICY`, `disasterBill`).
 

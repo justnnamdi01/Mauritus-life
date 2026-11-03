@@ -28,6 +28,16 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Done, session 8 (3 Nov 2026): the towns are connected by real roads
+- **Problem:** the three towns were pockets joined by a Rs 75 bus that jumped you across. Real distances cannot be walked tile by tile (Grand Baie to Port Louis is about 21 km).
+- **Roads:** `game/roads.js` finds the route between two towns along the real road network on the island map (A* over the OpenStreetMap roads, from each town's gate in `regions.json`). Grand Baie to Port Louis 20.7 km through the north, Port Louis to Flic en Flac 22.9 km, Grand Baie to Flic en Flac 43.5 km.
+- **Transport:** bus (Rs 25 + 5 a km, 30 km/h, a 5 to 20 min wait, only from a bus station or road sign), taxi (Rs 150 + 20 a km, 55 km/h, comes to you), your own car (Rs 3 a km fuel, 60 km/h, needs a rented or owned car). Rent or buy a car at any bus station.
+- **Server decides:** it plans the trip, checks the fare against your money, times the journey and only lets you arrive when it is over. A phone that jumps to another town without a trip is put back (new accounts may only start in Grand Baie). Trips are saved, so a reconnect or a deploy does not lose one, and asking twice is safe.
+- **Phone:** a travel menu (price and time per mode), a journey screen with a dot moving along the real route while game time passes, road signs where each road leaves a town, the bus stations' Travel lines, Maps → Island rows, and cross-town taxi requests now open the travel menu. A trip survives a reload.
+- Trips pass through locked regions on the road (for example Pamplemousses between Grand Baie and Port Louis) but you cannot stop there.
+- Tested: server tests (all pass, including the no-teleport rules and an early arrival), and in the browser a full taxi trip (fare charged, arrived at the right station, a cheat jump put back, 36 apps open, no errors).
+- Not tested: a bus trip and a car trip in the browser, resuming a trip after a reload, a real phone.
+
 ## Done, session 7 (3 Nov 2026): Flic en Flac rebuilt
 - Flic en Flac rebuilt from the real map (`tools/build-region.mjs west`): beach, lagoon, coast road, 32 places. 23 open (restaurants, cafés, a bar, a supermarket, a pharmacy, hotels, snack stalls, boutiques); clubs, clinics, post office, police and tourist office show "opening soon".
 - The engine now reads a region table (`WREG`), so Grand Baie, Port Louis and Flic en Flac share the same code; every region has a bus station and a bus to each of the others; the world map, Town map, ground, rides and island dot follow it.
