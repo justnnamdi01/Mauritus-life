@@ -1134,8 +1134,8 @@ html[data-theme="light"] .chat, html[data-theme="light"] .chatform input { color
     <div class="introSun"></div>
     <div class="introText">
       <p class="introEyebrow">Welcome to</p>
-      <h1 class="introTitle"><span style="--i:0">F</span><span style="--i:1">l</span><span style="--i:2">i</span><span style="--i:3">c</span><span style="--i:4">&nbsp;</span><span style="--i:5">e</span><span style="--i:6">n</span><span style="--i:7">&nbsp;</span><span style="--i:8">F</span><span style="--i:9">l</span><span style="--i:10">a</span><span style="--i:11">c</span><em>Life</em></h1>
-      <p class="introPlace">Mauritius · West Coast · Population: <span id="introPop">…</span></p>
+      <h1 class="introTitle"><span style="--i:0">M</span><span style="--i:1">a</span><span style="--i:2">u</span><span style="--i:3">r</span><span style="--i:4">i</span><span style="--i:5">t</span><span style="--i:6">i</span><span style="--i:7">u</span><span style="--i:8">s</span>&nbsp;<em>Life</em></h1>
+      <p class="introPlace">Mauritius · Grand Baie · Population: <span id="introPop">…</span></p>
       <p class="introTag" id="introTag">Work a shift. Pay your rent.</p>
       <button class="introGo" id="introGo" type="button">Tap to start</button>
     </div>
@@ -2888,7 +2888,7 @@ const DEVCON = { url: "https://thedevcon.space", when: "Sat 7 Nov · 2:00 PM", w
 const DVC = { g: null, sp: null, parts: [], fx: null, em: [] };
 const devconAd = (ev) => { try { const a = window.claude && window.claude.news; if (a && a.ad) a.ad("devcon", ev); } catch (e) {} }; // counted on the server so the client can see how the ad does
 function devconReward(kind) { // Rs 150,000 the first time you press the button to the site, Rs 20,000 the first time you visit and use the building
-  try { const a = window.claude && window.claude.news; if (!a || !a.adReward) return; a.adReward("devcon", kind).then((r) => { if (r && r.ok && r.amt) { toast("💻 Flic en Flac Team sent you " + rs(r.amt) + (kind === "click" ? " for checking out DevCon!" : " for visiting DevCon!")); banner("💻 DEVCON", "+" + rs(r.amt)); } }).catch(() => {}); } catch (e) {}
+  try { const a = window.claude && window.claude.news; if (!a || !a.adReward) return; a.adReward("devcon", kind).then((r) => { if (r && r.ok && r.amt) { toast("💻 Mauritius Life Team sent you " + rs(r.amt) + (kind === "click" ? " for checking out DevCon!" : " for visiting DevCon!")); banner("💻 DEVCON", "+" + rs(r.amt)); } }).catch(() => {}); } catch (e) {}
 }
 function devconOpenSite() { devconAd("click"); devconReward("click"); try { window.open(DEVCON.url, "_blank", "noopener"); } catch (e) {} }
 function devconVisit() { if (!s.dvVisit) { s.dvVisit = 1; save(); } devconReward("visit"); } // using anything in the hall counts as visiting
@@ -2899,10 +2899,10 @@ function devconClaim() { // the first 5 players get a code worth Rs 100 off
   a.adClaim("devcon").then((r) => { if (r && r.ok && r.code) { devconAd("open"); evCard({ icon: "🎁", tag: "DEVCON 2026", title: "Your code: " + r.code, text: "Rs 100 off your DevCon ticket. Enter this code when you register at thedevcon.space. Only the first " + r.max + " players get one, so don't lose it.", opts: [{ label: "🎟️ Go to thedevcon.space", pri: 1, go: devconOpenSite }, { label: "📋 Copy the code", go: () => { try { navigator.clipboard.writeText(r.code); toast("Code copied."); } catch (e) { toast(r.code); } } }, { label: "Done" }] }); if ($("phone") && !$("phone").hidden && pv.app === "devcon") phoneRender(); } else toast((r && r.error) || "Couldn't get a code."); }).catch(() => toast("Couldn't get a code."));
 }
 function devconCard() { devconAd("open"); evCard({ icon: "💻", tag: "DEVCON 2026", title: "Get your DevCon pass", text: DEVCON.when + " in " + DEVCON.where + ". Three talks, a build-with-AI team workshop, demos and a beach social with food and drinks. " + DEVCON.price + ".", opts: [{ label: "🎟️ Get your pass: Rs 150,000", sub: "Opens thedevcon.space", pri: 1, go: devconOpenSite }, { label: "🎁 Rs 100 off: claim your code", sub: "Only the first 5 players", go: devconClaim }, { label: "📱 What it is: open the app", go: () => openPhone("devcon") }, { label: "🚶 Visit the DevCon building", sub: "A guide takes you to the door", go: devconGo }, { label: "Not now" }] }); const cd = $("card"), im = el("div", "evphoto devcon"); im.style.backgroundImage = "url(/devcon/1.jpg)"; cd.insertBefore(im, cd.firstChild); }
-const SUPPORT = { wa: "+230 5933 0011", num: "23059330011" }; // where players get help: this WhatsApp number, or the Flic en Flac Team chat in the game
-const TEAM_NAME = "Flic en Flac Team", DV_TEAM_AT = Date.now(); // the game team's chat in Messages and Contacts: sent to every player, and players can write back
+const SUPPORT = { wa: "+230 5933 0011", num: "23059330011" }; // where players get help: this WhatsApp number, or the Mauritius Life Team chat in the game
+const TEAM_NAME = "Mauritius Life Team", DV_TEAM_AT = Date.now(); // the game team's chat in Messages and Contacts: sent to every player, and players can write back
 const TEAM = { m: [], un: 0, loaded: false }; // the replies the team sent and what you wrote (kept on the server)
-const TEAM_INTRO = [{ from: TEAM_NAME, me: false, at: DV_TEAM_AT - 3, text: "Hi! 👋 We're the Flic en Flac Team. Message us here any time with a question, a bug or an idea. We read everything and reply in this chat. You can also reach support on WhatsApp: " + SUPPORT.wa + "." },
+const TEAM_INTRO = [{ from: TEAM_NAME, me: false, at: DV_TEAM_AT - 3, text: "Hi! 👋 We're the Mauritius Life Team. Message us here any time with a question, a bug or an idea. We read everything and reply in this chat. You can also reach support on WhatsApp: " + SUPPORT.wa + "." },
   { from: TEAM_NAME, me: false, at: DV_TEAM_AT - 2, text: "💻 DevCon 2026 is on Sat 7 Nov at 2:00 PM in Flic en Flac: three talks, a build-with-AI workshop and a beach social with food & drinks." },
   { from: TEAM_NAME, me: false, at: DV_TEAM_AT - 1, text: "💰 Rs 150,000 for pressing Get your pass and signing up. Rs 20,000 for visiting the DevCon building and joining in: talk to the host, the speaker or the dev team.", act: "devcon" },
   { from: TEAM_NAME, me: false, at: DV_TEAM_AT, text: "🎁 The first 5 players also get a code for Rs 100 off the real ticket. Claim yours in the DevCon app." }];
@@ -3871,7 +3871,7 @@ function courtApp(box, link) { // the Court app
   const c = CASE.c, mins = (ms) => Math.max(0, Math.ceil(ms / 60000));
   if (!agentApi()) { box.append(el("p", "pnote", "The court only sits on the online server.")); return; }
   appHero(box, "⚖️", "Flic en Flac Court", c ? (c.status === "frozen" ? "Case open" : "Case closed") : "No case", c ? c.agent + " · " + c.reason : "Nobody is investigating you");
-  box.append(el("p", "pnote", "Think a ruling is wrong? Message the Flic en Flac Team in the game or on WhatsApp " + SUPPORT.wa + "."));
+  box.append(el("p", "pnote", "Think a ruling is wrong? Message the Mauritius Life Team in the game or on WhatsApp " + SUPPORT.wa + "."));
   if (c) {
     prow(box, "Status", c.status === "frozen" ? "Assets frozen" : c.status === "cleared" ? "Cleared" : c.status === "taxed" ? "Settled with tax" : "Convicted", c.verdict || "The court has not ruled yet");
     if (c.status === "frozen") { prow(box, "Frozen", rs((s.fz && s.fz.amt) || c.frozen || 0), "Savings and investments are locked too"); prow(box, "If you do nothing", mins(c.expires - Date.now()) + " min", "The court rules without you and may fine you more"); }
@@ -4115,7 +4115,7 @@ function nearestRoad(x, y) { // closest road tile to a point
   return best; // the pickup or drop-off point
 } // end nearestRoad
 function startRide(kind, dest, mins, msg) { // a vehicle comes to get you
-  if (dest && inGB(s.x, s.y) !== inGB(dest.x, dest.y)) { toast("🚌 No road joins Flic en Flac and Grand Baie in the game yet. Take the intercity bus: the Beach bus stop in Flic en Flac, or the bus station on Marché square in Grand Baie."); return; }
+  if (dest && inGB(s.x, s.y) !== inGB(dest.x, dest.y)) { toast("🚌 Rides stay inside a region. For another region, take the intercity bus from the Grand Baie bus station when it opens."); return; }
   const P = nearestRoad(s.x, s.y), D = nearestRoad(dest.x, dest.y); // pickup and drop-off points on the road
   const far = [[15.5, 0.5], [GATE - 1.5, 12.5], [GATE - 1.5, 28.5], [15.5, 43.5]].map(([x, y]) => ({ x, y })).sort((a, b) => Math.hypot(b.x - P.x, b.y - P.y) - Math.hypot(a.x - P.x, a.y - P.y))[0]; // the road end farthest from you
   const come = findPath(P.x, P.y, far.x, far.y, true).slice(0, 12).reverse(); // the vehicle starts 12 tiles up the road
@@ -4199,7 +4199,7 @@ function richNote(r, prev, changed) { // a new richest player
   if (!r || typeof r.uid !== "string") return; const was = RICH.uid; Object.assign(RICH, { uid: r.uid, name: String(r.name || "Someone").slice(0, 16), worth: r.worth | 0, since: r.since | 0 }); richStatueUpdate(true);
   if (!changed || !was || was === r.uid) return; const me = r.uid === (uid || "me"), lost = prev && prev.uid === (uid || "me"); // a real change of crown (not the first look)
   try { navigator.vibrate && navigator.vibrate([100, 60, 100, 60, 200]); } catch (e) {}
-  if (me) { banner("👑 YOU ARE THE RICHEST!", "Your statue now stands in town"); toast("👑 You are now the richest player in Flic en Flac! Your statue is by the Grand Casino."); }
+  if (me) { banner("👑 YOU ARE THE RICHEST!", "Your statue now stands in town"); toast("👑 You are now the richest player in Mauritius Life! Your statue is by the Grand Casino."); }
   else { banner("👑 NEW RICHEST PLAYER", RICH.name + " · " + rsShort(RICH.worth)); toast("👑 " + RICH.name + " is now the richest player in Flic en Flac" + (lost ? ". You lost the crown." : ".") + " See the statue by the Grand Casino."); }
   if (lost && canCard()) setTimeout(() => evCard({ icon: "👑", tag: "THE CROWN MOVED", title: "You lost the richest spot", text: RICH.name + " passed you with " + rs(RICH.worth) + ". Earn it back and your statue returns.", opts: [{ label: "🏆 See the Rich list", pri: true, go: () => openPhone("rich") }, { label: "OK", go: () => {} }] }), 1200);
 }
@@ -6285,7 +6285,7 @@ function phoneRender0() { // draw the current phone screen
     const mc = myClass(); prow(box, "Class", mc ? CLASSES[mc].icon + " " + CLASSES[mc].name : "None yet", mc ? CLASSES[mc].perk : "Earn one below"); // your class
     for (const k in CLASSES) prow(box, CLASSES[k].icon + " " + CLASSES[k].name, k === mc ? "Yours" : "", CLASSES[k].how + ". Perk: " + CLASSES[k].perk); // how to earn each class prow(box, "Friends", Object.values(s.friends).filter((c) => c >= 3).length + " neighbours"); // who you are
     { const w = el("button", "prow"), wl = el("span", "", "Support on WhatsApp"); wl.append(el("small", "", SUPPORT.wa + " · tap to open WhatsApp")); w.type = "button"; w.append(wl, el("b", "", "›")); w.onclick = () => { try { window.open(waLink(SUPPORT.num, "Hi Flic en Flac support, I need help with my account (" + s.name + ")."), "_blank", "noopener"); } catch (e) {} }; box.append(w);
-      const tm = el("button", "prow"), tl = el("span", "", "Support in the game"); tl.append(el("small", "", "Message the Flic en Flac Team here")); tm.type = "button"; tm.append(tl, el("b", "", "›")); tm.onclick = () => openPhone("thread", "team"); box.append(tm); } // help: WhatsApp or the team chat
+      const tm = el("button", "prow"), tl = el("span", "", "Support in the game"); tl.append(el("small", "", "Message the Mauritius Life Team here")); tm.type = "button"; tm.append(tl, el("b", "", "›")); tm.onclick = () => openPhone("thread", "team"); box.append(tm); } // help: WhatsApp or the team chat
     const r = el("button", "prow"), l = el("span", "", "Start a new life"); l.append(el("small", "", "Tap twice to erase this save")); r.type = "button"; r.append(l, el("b", "", "›")); // reset button
     r.onclick = () => { if (r.dataset.sure) { s = fresh(); save(); closePhone(); openCreate(); } else { r.dataset.sure = 1; l.lastChild.textContent = "Tap again to confirm"; } }; box.append(r); // two-tap confirm
   } // end settings
@@ -7312,7 +7312,7 @@ function advance(min, decay) { // move the clock forward
     } // end eviction
   } // end rent
   for (const ev of EVENTS) if (mark(Math.floor(before / 10080) * 10080 + evStart(ev) - 180)) toast("Tonight: " + ev.org + " at " + doorOf(ev.venue).name + ". Doors " + ev.h + ":00."); // party reminder three hours before
-  if (mark(Math.floor(before / 1440) * 1440 + 1200) && hash(day(), 7) % 3 !== 0) toast("🎉 Word is Jamal's is going off tonight — pull up after 21:00!"); // a surprise party on most nights
+  // (the old nightly "Jamal's is going off" message is gone: Grand Baie gets its own nights out when its clubs open)
   if (s.role === "student" && !s.grad) for (const d of COURSES[s.course].days) { // your class days this week
     const at = Math.floor(before / 10080) * 10080 + d * 1440 + CLASS_OPEN * 60; // minute lectures open that day
     if (mark(at)) toast("🎓 Class day: " + COURSES[s.course].short + " at Middlesex University. Go any time before 19:30."); // reminder in the morning
@@ -9072,11 +9072,11 @@ function render3d(dt) { // draw one 3D frame
 
 // ================= welcome intro =================
 let introOn = true; // the welcome intro plays every time the game opens
-const INTRO_CAM = [[-16, 7, 24, 6, 0, 22], [0, 5, 36, 11, 0.5, 26], [9, 8, 2, 21, 0, 10], [24, 12, 32, 33, 0, 22], [50, 20, 30, 64, 0, 14], [62, 34, 54, 40, 0, 20]]; // camera flight: [from x, y, z, look at x, y, z]
+const INTRO_CAM = [[18, 7, GBY + 30, 38, 0, GBY + 22], [30, 6, GBY + 46, 46, 0, GBY + 30], [48, 9, GBY + 14, 56, 0, GBY + 24], [74, 13, GBY + 42, 60, 0, GBY + 30], [62, 18, GBY + 8, 58, 0, GBY + 26], [56, 30, GBY + 62, 56, 0, GBY + 28]]; // camera flight: [from x, y, z, look at x, y, z]
 const INTRO_TAGS = ["Work a shift. Pay your rent.", "Party at Saxo. Chill at Maravan.", "Run with No Tomorrow at 6am.", "Make real friends online.", "Bonzour. Welcome home."]; // lines that rotate under the title
 function introCam(now) { // fly the camera over the town during the intro
   if (!R.introT0) R.introT0 = now; const seg = 2600, k = matchMedia("(prefers-reduced-motion: reduce)").matches ? INTRO_CAM.length : (now - R.introT0) / seg; // time along the flight
-  if (k >= INTRO_CAM.length - 1) { const a2 = (now - R.introT0 - seg * (INTRO_CAM.length - 1)) / 9000; R.camera.position.set(40 + Math.cos(a2) * 32, 30, 22 + Math.sin(a2) * 32); R.camera.lookAt(40, 0, 20); R.sun.target.position.set(40, 0, 20); } // slow circle over the whole map at the end
+  if (k >= INTRO_CAM.length - 1) { const a2 = (now - R.introT0 - seg * (INTRO_CAM.length - 1)) / 9000; R.camera.position.set(56 + Math.cos(a2) * 32, 30, GBY + 26 + Math.sin(a2) * 32); R.camera.lookAt(56, 0, GBY + 26); R.sun.target.position.set(56, 0, GBY + 26); } // slow circle over the whole map at the end
   else { const i = Math.floor(k), f = k - i, e = f * f * (3 - 2 * f), a = INTRO_CAM[i], b = INTRO_CAM[i + 1], L = (j) => a[j] + (b[j] - a[j]) * e; R.camera.position.set(L(0), L(1), L(2)); R.camera.lookAt(L(3), L(4), L(5)); R.sun.target.position.set(L(3), 0, L(5)); } // glide smoothly between shots
   R.sun.position.copy(R.sun.target.position).addScaledVector(R.sunL || new THREE.Vector3(-0.4, 0.85, 0.3), 40); // keep shadows where the camera looks
 } // end introCam
@@ -9919,7 +9919,7 @@ const exposeQ = []; let exposeT = 0; // scandals waiting their turn on screen
 function showExposed(it, mine) { exposeQ.push([it, mine]); if (!exposeT) nextExposed(); } // queue one
 function nextExposed() { // the tabloid card, one scandal at a time
   const box = $("exposed"), q = exposeQ.shift(); if (!q) { exposeT = 0; box.hidden = true; return; } const [it, mine] = q;
-  box.innerHTML = ""; box.append(el("i", "", "🗞️ FLIC EN FLAC GOSSIP"), el("b", "", it.kind === "court" ? "COURT NEWS" : it.kind === "campaign" ? "ELECTION NEWS" : it.kind === "crime" ? "CRIME NEWS" : mine ? "YOU'VE BEEN EXPOSED!" : "EXPOSED!"), el("span", "", it.icon + " " + it.text)); // text only, never HTML
+  box.innerHTML = ""; box.append(el("i", "", "🗞️ MAURITIUS GOSSIP"), el("b", "", it.kind === "court" ? "COURT NEWS" : it.kind === "campaign" ? "ELECTION NEWS" : it.kind === "crime" ? "CRIME NEWS" : mine ? "YOU'VE BEEN EXPOSED!" : "EXPOSED!"), el("span", "", it.icon + " " + it.text)); // text only, never HTML
   box.hidden = false; box.classList.remove("pop"); void box.offsetWidth; box.classList.add("pop"); exposeT = setTimeout(nextExposed, 5500);
 } // end nextExposed
 if (window.claude && window.claude.news) window.claude.news.on(gotNews); // listen for scandals
@@ -10610,7 +10610,7 @@ const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where 
     ["🏡", "Houses moved away from the airport", "Twenty houses that were squeezed against the SSR Airport fence and runway now stand on open ground around Flic en Flac, with room around them. Their addresses are the same, so nobody lost their home. Use Find a friend's house if you cannot spot yours.", () => openPhone("guests")]
   ]],
   ["2027.02.01", "1 Feb 2027", "Support when you need it", [
-    ["🆘", "Support in the game and on WhatsApp", "Settings now has Support: message the Flic en Flac Team in the game, or tap Support on WhatsApp (+230 5933 0011). The number is also in the Court app and the Guide.", () => openPhone("settings")]
+    ["🆘", "Support in the game and on WhatsApp", "Settings now has Support: message the Mauritius Life Team in the game, or tap Support on WhatsApp (+230 5933 0011). The number is also in the Court app and the Guide.", () => openPhone("settings")]
   ]],
   ["2027.01.31", "31 Jan 2027", "House parties happen in the host's own home", [
     ["🏠", "Parties in the host's real home", "A house party now takes place inside the host's own house, with their furniture and style. Accept or Join now from the chat invite takes you through their front door, and a dance floor appears for everyone.", () => openPhone("guests")]

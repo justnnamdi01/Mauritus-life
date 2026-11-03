@@ -79,8 +79,8 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
   </section>
 
   <section class="card" id="teamCard" data-tab="talk" hidden>
-    <div class="row"><h2 style="margin-right:auto">💬 Flic en Flac Team inbox</h2><button type="button" id="teamRe">Refresh</button></div>
-    <p class="muted">Messages players send to the Flic en Flac Team chat in their phone. Open one to read it and reply. Your reply appears in their Messages straight away.</p>
+    <div class="row"><h2 style="margin-right:auto">💬 Mauritius Life Team inbox</h2><button type="button" id="teamRe">Refresh</button></div>
+    <p class="muted">Messages players send to the Mauritius Life Team chat in their phone. Open one to read it and reply. Your reply appears in their Messages straight away.</p>
     <div id="teamList"></div>
   </section>
   <section class="card" id="czCard" data-tab="game" hidden>
@@ -365,7 +365,7 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
   async function msgTo(pl) { // a message from the game team to one player
     const box = document.createElement("dialog"); box.style.cssText = "max-width:460px;width:92%;border-radius:12px;padding:14px;"; const sel = document.createElement("select"), ta = document.createElement("textarea"), info = document.createElement("p"), go = document.createElement("button"), cl = document.createElement("button");
     for (const [k, l] of [["clock", "Clock trick"], ["edit", "Edited cash"], ["farm", "Restart farming"], ["recv", "Received tainted money"], ["free", "Write your own"]]) { const o = document.createElement("option"); o.value = k; o.textContent = l; sel.append(o); }
-    const fill = () => { ta.value = MSG_TPL[sel.value].replace("{n}", pl.name); }; sel.onchange = fill; fill(); ta.rows = 7; ta.maxLength = 400; ta.style.cssText = "width:100%;margin:8px 0;"; info.className = "muted"; info.textContent = "To " + pl.name + " · it shows up in their Messages from the Flic en Flac Team (max 400 characters).";
+    const fill = () => { ta.value = MSG_TPL[sel.value].replace("{n}", pl.name); }; sel.onchange = fill; fill(); ta.rows = 7; ta.maxLength = 400; ta.style.cssText = "width:100%;margin:8px 0;"; info.className = "muted"; info.textContent = "To " + pl.name + " · it shows up in their Messages from the Mauritius Life Team (max 400 characters).";
     go.type = "button"; go.textContent = "Send"; cl.type = "button"; cl.textContent = "Cancel"; cl.style.marginLeft = "8px"; cl.onclick = () => { box.close(); box.remove(); };
     go.onclick = async () => { go.disabled = true; try { await api("/api/admin/team", { uid: pl.uid, text: ta.value.slice(0, 400) }); alert("Sent to " + pl.name); box.close(); box.remove(); } catch (e) { alert(e.message || "Failed"); go.disabled = false; } };
     box.append(info, sel, ta, go, cl); document.body.append(box); box.showModal();
