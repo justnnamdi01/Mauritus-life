@@ -4996,7 +4996,7 @@ const RDEF = [ // the people who live here: name, kind, town, what they are like
   { id: "zoe", name: "Zoé", type: "visitor", city: "west", traits: ["relaxed", "helpful"], catch: "Came for a week. Three years ago.", look: { g: "f", skin: 1, hair: "#b58a4a", shirt: "#2aa4a0", pants: "#1d6f9a", role: "tourist" } },
   { id: "rajen", name: "Rajen", type: "regular", city: "west", traits: ["musical", "broke"], home: 1, catch: "Rs 50 and I sing all night.", look: { g: "m", skin: 3, hair: "#101010", shirt: "#f0a030", pants: "#2a2a2a" } }
 ];
-const RXTRA = { grandbaie: ["Nadia", "Kélian", "Patricia", "Jerome", "Lucas", "Anaïs"], portlouis: ["Sophie", "Anil", "Brigitte", "Hassan", "Meera", "Didier"], west: ["Tom", "Maya", "Jonathan", "Sandrine", "Alex", "Noémie"] }; // passers-by who have no home here (they wander and go home off the map)
+const RXTRA = { grandbaie: ["Nadia", "Kélian", "Patricia", "Jerome", "Lucas", "Anaïs", "Sébastien", "Fiona", "Rodrigue", "Leïla"], portlouis: ["Sophie", "Anil", "Brigitte", "Hassan", "Meera", "Didier", "Clarisse", "Imran", "Joëlle", "Vikash"], west: ["Tom", "Maya", "Jonathan", "Sandrine", "Alex", "Noémie", "Zack", "Léna", "Mathieu", "Dilshaad"] }; // passers-by who have no home here (they wander and go home off the map)
 const RXTYPES = ["visitor", "uncle", "regular", "visitor"];
 const RES = []; // everyone who lives here
 const RLOOK_ = { grandbaie: { sh: ["#ff7a59", "#18b6c9", "#f7c948", "#e94f8a", "#7ed957"], pa: ["#f1e6c8", "#ffffff", "#2f6fd0"] }, portlouis: { sh: ["#e8ecef", "#9fb3c8", "#3a4a5e", "#c8d0d8"], pa: ["#26303c", "#3a4a5e"] }, west: { sh: ["#2aa4a0", "#f0a030", "#d94f6a", "#5a7ad8"], pa: ["#1d6f9a", "#d6573a", "#2a2a2a"] } };
@@ -5055,48 +5055,100 @@ function residentStep(n, dt) {
   n.nextSay -= dt; if (n.nextSay <= 0 && dist < 7) { n.nextSay = rnd(10, 24); n.say = pickOf(n.lines.bub); if (n.catch && Math.random() < 0.3) n.say = n.catch; n.sayUntil = performance.now() + 3600; } else if (n.nextSay <= 0) n.nextSay = rnd(8, 16);
   if (n.path.length === 0) { n.wait -= dt; if (n.wait > 0) return;
     if (n.mode === "going") { const d = resDoor(n) || resAnchor(n); if (Math.hypot(n.x - d.x, n.y - d.y) < 1.2) { n.atHome = true; n.hide = true; n.path = []; n.mode = "walk"; return; } n.path = locPath(n.x, n.y, d.x, d.y); n.wait = 1; return; }
-    const sp = pickOf(spotsOf(n)), tx = sp.x + (Math.random() - 0.5) * 2, ty = sp.y + Math.random() * 1.2; n.path = locPath(n.x, n.y, tx, ty); n.wait = n.type === "vendor" ? rnd(25, 60) : n.type === "uncle" ? rnd(14, 40) : n.type === "regular" ? rnd(8, 26) : rnd(4, 12); return; }
+    const sp = pickOf(spotsOf(n)), tx = sp.x + (Math.random() - 0.5) * 2, ty = sp.y + Math.random() * 1.2; n.path = locPath(n.x, n.y, tx, ty); if (!n.path.length) { n.fail = (n.fail || 0) + 1; n.wait = 1.5; if (n.fail > 3 && dist > 26) { n.x = sp.x; n.y = sp.y + 0.4; n.fail = 0; } return; } n.fail = 0; n.wait = n.type === "vendor" ? rnd(25, 60) : n.type === "uncle" ? rnd(14, 40) : n.type === "regular" ? rnd(8, 26) : rnd(4, 12); return; }
   const p = n.path[0], d = Math.hypot(p.x - n.x, p.y - n.y); if (d < 0.12) { n.path.shift(); return; }
   if (n.sway) { n.x += Math.sin(performance.now() / 260) * 0.45 * dt; n.y += Math.cos(performance.now() / 310) * 0.3 * dt; } // staggers a little
   n.face = Math.abs(p.x - n.x) > Math.abs(p.y - n.y) ? (p.x < n.x ? 2 : 3) : (p.y < n.y ? 1 : 0); const sp = n.speed * (n.sway ? 0.8 : 1) * dt; n.x += (p.x - n.x) / d * Math.min(sp, d); n.y += (p.y - n.y) / d * Math.min(sp, d);
 }
-// ---- the drivers and the traffic
+// ---- the roads, the cars and the crowd. Cars follow a map of each town's junctions, turn corners and loop round the blocks; they appear and vanish out of sight, never in front of you,
+// and there are always some around you. A crowd of walkers does the same on foot, so every street has people on it.
 const TRAF = [];
-function roadRuns(city) { // long straight stretches of road in a town, for cars to drive up and down
-  const r = rTown(city), runs = []; for (let y = r.y0 + 6; y < r.y0 + r.M.h - 6; y++) { let x = 3; while (x < r.M.w - 3) { if (terr[y * W + x] === 4) { let e = x; while (e < r.M.w - 3 && terr[y * W + e] === 4) e++; if (e - x >= 16 && terr[(y - 1) * W + x + 3] === 4 && terr[(y + 1) * W + x + 3] === 4) runs.push({ len: e - x, pts: [{ x: x + 1.5, y: y + 0.5 }, { x: e - 1.5, y: y + 0.5 }] }); x = e; } else x++; } }
-  for (let x = 3; x < r.M.w - 3; x++) { let y = r.y0 + 4; while (y < r.y0 + r.M.h - 4) { if (terr[y * W + x] === 4) { let e = y; while (e < r.y0 + r.M.h - 4 && terr[e * W + x] === 4) e++; if (e - y >= 16 && terr[(y + 3) * W + x - 1] === 4 && terr[(y + 3) * W + x + 1] === 4) runs.push({ len: e - y, pts: [{ x: x + 0.5, y: y + 1.5 }, { x: x + 0.5, y: e - 1.5 }] }); y = e; } else y++; } }
-  runs.sort((a, b) => b.len - a.len); const out = []; for (const q of runs) if (!out.some((o) => Math.abs(o.pts[0].x - q.pts[0].x) < 5 && Math.abs(o.pts[0].y - q.pts[0].y) < 5)) out.push(q); return out;
-}
-function highwayRoute(road) { const r = regionDef(road), pts = []; for (let i = 6; i < r.M.h - 6; i += 3) pts.push({ x: r.M.cx[i] + 0.5, y: r.y0 + i + 0.5 }); return pts; }
-const routeLen = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return d; };
+const wrapA = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
+const playerAt = () => ({ x: s.inside ? s.ox : s.x, y: s.inside ? s.oy : s.y });
 const CITYCAR = { // the traffic of each place looks different
-  grandbaie: [{ len: 1.4, col: "#f4f4f4", taxi: true }, { len: 1.45, col: "#18b6c9", conv: true }, { len: 0.9, col: "#e94f8a", moto: true }, { len: 1.4, col: "#f7c948" }],
-  portlouis: [{ len: 2.4, col: "#2f6fd0", bus: true }, { len: 1.45, col: "#5d6670" }, { len: 1.4, col: "#c8d0d8", taxi: true }, { len: 1.5, col: "#3a4a5e" }, { len: 1.6, col: "#c0392b", tall: true }, { len: 2.4, col: "#e4572e", bus: true }, { len: 1.4, col: "#f4f4f4", taxi: true }],
-  west: [{ len: 1.7, col: "#c0392b", tall: true }, { len: 1.4, col: "#2aa4a0" }, { len: 1.7, col: "#f0a030", tall: true }, { len: 0.9, col: "#2a2a2a", moto: true }]
+  grandbaie: [{ len: 1.4, col: "#f4f4f4", taxi: true }, { len: 1.45, col: "#18b6c9", conv: true }, { len: 0.9, col: "#e94f8a", moto: true }, { len: 1.4, col: "#f7c948" }, { len: 1.4, col: "#ffffff" }, { len: 1.5, col: "#2f6fd0" }],
+  portlouis: [{ len: 2.4, col: "#2f6fd0", bus: true }, { len: 1.45, col: "#5d6670" }, { len: 1.4, col: "#c8d0d8", taxi: true }, { len: 1.5, col: "#3a4a5e" }, { len: 1.6, col: "#c0392b", tall: true }, { len: 2.4, col: "#e4572e", bus: true }, { len: 1.4, col: "#f4f4f4", taxi: true }, { len: 1.45, col: "#1d2a36" }],
+  west: [{ len: 1.7, col: "#c0392b", tall: true }, { len: 1.4, col: "#2aa4a0" }, { len: 1.7, col: "#f0a030", tall: true }, { len: 0.9, col: "#2a2a2a", moto: true }, { len: 1.4, col: "#d94f6a" }, { len: 1.45, col: "#f4f4f4" }]
 };
-function addVeh(pts, v, o) { const len = routeLen(pts); if (len < 8) return null; const t = { v, pts, len, d: Math.random() * len, dir: Math.random() < 0.5 ? 1 : -1, sp: (o && o.sp) || 3 + Math.random() * 1.6, m: null, x: 0, y: 0, hx: 1, hy: 0, wait: 0 }; Object.assign(t, o || {}); TRAF.push(t); vehPos(t); return t; }
-function vehPos(t) { let d = Math.max(0, Math.min(t.len, t.d)), i = 1; for (; i < t.pts.length - 1; i++) { const sg = Math.hypot(t.pts[i].x - t.pts[i - 1].x, t.pts[i].y - t.pts[i - 1].y); if (d <= sg) break; d -= sg; } const a = t.pts[i - 1], b = t.pts[i], sg = Math.hypot(b.x - a.x, b.y - a.y) || 1, f = Math.min(1, d / sg), hx = (b.x - a.x) / sg * t.dir, hy = (b.y - a.y) / sg * t.dir; t.hx = hx; t.hy = hy; t.x = a.x + (b.x - a.x) * f + hy * 0.8; t.y = a.y + (b.y - a.y) * f - hx * 0.8; } // keep to the left of the road, as in Mauritius
+const RGRAPH = {}; // each town's roads as junctions joined by streets
+function roadGraph(city) {
+  if (RGRAPH[city]) return RGRAPH[city]; const r = rTown(city), runs = [], road = (x, y) => terr[y * W + x] === 4, cx0 = 2, cx1 = r.M.w - 2, cy0 = r.y0 + 2, cy1 = r.y0 + r.M.h - 2;
+  for (let y = cy0 + 1; y < cy1 - 1; y++) { let x = cx0; while (x < cx1) { if (road(x, y - 1) && road(x, y) && road(x, y + 1)) { let e = x; while (e < cx1 && road(e, y - 1) && road(e, y) && road(e, y + 1)) e++; if (e - x >= 7) runs.push({ h: 1, c: y + 0.5, a: x + 0.5, b: e - 0.5 }); x = e; } else x++; } }
+  for (let x = cx0 + 1; x < cx1 - 1; x++) { let y = cy0; while (y < cy1) { if (road(x - 1, y) && road(x, y) && road(x + 1, y)) { let e = y; while (e < cy1 && road(x - 1, e) && road(x, e) && road(x + 1, e)) e++; if (e - y >= 7) runs.push({ h: 0, c: x + 0.5, a: y + 0.5, b: e - 0.5 }); y = e; } else y++; } }
+  const nodes = [], add = (x, y) => { for (const n of nodes) if (Math.hypot(n.x - x, n.y - y) < 1.8) return n; const n = { x, y, adj: [], id: nodes.length }; nodes.push(n); return n; }; // a new junction, or the one already there
+  const hs = runs.filter((q) => q.h), vs = runs.filter((q) => !q.h);
+  for (const a of hs) for (const b of vs) if (b.c >= a.a - 1 && b.c <= a.b + 1 && a.c >= b.a - 1 && a.c <= b.b + 1) add(b.c, a.c);
+  for (const q of runs) { add(q.h ? q.a : q.c, q.h ? q.c : q.a); add(q.h ? q.b : q.c, q.h ? q.c : q.b); }
+  for (const q of runs) { const on = nodes.filter((n) => q.h ? Math.abs(n.y - q.c) < 1.9 && n.x >= q.a - 1.9 && n.x <= q.b + 1.9 : Math.abs(n.x - q.c) < 1.9 && n.y >= q.a - 1.9 && n.y <= q.b + 1.9).sort((m, n) => q.h ? m.x - n.x : m.y - n.y); for (let i = 1; i < on.length; i++) { const A2 = on[i - 1], B2 = on[i]; if (A2 !== B2 && !A2.adj.includes(B2.id)) { A2.adj.push(B2.id); B2.adj.push(A2.id); } } }
+  return (RGRAPH[city] = { nodes, runs, live: nodes.filter((n) => n.adj.length).map((n) => n.id) });
+}
+const highwayRoute = (road) => { const r = regionDef(road), pts = []; for (let i = 0; i < r.M.h; i += 3) pts.push({ x: r.M.cx[i] + 0.5, y: r.y0 + i + 0.5 }); return pts; };
+const routeLenOf = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return d; };
+function newVeh(v, o) { const t = Object.assign({ v, x: 0, y: 0, hx: 1, hy: 0, ang: 0, sp: 3 + Math.random() * 1.6, m: null, age: 0, stuck: 0, stopT: 0, kind: "g" }, o || {}); if (v.bus) t.sp = 2.6; if (v.moto) t.sp = 4.4; TRAF.push(t); return t; }
+function placeOnGraph(t, G, i, j, f, keep) { const ox = t.x, oy = t.y, oa = t.ang; const A2 = G.nodes[i], B2 = G.nodes[j], l = Math.hypot(B2.x - A2.x, B2.y - A2.y) || 1; t.G = G; t.from = i; t.to = j; t.len = l; t.d = f * l; t.hx = (B2.x - A2.x) / l; t.hy = (B2.y - A2.y) / l; t.ang = Math.atan2(t.hy, t.hx); t.x = A2.x + t.hx * t.d + t.hy * 0.8; t.y = A2.y + t.hy * t.d - t.hx * 0.8; if (keep) { t.x = ox; t.y = oy; t.ang = oa; } }
+function spawnGraphVeh(city, from, min, max, v, o) { // a car at a junction between min and max tiles from a point (out of sight)
+  const G = roadGraph(city); if (!G.live.length) return null; for (let k = 0; k < 24; k++) { const i = pickOf(G.live), n = G.nodes[i], d = from ? Math.hypot(n.x - from.x, n.y - from.y) : 99; if (d < min || d > max) continue; const j = pickOf(n.adj); const t = newVeh(v, Object.assign({ town: city }, o || {})); placeOnGraph(t, G, i, j, Math.random() * 0.3); return t; } return null;
+}
+function pickNext(t) { const G = t.G, nd = G.nodes[t.to], opts = nd.adj.filter((i) => i !== t.from), list = opts.length ? opts : nd.adj; if (list.length === 1) return list[0]; let best = list[0], bs = -9; for (const i of list) { const q = G.nodes[i], dx = q.x - nd.x, dy = q.y - nd.y, l = Math.hypot(dx, dy) || 1, sc = (dx * t.hx + dy * t.hy) / l + Math.random() * 1.2; if (sc > bs) { bs = sc; best = i; } } return best; } // keep going straight most of the time, turn now and then, turn round at a dead end
+function routePos(t, dt) { // along a highway
+  const pts = t.pts; let d = Math.max(0, Math.min(t.len, t.d)), i = 1; for (; i < pts.length - 1; i++) { const sg = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); if (d <= sg) break; d -= sg; }
+  const a = pts[i - 1], b = pts[i], sg = Math.hypot(b.x - a.x, b.y - a.y) || 1, f = Math.min(1, d / sg); t.hx = (b.x - a.x) / sg * t.dir; t.hy = (b.y - a.y) / sg * t.dir;
+  const tx = a.x + (b.x - a.x) * f + t.hy * 0.8, ty = a.y + (b.y - a.y) * f - t.hx * 0.8; if (!dt) { t.x = tx; t.y = ty; t.ang = Math.atan2(t.hy, t.hx); } else { const k = Math.min(1, dt * 6); t.x += (tx - t.x) * k; t.y += (ty - t.y) * k; t.ang += wrapA(Math.atan2(t.hy, t.hx) - t.ang) * Math.min(1, dt * 7); }
+}
 function vehStep(t, dt) {
-  const dp = Math.hypot(t.x - s.x, t.y - s.y); if (dp > 80 && !t.drv) return; // far away: asleep
-  const yielding = !s.inside && dp < 2.8 && Math.abs((s.x - t.x) * t.hx + (s.y - t.y) * t.hy) < 3 && (s.x - t.x) * t.hx + (s.y - t.y) * t.hy > -0.5; // someone is on the road ahead: stop
-  if (t.drv) { if (yielding) t.stopT = (t.stopT || 0) + dt; else if (t.stopT) t.stopT = Math.max(0, t.stopT - dt * 0.25); }
-  if (yielding && !(t.drv && (t.stopT || 0) > 9)) return;
-  const hr = hour(); if (t.drv && !(hr >= 6 && hr < 22)) return;
-  t.d += t.sp * dt * t.dir; if (t.d > t.len) { t.d = t.len; t.dir = -1; } else if (t.d < 0) { t.d = 0; t.dir = 1; } vehPos(t);
+  t.age += dt; const pa = playerAt(), dp = Math.hypot(t.x - pa.x, t.y - pa.y), hr = hour(), parked = t.drv && !(hr >= 6 && hr < 22); t.park = parked;
+  if (dp > 95) return; // far from you: nobody is watching
+  if (parked) return; // the taxi drivers go home: their cars stay where they stopped
+  const fwd = (x, y) => (x - t.x) * t.hx + (y - t.y) * t.hy, lat = (x, y) => Math.abs((x - t.x) * t.hy - (y - t.y) * t.hx);
+  let hold = !s.inside && dp < 3 && fwd(pa.x, pa.y) > -0.5 && lat(pa.x, pa.y) < 1.6; // someone is in the road: stop
+  if (t.drv) { if (hold) t.stopT += dt; else t.stopT = Math.max(0, t.stopT - dt * 0.3); if (hold && t.stopT > 12) hold = false; }
+  if (!hold) for (const u of TRAF) { if (u === t || u.park) continue; const f = fwd(u.x, u.y); if (f > 0.2 && f < 2.3 && lat(u.x, u.y) < 0.9) { hold = true; break; } } // a car just ahead: wait behind it
+  t.stuck = hold ? t.stuck + dt : 0; if (hold && t.stuck < 5) return; // (after a while a jam clears: they squeeze through)
+  const turning = t.kind === "g" && t.len - t.d < 1.4; let sp = t.sp * (turning ? 0.55 : 1) * Math.min(1, 0.35 + t.age * 0.4);
+  if (t.kind === "g") { t.d += sp * dt; if (t.d >= t.len) { const G = t.G, cur = t.to, nxt = pickNext(t); placeOnGraph(t, G, cur, nxt, 0.0, true); } const A2 = t.G.nodes[t.from], tx = A2.x + t.hx * t.d + t.hy * 0.8, ty = A2.y + t.hy * t.d - t.hx * 0.8, k = Math.min(1, dt * 6); t.x += (tx - t.x) * k; t.y += (ty - t.y) * k; t.ang += wrapA(Math.atan2(t.hy, t.hx) - t.ang) * Math.min(1, dt * 7); }
+  else { t.d += sp * dt * t.dir; if (t.d > t.len || t.d < 0) { if (dp < 45) { t.d = Math.max(0, Math.min(t.len, t.d)); t.dir = -t.dir; } else t.dead = 1; } routePos(t, dt); }
 }
-function driverStep(n, dt, dist) { const t = n.veh; if (!t) return; const hr = hour(), on = hr >= 6 && hr < 22; n.inCar = on; n.hide = !on; n.atHome = !on; if (on) { n.x = t.x; n.y = t.y; n.face = Math.abs(t.hx) > Math.abs(t.hy) ? (t.hx < 0 ? 2 : 3) : (t.hy < 0 ? 1 : 0); n.path = t.stopT > 0.5 ? [] : [1]; n.say = n.say; } else { const d = resDoor(n) || resAnchor(n); n.x = d.x; n.y = d.y; } n.nextSay -= dt; if (n.nextSay <= 0 && dist < 8 && on && !s.inside) { n.nextSay = rnd(9, 20); n.say = pickOf(n.lines.bub); n.sayUntil = performance.now() + 3200; } else if (n.nextSay <= 0) n.nextSay = rnd(8, 16); }
-let trafficReady = false;
-function trafficInit() { // fill the roads: each town with its own kind of traffic, the highways with a mix
-  trafficReady = true; const towns = ["grandbaie", "portlouis", "west"];
-  for (const c of towns) { const runs = roadRuns(c), cars = CITYCAR[c], want = { grandbaie: 4, portlouis: 7, west: 4 }[c]; for (let i = 0; i < Math.min(want, runs.length * 2); i++) { const run = runs[i % runs.length], v = cars[i % cars.length]; addVeh(run.pts, v, { sp: v.bus ? 2.6 : v.moto ? 4.4 : 3 + (i % 3) * 0.6, town: c }); } }
-  for (const [road, a, b] of [["road_grandbaie_portlouis", "grandbaie", "portlouis"], ["road_portlouis_west", "portlouis", "west"]]) { const pts = highwayRoute(road), mix = CITYCAR[a].concat(CITYCAR[b]); for (let i = 0; i < 5; i++) addVeh(pts, mix[(i * 3) % mix.length], { sp: 5.5 + (i % 3) * 1.2, town: road }); }
-  for (const n of RES) if (n.type === "driver") { const runs = roadRuns(n.city), run = runs[Math.min(runs.length - 1, 1)]; if (run) { n.veh = addVeh(run.pts, n.car, { sp: 3.4, drv: n, town: n.city }); n.inCar = true; } }
+function driverStep(n, dt, dist) { const t = n.veh; if (!t) return; const hr = hour(), on = hr >= 6 && hr < 22; n.inCar = on; n.hide = !on; n.atHome = !on; if (on) { n.x = t.x; n.y = t.y; n.face = Math.abs(t.hx) > Math.abs(t.hy) ? (t.hx < 0 ? 2 : 3) : (t.hy < 0 ? 1 : 0); n.path = t.stopT > 0.5 ? [] : [1]; } else { const d = resDoor(n) || resAnchor(n); n.x = d.x; n.y = d.y; n.path = []; } n.nextSay -= dt; if (n.nextSay <= 0 && dist < 8 && on) { n.nextSay = rnd(9, 20); n.say = pickOf(n.lines.bub); n.sayUntil = performance.now() + 3200; } else if (n.nextSay <= 0) n.nextSay = rnd(8, 16); }
+const MESHES = {}; // car models are reused: a car that drives off hands its model to the next one
+const vKey = (v) => JSON.stringify(v);
+function grabMesh(v) { const k = vKey(v), pool = MESHES[k] || (MESHES[k] = []); let m = pool.pop(); if (!m) { m = makeCar(v); R.dyn.add(m); } return m; }
+function dropMesh(t) { if (!t.m) return; t.m.visible = false; (MESHES[vKey(t.v)] = MESHES[vKey(t.v)] || []).push(t.m); t.m = null; }
+let trafficReady = false, trafT = 0;
+function trafficInit() { // the three taxi drivers' cars live on their town's roads for good; everything else comes and goes around you
+  trafficReady = true; for (const n of RES) if (n.type === "driver") { const G = roadGraph(n.city); if (!G.live.length) continue; const i = pickOf(G.live), t = newVeh(n.car, { sp: 3.2, drv: n, town: n.city, keep: 1 }); placeOnGraph(t, G, i, pickOf(G.nodes[i].adj), Math.random()); n.veh = t; n.inCar = true; }
 }
-function trafficStep(dt) { if (!trafficReady) trafficInit(); for (const t of TRAF) vehStep(t, dt); }
+const TRAF_TARGET = { grandbaie: 14, portlouis: 22, west: 12 };
+function trafficTick(dt) { // keep the roads around you busy
+  trafT -= dt; if (trafT > 0) return; trafT = 0.5; const pa = playerAt(), rid = regionOfY(pa.y), R0 = regionDef(rid); for (let i = TRAF.length - 1; i >= 0; i--) { const t = TRAF[i]; if (t.keep) continue; if (t.dead || Math.hypot(t.x - pa.x, t.y - pa.y) > 85) { dropMesh(t); TRAF.splice(i, 1); } } if (!R0) return;
+  if (R0.kind !== "road") { const have = TRAF.filter((t) => t.town === rid && !t.keep && Math.hypot(t.x - pa.x, t.y - pa.y) < 80).length, cars = CITYCAR[rid]; if (have < (TRAF_TARGET[rid] || 8)) spawnGraphVeh(rid, pa, 22, 46, pickOf(cars), {}); return; }
+  const have = TRAF.filter((t) => t.kind === "r" && t.town === rid && Math.hypot(t.x - pa.x, t.y - pa.y) < 80).length; if (have < 6) { const pts = highwayRoute(rid), len = routeLenOf(pts), mix = CITYCAR[R0.M.a].concat(CITYCAR[R0.M.b]), dir = Math.random() < 0.5 ? 1 : -1; let d = null; for (let k = 0; k < 8; k++) { const q = Math.random() * len; const row = Math.min(R0.M.h - 1, Math.floor(q / len * R0.M.h)), y = R0.y0 + row; if (Math.abs(y - pa.y) > 30 && Math.abs(y - pa.y) < 55) { d = q; break; } } if (d !== null) { const t = newVeh(pickOf(mix), { kind: "r", pts, len, d, dir, town: rid, sp: 5.5 + Math.random() * 3 }); routePos(t, 0); } }
+}
+function trafficStep(dt) { if (!trafficReady) trafficInit(); trafficTick(dt); for (const t of TRAF) vehStep(t, dt); }
 function trafficDraw3d() {
-  for (const t of TRAF) { const dp = Math.hypot(t.x - s.x, t.y - s.y), on = !s.inside && dp < 55 && (!t.drv || (hour() >= 6 && hour() < 22)); if (!on) { if (t.m) t.m.visible = false; continue; }
-    if (!t.m) { t.m = makeCar(t.v); R.dyn.add(t.m); } t.m.visible = true; t.m.position.set(t.x, 0, t.y); t.m.rotation.y = -Math.atan2(t.hy, t.hx); }
+  const pa = playerAt(); for (const t of TRAF) { const dp = Math.hypot(t.x - pa.x, t.y - pa.y), on = !s.inside && dp < 58; if (!on) { dropMesh(t); continue; }
+    if (!t.m) t.m = grabMesh(t.v); t.m.visible = true; t.m.position.set(t.x, 0, t.y); t.m.rotation.y = -t.ang; const k = Math.min(1, 0.35 + t.age * 1.2); t.m.scale.setScalar(k); }
 }
+// ---- the crowd: people on foot who come and go out of sight, so the streets always have somebody on them
+const CROWD = []; for (let i = 0; i < 26; i++) CROWD.push({ i, on: false, x: 0, y: 0, path: [], face: 0, wait: 0, say: "", sayUntil: 0, nextSay: rnd(6, 20), city: "", look: null, sp: 1.15 + Math.random() * 0.8 });
+const CROWD_TARGET = { grandbaie: 13, portlouis: 20, west: 11 };
+function ambLook(i, city) { const L = RLOOK_[city], g = i % 2 ? "f" : "m"; return { g, skin: SKINS[(i * 3 + 1) % 5], hair: ["#17100c", "#3a2414", "#101010", "#b58a4a", "#d8d8d8"][(i * 7) % 5], shirt: pickOf(L.sh, i * 5 + 2), pants: pickOf(L.pa, i), role: i % 5 === 0 ? "tourist" : "resident" }; }
+function walkSpot(city, near, rmin, rmax) { // a random walkable spot at a distance from a point
+  const r = rTown(city); for (let k = 0; k < 16; k++) { const a = Math.random() * 6.283, d = rmin + Math.random() * (rmax - rmin), x = Math.floor(near.x + Math.cos(a) * d), y = Math.floor(near.y + Math.sin(a) * d); if (x < 3 || x >= r.M.w - 3 || y < r.y0 + 2 || y >= r.y0 + r.M.h - 2) continue; const t = terr[y * W + x]; if ((t === 22 || t === 4 || t === 9 || t === 2) && !isSolid(x, y)) return { x: x + 0.5, y: y + 0.5 }; } return null;
+}
+let ambT = 0, ambCity = "";
+function ambNewGoal(n, pa, near) { const g = walkSpot(n.city, near ? pa : n, near ? 2 : 8, near ? 22 : 26); if (!g) return false; const p = locPath(n.x, n.y, g.x, g.y); if (p.length < 3) return false; n.path = p; return true; }
+function ambTick(dt) {
+  if (s.inside) return; const pa = playerAt(), rid = regionOfY(pa.y), R0 = regionDef(rid), town = R0 && R0.kind !== "road" ? rid : "";
+  if (town !== ambCity) { ambCity = town; for (const n of CROWD) { n.on = false; n.city = town; n.look = town ? ambLook(n.i, town) : null; } }
+  if (!town) return; ambT -= dt;
+  if (ambT <= 0) { ambT = 0.45; const active = CROWD.filter((n) => n.on).length; if (active < (CROWD_TARGET[town] || 10)) { const n = CROWD.find((q) => !q.on); if (n) { const sp = walkSpot(town, pa, 20, 34); if (sp) { n.x = sp.x; n.y = sp.y; n.path = []; if (ambNewGoal(n, pa, Math.random() < 0.7)) { n.on = true; n.wait = 0; n.nextSay = rnd(6, 18); n.say = ""; } } } } }
+  for (const n of CROWD) { if (!n.on) continue; const d = Math.hypot(n.x - pa.x, n.y - pa.y); if (d > 46) { n.on = false; continue; }
+    if (n.path.length === 0) { n.wait -= dt; if (n.wait > 0) continue; if (Math.random() < 0.4) { n.wait = rnd(3, 11); n.face = rnd(0, 3); continue; } if (!ambNewGoal(n, pa, Math.random() < 0.5)) n.wait = 2; continue; }
+    const p = n.path[0], dd = Math.hypot(p.x - n.x, p.y - n.y); if (dd < 0.15) { n.path.shift(); continue; }
+    n.face = Math.abs(p.x - n.x) > Math.abs(p.y - n.y) ? (p.x < n.x ? 2 : 3) : (p.y < n.y ? 1 : 0); const sp = n.sp * dt * (n.path.length < 2 ? 0.7 : 1); n.x += (p.x - n.x) / dd * Math.min(sp, dd); n.y += (p.y - n.y) / dd * Math.min(sp, dd);
+    n.nextSay -= dt; if (n.nextSay <= 0) { n.nextSay = rnd(12, 28); if (d < 7 && LN[town]) { n.say = pickOf(LN[town].visitor.bub); n.sayUntil = performance.now() + 3200; } } }
+}
+function ambDraw3d(now) { if (s.inside) return; const pa = playerAt(); for (const n of CROWD) { if (!n.on || !n.look || Math.hypot(n.x - pa.x, n.y - pa.y) > 44) continue; personAt("amb" + n.i, n.look, n.x, n.y, n.face, n.path.length > 0, { name: "", bubble: n.sayUntil > now ? n.say : "", swim: false }); } }
 // ---- homes you can visit
 function homeActs(h) {
   const n = h.res; if (!n) return [A("🚪 Nobody lives here", "A quiet house", 0, 0, {}, { why: "Nobody is home." })];
@@ -9351,7 +9403,7 @@ function render3d(dt) { // draw one 3D frame
   setSpriteText(R.fbScore, "WEST " + BALL.fb.a + " : " + BALL.fb.b + " EAST", "rgba(6,28,40,0.85)", "#ffffff", 0.45); setSpriteText(R.bbScore, "YOU " + s.hoops + " PTS", "rgba(6,28,40,0.85)", "#ffffff", 0.4); // scoreboards
   R.fball.visible = R.bball.visible = true; R.fball.position.set(BALL.fb.x, 0.14, BALL.fb.y); const c = BALL.bb, held = c.h && (c.h === meId() ? meMoving : others[c.h] && others[c.h].p.mv); R.bball.position.set(c.x, fly ? 0.7 + fly.z * 1.6 : c.h ? 0.62 + (held ? Math.abs(Math.sin(now / 110)) * 0.35 : 0) : 0.17, c.y); // balls, with dribble bounce and shot arc
   for (const i of [0, 1]) personAt("keeper" + i, { g: "m", skin: SKINS[i ? 3 : 1], hair: "#17100c", shirt: i ? "#ffd23c" : "#35c4bb", pants: "#15171a", role: "resident" }, i ? FB.x1 - 0.6 : FB.x0 + 0.6, keeper[i], i ? 2 : 3, true); // goalkeepers
-  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
+  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); ambDraw3d(now); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
   if (ride) { if (!R.rideM || R.rideKind !== ride.kind) { if (R.rideM) R.dyn.remove(R.rideM); R.rideM = makeCar(ride.v); R.rideKind = ride.kind; } R.rideM.visible = true; placeCar(R.rideM, ride.x, ride.y, ride.vert, ride.rev); } else if (R.rideM) R.rideM.visible = false; // your ride
   if (!R.dogM) R.dogM = DOGS.map((d) => makeDog(d.col)); DOGS.forEach((d, i) => { const m = R.dogM[i]; m.visible = true; m.position.set(d.x, 0, d.y); m.rotation.y = d.dir > 0 ? 0 : Math.PI; m.position.y = d.chase > 0 ? Math.abs(Math.sin(now / 60)) * 0.08 : 0; }); // street dogs (they bounce when chasing)
   govGuards3d(); // the President's bodyguards
@@ -10784,6 +10836,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.15", "5 Nov 2026", "Busier, smoother streets", [
+    ["🚶", "Crowds on every street", "Towns now have people on foot walking from place to place all day, and ten locals with names in every town to stop and talk to.", null],
+    ["🚗", "Cars that really drive", "Cars follow the real junctions, turn corners and loop round the blocks, wait behind each other and stop for you. They come and go out of sight instead of vanishing in front of you.", null]
+  ]],
   ["2027.03.14", "5 Nov 2026", "Meet the locals", [
     ["🧑‍🤝‍🧑", "People with personalities", "Every town now has its own residents: funny taxi drivers, street vendors, retired uncles, lost visitors and a few characters who are always short of cash. Chat, hear a joke, ask for tips, or buy them a round.", null],
     ["🏠", "Visit their lakaz", "Some residents live in houses you can walk into. They are out in the day and home at night, so knock after dark and share some tea.", null],
@@ -13096,7 +13152,7 @@ function frame(now) { // runs every animation frame
       if (pending && path.length === 0 && Math.hypot(pending.x - s.x, pending.y - s.y) < 1.6) { near = pending; pending = null; useNear(); } // open the thing you tapped
     } // end free
     for (const n of NPC) npcStep(n, dt); luxStep(dt); stepSugar(dt); bzStep(dt); bzFx(dt, performance.now()); triStep(); maybePoliceStop(dt); maybeCarHit(dt); maybeOddJob(dt); deliverCheck(); workCallStep(); // neighbours/beachgoers, police, accidents, odd jobs, deliveries, time for work
-    for (const c of CARS) carStep(c, dt); trafficStep(dt); // traffic moves
+    for (const c of CARS) carStep(c, dt); trafficStep(dt); ambTick(dt); // traffic and the crowd move
     for (const d of DOGS) dogStep(d, dt); // dogs wander or chase
     sportStep(dt); // balls roll, keepers move
     creepStep(dt); // street harassment for female characters
