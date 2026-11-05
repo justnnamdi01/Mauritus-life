@@ -28,6 +28,15 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Done, session 12 (5 Nov 2026): one continuous island
+- **What you reported (with phone screenshots):** the towns and highways were separate blocks floating in dark sea, joined only by a teleport at the exit. You wanted it connected, like the island map.
+- **Now one chain of maps, north to south:** Grand Baie, the highway, Port Louis, the highway, Flic en Flac, each map starting on the row where the one above ends (`WREG`/`RAO`.. in `index.html`, `LAYOUT` in `regions.js`). No portals: you walk straight off a town's last street onto the highway and into the next town. A toast says where you are when you cross.
+- **Towns:** each exit now runs to the map edge facing its neighbour (north or south, `CH` in `tools/build-region.mjs`).
+- **Highways rebuilt (`tools/build-road.mjs`):** 120 tiles wide like the towns, running down the page; the road leaves the exit of the town above and arrives at the exit of the town below, bending the way the real road bends (up to 30 tiles sideways). The ground beside the road is the real coast, fields and villages, and it carries on from each town's edge so there is no seam. 19.3 km and 20.7 km.
+- **Server:** moving between two maps is allowed only between neighbours and close to the line where they join; the highway speed limit stays; trips still work. Tests updated and pass.
+- **Tested:** server tests; in the headless browser I walked from Grand Baie's exit down the whole highway into Port Louis (region switched, no errors, heap flat) and opened the Maps app. **Not tested:** a real phone (frame rate), Port Louis to Flic en Flac on foot in the browser, the world and island map pictures (they may still draw the old straight highways).
+- **Limits:** the world is now about 1,000 rows tall, so the first load is a little heavier; only a column 120 tiles wide is land, with sea beyond; towns are drawn at 12 m a tile and highways at 75 m, so houses jump in size at the join.
+
 ## Done, session 11 (5 Nov 2026): real highways between the towns
 - **What you reported:** roads hard to see, towns too close together, roads that end in water before the next town, and no real way to cross.
 - **Highways** (`tools/build-road.mjs`, maps `road-grandbaie-portlouis`, `road-portlouis-west`): the real route between the towns, 19.3 km and 20.7 km, drawn one tile per 75 m, straight, with the real country on both sides sampled from the island map: sea, fields, hills, houses. The villages along the way come from OpenStreetMap place names (Triolet, Balaclava, Arsenal, Sinatambou, Le Hochet, Sainte-Croix, Plaine Verte; Coromandel, Petite Rivière, Bambous, Médine...) as green signs and rows of houses on both sides, with a blue kilometre post every 2 km and "Leaving X" / "Welcome to Y" signs.

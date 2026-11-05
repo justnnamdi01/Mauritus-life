@@ -18,15 +18,13 @@ const BY_ID = Object.fromEntries(DEF.map((r) => [r.id, r]));
 const DEFAULT_RG = "grandbaie"; // the map every player starts on
 const GB_ROW = 232; // the walkable map: rows from here down are Grand Baie (HO in public/index.html); its first tile row is GBY = 236
 const loadMap = (id) => { try { const t = fs.readFileSync(path.join(__dirname, "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } }; // a walkable map built from OpenStreetMap
-const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), FLM = loadMap("west"), PL_ROW = 320, FL_ROW = 408; // Port Louis starts at this row (PLO in public/index.html); its first tile row is PLY = 324
-const STOPS = { grandbaie: GBM ? { x: GBM.stop.x, y: GB_ROW + 4 + GBM.stop.y } : { x: 30.5, y: 260.5 }, portlouis: PLM ? { x: PLM.stop.x, y: PL_ROW + 4 + PLM.stop.y } : { x: 48.5, y: 370.5 }, west: FLM ? { x: FLM.stop.x, y: FL_ROW + 4 + FLM.stop.y } : { x: 52.5, y: 432.5 } }; // the bus stations: where to put someone back
-// the highways between the towns (one tile for every 75 m of road), laid out below the towns in the same grid
-const ROADMAPS = [{ id: "road_grandbaie_portlouis", file: "road-grandbaie-portlouis", block: 492, y0: 496 }, { id: "road_portlouis_west", file: "road-portlouis-west", block: 548, y0: 552 }].map((r) => Object.assign(r, { M: loadMap(r.file) })).filter((r) => r.M), ROAD_END = 604;
-const TOWNMAPS = { grandbaie: { M: GBM, y0: GB_ROW + 4 }, portlouis: { M: PLM, y0: PL_ROW + 4 }, west: { M: FLM, y0: FL_ROW + 4 } };
-const PORTALS = []; for (const rr of ROADMAPS) for (const [i, town] of [[0, rr.M.a], [1, rr.M.b]]) { const T = TOWNMAPS[town], other = town === rr.M.a ? rr.M.b : rr.M.a, ex = T && T.M && (T.M.exits || []).find((e) => e.to === other); if (!ex) continue; const end = rr.M.ends[i], inward = i === 0 ? 1 : -1; PORTALS.push({ road: rr.id, town, a: { x: ex.x, y: T.y0 + ex.y }, b: { x: end.x, y: rr.y0 + end.y }, bIn: { x: end.x + inward * 5, y: rr.y0 + end.y } }); }
-for (const rr of ROADMAPS) STOPS[rr.id] = { x: rr.M.stop.x, y: rr.y0 + rr.M.stop.y };
-const roadAt = (y) => ROADMAPS.find((r) => y >= r.block && y < (ROADMAPS[ROADMAPS.indexOf(r) + 1] ? ROADMAPS[ROADMAPS.indexOf(r) + 1].block : ROAD_END));
-const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= 492 && roadAt(y) ? roadAt(y).id : y >= 492 ? "old" : y >= FL_ROW ? "west" : y >= PL_ROW ? "portlouis" : y >= GB_ROW ? "grandbaie" : "old") : ""; }; // rows above GB_ROW are the first game's old map: no region, never allowed // "" indoors or with no place
+// The island is one continuous strip of map, north to south, and the server lays it out exactly as the client does (see WREG in public/index.html): Grand Baie, the road, Port Louis, the road, Flic en Flac. Each map starts on the row where the one above ends.
+const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), FLM = loadMap("west"), RAM = loadMap("road-grandbaie-portlouis"), RBM = loadMap("road-portlouis-west");
+const LAYOUT = []; { let y = GB_ROW + 4; for (const [id, M, kind] of [["grandbaie", GBM], ["road_grandbaie_portlouis", RAM, "road"], ["portlouis", PLM], ["road_portlouis_west", RBM, "road"], ["west", FLM]]) { if (!M) continue; LAYOUT.push({ id, M, kind, y0: y, block: LAYOUT.length ? y : GB_ROW }); y += M.h; } LAYOUT.END = y + 4; }
+const STOPS = {}; for (const r of LAYOUT) STOPS[r.id] = { x: r.M.stop.x, y: r.y0 + r.M.stop.y }; // the bus stations: where to put someone back
+if (!STOPS.grandbaie) STOPS.grandbaie = { x: 30.5, y: 260.5 };
+const ROADMAPS = LAYOUT.filter((r) => r.kind === "road");
+const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); if (!(Number.isFinite(y) && p.x !== undefined)) return ""; if (y < GB_ROW || y >= LAYOUT.END) return "old"; for (let i = LAYOUT.length - 1; i >= 0; i--) if (y >= LAYOUT[i].block) return LAYOUT[i].id; return "old"; }; // rows above GB_ROW are the first game's old map: no region, never allowed // "" indoors or with no place
 
 let db = null, persist = () => {}, onChange = () => {};
 function init(theDb, persistFn, changed) { // call once the save has loaded
@@ -54,9 +52,10 @@ function spawn() { // somewhere safe: the first seed of the first open region
   const rg = STOPS[r.id] ? r.id : "grandbaie"; return { rg, x: STOPS[rg].x, y: STOPS[rg].y, ix: (lo - ISL.lon0) * ISL.kx / ISL.tileM, iy: (ISL.lat0 - la) * ISL.ky / ISL.tileM };
 }
 function roadOpen(id) { const r = ROADMAPS.find((q) => q.id === id); return !!r && isOpen(r.M.a) && isOpen(r.M.b); }
-function portalOk(prev, next) { // a move from one region to another is allowed only across a portal: from a town's highway exit onto its highway, or back
+function portalOk(prev, next) { // a move from one region to another is allowed only between two maps that touch, close to the line where they join (a fast vehicle covers several tiles between two position updates)
   const px = Number(prev && prev.x), py = Number(prev && prev.y), nx = Number(next && next.x), ny = Number(next && next.y); if (![px, py, nx, ny].every(Number.isFinite)) return false;
-  return PORTALS.some((q) => (Math.hypot(px - q.a.x, py - q.a.y) < 12 && Math.hypot(nx - q.bIn.x, ny - q.bIn.y) < 12) || (Math.hypot(px - q.b.x, py - q.b.y) < 12 && Math.hypot(nx - q.a.x, ny - q.a.y) < 12)); // a few tiles of slack: a fast vehicle covers several tiles between two position updates
+  const a = LAYOUT.findIndex((r) => r.id === walkRegion({ x: px, y: py })), b = LAYOUT.findIndex((r) => r.id === walkRegion({ x: nx, y: ny })); if (a < 0 || b < 0 || Math.abs(a - b) !== 1) return false;
+  const line = LAYOUT[Math.max(a, b)].block; return Math.abs(py - line) < 14 && Math.abs(ny - line) < 14 && Math.hypot(nx - px, ny - py) < 24;
 }
 function placeOk(p) { // is a presence somewhere it is allowed to be? returns "" or the locked region's id
   const rg = walkRegion(p) || (p.rg === undefined || p.rg === "" ? DEFAULT_RG : String(p.rg)); // where they stand decides, not what the phone says
@@ -85,4 +84,4 @@ function adminSet(b) {
   persist(); onChange(); return { ok: true, regions: list() };
 }
 const regionOfPresence = (p) => walkRegion(p || {}); // which region a presence is standing in ("" indoors or with no place yet; "old" = the first game's unreachable rows)
-module.exports = { portalOk, PORTALS, regionOfPresence, STOPS, walkRegion, init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };
+module.exports = { portalOk, LAYOUT, regionOfPresence, STOPS, walkRegion, init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };

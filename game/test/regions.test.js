@@ -45,10 +45,10 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     const ask = (t, extra) => new Promise((res) => { const rid = "r" + Math.random().toString(36).slice(2, 8), h = (d) => { try { const m = JSON.parse(d); if (m.rid === rid) { ws.off("message", h); res(m); } } catch (e) {} }; ws.on("message", h); ws.send(JSON.stringify(Object.assign({ t, rid }, extra))); });
     { const uidOf = got.find((m) => m.t === "welcome").uid; ws.send(JSON.stringify({ t: "doc.set", path: "players/" + uidOf, data: { name: "Tester", money: 5000, savedAt: Date.now() }, rid: "d1" })); await wait(400); } // a saved player, so the server knows what they can pay
     const mapOf = (id) => { const t = fs.readFileSync(path.join(__dirname, "..", "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); }, stopOf = (id, row) => { const m = mapOf(id); return { x: m.stop.x, y: row + 4 + m.stop.y }; }; // the bus stations come from the real maps
-    const stop = stopOf("grandbaie", 232), plStop = stopOf("portlouis", 320), flStop = stopOf("west", 408);
+    const REGM = require("../regions"), LAY = (id) => REGM.LAYOUT.find((r) => r.id === id), stop = REGM.STOPS.grandbaie, plStop = REGM.STOPS.portlouis, flStop = REGM.STOPS.west;
     pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "a new player cannot start in Port Louis");
     pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "a new player starts at the Grand Baie bus station");
-    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel" && l.back.y < 320, "jumping to Port Louis without a trip is refused and put back");
+    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel" && l.back.y < LAY("portlouis").y0, "jumping to Port Louis without a trip is refused and put back");
     pres({ x: flStop.x, y: flStop.y, rg: "west" }); l = await locked(); ok(l && l.why === "travel", "jumping to Flic en Flac without a trip is refused");
     let pl = await ask("road.plan", { to: "portlouis" }); ok(pl.ok && pl.km > 15 && pl.km < 30 && pl.modes.length === 3 && pl.via.includes("Pamplemousses and the north"), "the plan for Grand Baie to Port Louis follows the real road (" + pl.km + " km via " + (pl.via || []).join(", ") + ")");
     ok(pl.modes.find((x) => x.id === "bus").fare < pl.modes.find((x) => x.id === "taxi").fare && pl.modes.find((x) => x.id === "bus").minutes > pl.modes.find((x) => x.id === "taxi").minutes, "the bus is cheaper and slower than a taxi");
@@ -58,21 +58,21 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     const again = await ask("road.start", { to: "west", mode: "bus" }); ok(again.ok && again.again && again.to === "portlouis", "asking again during a trip gives the same trip (safe to repeat)");
     let ar = await ask("road.arrive"); ok(!ar.ok, "you cannot arrive before the journey is over");
     pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "and a phone that skips the journey is put back");
-    await wait(900); ar = await ask("road.arrive"); ok(ar.ok && ar.to === "portlouis" && ar.y > 320, "you arrive once the time is up");
+    await wait(900); ar = await ask("road.arrive"); ok(ar.ok && ar.to === "portlouis" && ar.y >= LAY("portlouis").y0, "you arrive once the time is up");
     pres({ x: ar.x, y: ar.y, rg: "portlouis" }); l = await locked(); ok(!l, "and then you may stand in Port Louis");
     pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(l && l.why === "travel", "going back to Grand Baie also needs a trip");
     pl = await ask("road.plan", { to: "west" }); ok(pl.ok && pl.km > 15 && pl.km < 35, "Port Louis to Flic en Flac is " + pl.km + " km by road");
     st = await ask("road.start", { to: "west", mode: "bus" }); ok(st.ok && st.wait >= 5, "a bus to Flic en Flac starts and has a wait (" + st.wait + " min)");
     await wait(900); ar = await ask("road.arrive"); pres({ x: ar.x, y: ar.y, rg: "west" }); l = await locked(); ok(ar.ok && !l, "you arrive in Flic en Flac");
-    // The highway between Port Louis and Flic en Flac: walk out of the town exit onto it, no skipping, and out the other end
-    const rbMap = mapOf("road-portlouis-west"), rbY = 552, rbEnd0 = { x: rbMap.ends[0].x, y: rbY + rbMap.ends[0].y }, rbEnd1 = { x: rbMap.ends[1].x, y: rbY + rbMap.ends[1].y }, flEx = mapOf("west").exits.find((e) => e.to === "portlouis"), flExit = { x: flEx.x, y: 412 + flEx.y };
-    pres({ x: flExit.x, y: flExit.y, rg: "west" }); l = await locked(); ok(!l, "walking to the Flic en Flac highway exit is fine");
-    pres({ x: rbEnd1.x - 5, y: rbEnd1.y, rg: "road" }); l = await locked(); ok(!l, "from the exit you step onto the highway");
-    pres({ x: rbEnd1.x - 60, y: rbEnd1.y }); l = await locked(); ok(l && l.why === "speed", "skipping 55 tiles of the highway in one step is refused");
-    pres({ x: rbEnd1.x - 12, y: rbEnd1.y }); l = await locked(); ok(!l, "but walking along it is fine");
-    pres({ x: 56.5, y: 376, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "you cannot jump from the middle of the highway into Port Louis");
-    pres({ x: rbEnd1.x - 1, y: rbEnd1.y }); await wait(1200); l = await locked(); pres({ x: flExit.x, y: flExit.y, rg: "west" }); l = await locked(); ok(!l, "walking back to the end puts you at the Flic en Flac exit again");
-    pres({ x: rbEnd0.x + 5, y: rbEnd0.y, rg: "road" }); l = await locked(); ok(l, "and the highway's other end cannot be reached from Flic en Flac");
+    // The highway between Port Louis and Flic en Flac is one continuous map with the town: walk north out of Flic en Flac and you are on it, no skipping
+    const fl = LAY("west"), flX = mapOf("west").exits.find((e) => e.to === "portlouis").x, rb = LAY("road_portlouis_west");
+    pres({ x: flX, y: fl.y0 + 1.5, rg: "west" }); l = await locked(); ok(!l, "walking to the Flic en Flac highway exit is fine");
+    pres({ x: flX, y: fl.y0 - 3, rg: "road" }); l = await locked(); ok(!l, "from the exit you simply walk on to the highway");
+    pres({ x: flX, y: fl.y0 - 60 }); l = await locked(); ok(l && l.why === "speed", "skipping 57 tiles of the highway in one step is refused");
+    pres({ x: flX, y: fl.y0 - 14 }); l = await locked(); ok(!l, "but walking along it is fine");
+    pres({ x: 60.5, y: LAY("portlouis").y0 + 20, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "you cannot jump from the middle of the highway into Port Louis");
+    pres({ x: flX, y: fl.y0 - 3 }); l = await locked(); pres({ x: flX, y: fl.y0 + 2, rg: "west" }); l = await locked(); ok(!l, "walking back along the road puts you in Flic en Flac again");
+    pres({ x: 60, y: rb.y0 + 5, rg: "road" }); l = await locked(); ok(l, "and the highway's far end cannot be reached from Flic en Flac");
     pres({ x: 20, y: 30, rg: "grandbaie" }); l = await locked(); ok(l && l.back.y > 232, "a phone that stands in the first game's old rows is put back");
     a = await admin("POST", { id: "west", open: false }); l = await locked(); ok(a.ok && l && l.id === "west", "closing Flic en Flac sends the player standing there home to Grand Baie");
     pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "and the server then agrees they are in Grand Baie");
