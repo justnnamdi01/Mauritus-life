@@ -38,7 +38,7 @@ function route(from, to) { // the road route between two towns: tiles, length in
   let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); const km = Math.max(1, Math.round(len * ISL.tileM / 100) / 10);
   const via = []; for (const [x, y] of pts) { const id = ISL.regions[REGION_AT[y * W + x]]; if (id && via[via.length - 1] !== id) via.push(id); }
   const step = Math.max(1, Math.floor(pts.length / 70)), thin = pts.filter((_, i) => i % step === 0 || i === pts.length - 1); // a short line for the phone to draw
-  return (CACHE[key] = { from, to, km, via, path: thin });
+  return (CACHE[key] = { from, to, km, via, path: thin, full: pts });
 }
 // The offers for a trip: every way to go, with its price and how long it takes (in game minutes)
 function plan(from, to) {

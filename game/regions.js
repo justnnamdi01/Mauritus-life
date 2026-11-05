@@ -20,7 +20,13 @@ const GB_ROW = 232; // the walkable map: rows from here down are Grand Baie (HO 
 const loadMap = (id) => { try { const t = fs.readFileSync(path.join(__dirname, "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } }; // a walkable map built from OpenStreetMap
 const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), FLM = loadMap("west"), PL_ROW = 320, FL_ROW = 408; // Port Louis starts at this row (PLO in public/index.html); its first tile row is PLY = 324
 const STOPS = { grandbaie: GBM ? { x: GBM.stop.x, y: GB_ROW + 4 + GBM.stop.y } : { x: 30.5, y: 260.5 }, portlouis: PLM ? { x: PLM.stop.x, y: PL_ROW + 4 + PLM.stop.y } : { x: 48.5, y: 370.5 }, west: FLM ? { x: FLM.stop.x, y: FL_ROW + 4 + FLM.stop.y } : { x: 52.5, y: 432.5 } }; // the bus stations: where to put someone back
-const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= FL_ROW ? "west" : y >= PL_ROW ? "portlouis" : y >= GB_ROW ? "grandbaie" : "old") : ""; }; // rows above GB_ROW are the first game's old map: no region, never allowed // "" indoors or with no place
+// the highways between the towns (one tile for every 75 m of road), laid out below the towns in the same grid
+const ROADMAPS = [{ id: "road_grandbaie_portlouis", file: "road-grandbaie-portlouis", block: 492, y0: 496 }, { id: "road_portlouis_west", file: "road-portlouis-west", block: 548, y0: 552 }].map((r) => Object.assign(r, { M: loadMap(r.file) })).filter((r) => r.M), ROAD_END = 604;
+const TOWNMAPS = { grandbaie: { M: GBM, y0: GB_ROW + 4 }, portlouis: { M: PLM, y0: PL_ROW + 4 }, west: { M: FLM, y0: FL_ROW + 4 } };
+const PORTALS = []; for (const rr of ROADMAPS) for (const [i, town] of [[0, rr.M.a], [1, rr.M.b]]) { const T = TOWNMAPS[town], other = town === rr.M.a ? rr.M.b : rr.M.a, ex = T && T.M && (T.M.exits || []).find((e) => e.to === other); if (!ex) continue; const end = rr.M.ends[i], inward = i === 0 ? 1 : -1; PORTALS.push({ road: rr.id, town, a: { x: ex.x, y: T.y0 + ex.y }, b: { x: end.x, y: rr.y0 + end.y }, bIn: { x: end.x + inward * 5, y: rr.y0 + end.y } }); }
+for (const rr of ROADMAPS) STOPS[rr.id] = { x: rr.M.stop.x, y: rr.y0 + rr.M.stop.y };
+const roadAt = (y) => ROADMAPS.find((r) => y >= r.block && y < (ROADMAPS[ROADMAPS.indexOf(r) + 1] ? ROADMAPS[ROADMAPS.indexOf(r) + 1].block : ROAD_END));
+const walkRegion = (p) => { if (p.in) return ""; const y = Number(p.y); return Number.isFinite(y) && p.x !== undefined ? (y >= 492 && roadAt(y) ? roadAt(y).id : y >= 492 ? "old" : y >= FL_ROW ? "west" : y >= PL_ROW ? "portlouis" : y >= GB_ROW ? "grandbaie" : "old") : ""; }; // rows above GB_ROW are the first game's old map: no region, never allowed // "" indoors or with no place
 
 let db = null, persist = () => {}, onChange = () => {};
 function init(theDb, persistFn, changed) { // call once the save has loaded
@@ -47,8 +53,14 @@ function spawn() { // somewhere safe: the first seed of the first open region
   const r = DEF.find((q) => isOpen(q.id) && STOPS[q.id]) || BY_ID[DEFAULT_RG], [lo, la] = r.seeds[0]; // an open region that has a walkable map
   const rg = STOPS[r.id] ? r.id : "grandbaie"; return { rg, x: STOPS[rg].x, y: STOPS[rg].y, ix: (lo - ISL.lon0) * ISL.kx / ISL.tileM, iy: (ISL.lat0 - la) * ISL.ky / ISL.tileM };
 }
+function roadOpen(id) { const r = ROADMAPS.find((q) => q.id === id); return !!r && isOpen(r.M.a) && isOpen(r.M.b); }
+function portalOk(prev, next) { // a move from one region to another is allowed only across a portal: from a town's highway exit onto its highway, or back
+  const px = Number(prev && prev.x), py = Number(prev && prev.y), nx = Number(next && next.x), ny = Number(next && next.y); if (![px, py, nx, ny].every(Number.isFinite)) return false;
+  return PORTALS.some((q) => (Math.hypot(px - q.a.x, py - q.a.y) < 12 && Math.hypot(nx - q.bIn.x, ny - q.bIn.y) < 12) || (Math.hypot(px - q.b.x, py - q.b.y) < 12 && Math.hypot(nx - q.a.x, ny - q.a.y) < 12)); // a few tiles of slack: a fast vehicle covers several tiles between two position updates
+}
 function placeOk(p) { // is a presence somewhere it is allowed to be? returns "" or the locked region's id
   const rg = walkRegion(p) || (p.rg === undefined || p.rg === "" ? DEFAULT_RG : String(p.rg)); // where they stand decides, not what the phone says
+  if (rg.startsWith("road_")) return roadOpen(rg) ? "" : rg; // a highway is open when both its towns are
   if (!BY_ID[rg] || !isOpen(rg)) return BY_ID[rg] ? rg : "?";
   if (p.ix !== undefined || p.iy !== undefined) { const ix = Number(p.ix), iy = Number(p.iy), at = regionAt(ix, iy); if (!Number.isFinite(ix) || !Number.isFinite(iy) || !at) return "?"; if (!isOpen(at)) return at; }
   return "";
@@ -73,4 +85,4 @@ function adminSet(b) {
   persist(); onChange(); return { ok: true, regions: list() };
 }
 const regionOfPresence = (p) => walkRegion(p || {}); // which region a presence is standing in ("" indoors or with no place yet; "old" = the first game's unreachable rows)
-module.exports = { regionOfPresence, STOPS, walkRegion, init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };
+module.exports = { portalOk, PORTALS, regionOfPresence, STOPS, walkRegion, init, isOpen, regionAt, list, spawn, placeOk, filterPatch, info, adminSet, DEFAULT_RG };
