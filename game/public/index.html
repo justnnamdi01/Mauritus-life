@@ -91,6 +91,12 @@
 .bizunlock { margin: 6px 0 10px; padding: 10px 12px; border-radius: 14px; font-size: 0.8rem; font-weight: 700; line-height: 1.35; color: #fff; background: linear-gradient(135deg, #1f6fa8, #7a4fd1); }
 
 .housepic { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto 10px; border-radius: 16px; border: 2px solid rgba(255, 255, 255, 0.25); }
+#cityCard { position: fixed; left: 50%; top: 14%; transform: translate(-50%, -30px) scale(0.92); z-index: 60; display: flex; align-items: center; gap: 12px; padding: 12px 20px 12px 14px; border-radius: 18px; background: rgba(10,22,30,0.9); border: 2px solid var(--cc, #14b8c9); box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 0 0 4px rgba(255,255,255,0.05); color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.35s, transform 0.45s cubic-bezier(.2,1.3,.4,1); max-width: calc(100% - 32px); }
+#cityCard.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#cityCard .cci { font-size: 2.3rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+#cityCard b { display: block; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cc, #14b8c9); }
+#cityCard h2 { margin: 1px 0 1px; font-size: 1.35rem; line-height: 1.1; }
+#cityCard small { color: rgba(255,255,255,0.78); font-size: 0.78rem; }
 </style>
 <script src="grandbaie-map.js"></script>
 <script src="portlouis-map.js"></script>
@@ -1416,11 +1422,24 @@ const inGB = (x, y) => y >= HO && y < RAO; // Grand Baie (the server works the r
 const unrleMap = (M) => { const o = new Uint8Array(M.w * M.h); let i = 0; for (let k = 0; k < M.terr.length; k += 2) { o.fill(M.terr[k], i, i + M.terr[k + 1]); i += M.terr[k + 1]; } return o; };
 for (const r of WREG) r.T = unrleMap(r.M);
 function gbTile(x, y) { for (let i = WREG.length - 1; i >= 0; i--) { const r = WREG[i]; if (y >= r.block) { const ly = y - r.y0; if (ly < 0 || ly >= r.M.h || x < 0 || x >= r.M.w) return 0; return r.T[ly * r.M.w + x]; } } return 0; } // the terrain of the walkable regions (deep sea round the edges)
+const CITY = { // what each town is like: its colour, its ground, its houses. So you can tell where you are before you read a sign
+  grandbaie: { name: "Grand Baie", icon: "🏝️", col: "#14b8c9", tag: "Sun, sand and sega", gc: { 3: "#6cc25a", 9: "#7fd070", 2: "#f6e6b0", 22: "#eadfc4" }, road: "#7e8791", pal: [["#ffffff", "#18a7b5"], ["#fdf3d8", "#e8a33d"], ["#e4f6f8", "#2a8fa0"], ["#fff1d6", "#c9a45a"], ["#fbe3dc", "#d4563a"]] },
+  portlouis: { name: "Port Louis", icon: "🏙️", col: "#e4572e", tag: "The busy capital", gc: { 3: "#7b9a64", 9: "#6f9560", 2: "#d4c9a8", 22: "#bdbbb3" }, road: "#565d66", pal: [["#d9d6cc", "#5f6f82"], ["#e8d9b5", "#8d4a3a"], ["#c9ced4", "#46566c"], ["#e2c9a0", "#7a5a3a"], ["#cfc7bb", "#6b3f35"]] },
+  west: { name: "Flic en Flac", icon: "🏖️", col: "#f0a030", tag: "Waves, sunsets and slow days", gc: { 3: "#a9b862", 9: "#97b055", 2: "#f0d9a0", 22: "#e0cfa6" }, road: "#8f887a", pal: [["#ffd9c7", "#c8553d"], ["#fff2b8", "#4a8fb8"], ["#cfe8d8", "#a85a3a"], ["#f7c6d0", "#5a7a4a"], ["#d8e6ff", "#d2693f"]] }
+};
+const CITY_ROAD = { name: "The road", icon: "🛣️", col: "#7a8896", tag: "", gc: {}, road: "#6a7078", pal: CITY.grandbaie.pal.slice(0, 2).concat(CITY.portlouis.pal.slice(0, 2), CITY.west.pal.slice(0, 2)) }; // between the towns
+const palOf = (reg) => (CITY[reg] || CITY_ROAD).pal;
+const mixHex = (a, b, f) => { const h = (x) => [1, 3, 5].map((i) => parseInt(x.slice(i, i + 2), 16)); const A2 = h(a), B2 = h(b); return "rgb(" + A2.map((v, i) => Math.round(v + (B2[i] - v) * f)).join(",") + ")"; };
+const tintMemo = {};
+function tintOf(y, key, base) { // the colour of the ground at a row: each town its own, the highway fading from one to the other
+  if (y < HO) return base; const id = regionOfY(y), C = CITY[id]; if (C) return (key === "road" ? C.road : C.gc[key]) || base; const r = regionDef(id); if (!r || r.kind !== "road") return base;
+  const A2 = CITY[r.M.a], B2 = CITY[r.M.b], ca = (key === "road" ? A2.road : A2.gc[key]) || base, cb = (key === "road" ? B2.road : B2.gc[key]) || base, f = Math.round(Math.max(0, Math.min(1, (y - r.y0) / r.M.h)) * 24) / 24, k = key + ca + cb + f; return tintMemo[k] || (tintMemo[k] = ca.startsWith("#") && cb.startsWith("#") ? mixHex(ca, cb, f) : ca);
+}
 const GBPAL = [["#f3efe4", "#b5482f"], ["#f1dfc4", "#8d6a3a"], ["#e6edf2", "#4a6b9a"], ["#f4e3e3", "#a8433d"], ["#e9f1e2", "#3f7a4a"], ["#f2ead6", "#c9a45a"]]; // wall and roof colours, picked by position
 const GBKIND = [[/Dholl Puri/, "dholl"], [/Sega Bar/, "bar"], [/^Bar$/, "bar"], [/Shopping Centre|Supermarket/, "mall"], [/Mini Market/, "mini"], [/Baza+r|Foire|Central Market|Market Fair/i, "bazar"], [/Bakery/, "bakery"], [/Pharmacy/, "pharma"], [/Fish Market/, "fish"], [/Restaurant/, "resto"], [/Snack Bar/, "dholl"], [/Café/, "cafe"], [/Cinema|Theatre/, "cinema"], [/Museum|Musée|Arts Centre|Centre d.Arts/, "museum"], [/Hotel/, "hotel"], [/Barber/, "barber"], [/Library/, "library"], [/Petrol/, "fuel"], [/Clothes/, "clothes"], [/Shiv|Mosque|Masjid|Sunnee|Temple|Church|Cathedral|Pagoda|Salle|Mariamen/i, "worship"]]; // which template a building from the map gets (Mini Market is matched before Market)
 const GBNAMES = { mall: ["Supermarché Soleil", "Centre Commercial", "Supermarché Lafam", "Galerie Marchande", "Supermarché Corail"], mini: ["Boutik Soleil", "Boutik Lakaz", "Boutik Ti Zan", "Boutik Marie"], bakery: ["Boulangerie du Coin", "Boulangerie Lafam", "Boulangerie Soleil"], pharma: ["Pharmacie Centrale", "Pharmacie Soleil", "Pharmacie Lagon", "Pharmacie Corail"], resto: ["Resto Kreol", "Resto Vindaye", "Resto Briyani", "Resto Rougaille", "Resto Mazavaroo", "Resto Gouyave", "Resto Lantani", "Resto Pwason", "Resto Zasmin", "Resto Tamarin Bleu"], barber: ["Barbier Soleil", "Barbier Corail"], fuel: ["Station Service"], clothes: ["Boutique Mode", "Boutique Lamode", "Boutique Soley", "Boutique Zoli"], fish: ["Marché Poisson"], dholl: ["Faratha Express", "Gato Piment Stall", "Boulette Corner", "Alouda Bar", "Dholl Puri Stall", "Mine Frite Stall", "Samoussa Stall"], cafe: ["Café Soleil", "Café Lafam", "Salon de Thé", "Café Zasmin", "Café Corail"], cinema: ["Cinéma Capitale", "Théâtre Zoli"], hotel: ["Hôtel de la Baie", "Hôtel Lagon", "Hôtel Corail", "Hôtel Filao", "Hôtel Zoli", "Hôtel Soleil"], bar: ["Bar Séga", "Bar Lagon", "Bar Filao", "Bar Zoli"] }; // Mauritian names for the generic places (made up, so they are not real businesses)
 const GBSOON = (() => { // the places of both regions, from the real maps: the ones with a template are open, the rest show a sign
-  const o = []; for (const RG of WREG) { const M = RG.M, y0 = RG.y0, pre = RG.pre; const cnt = {}; M.buildings.forEach((q, k) => { const pal = GBPAL[(q.x * 7 + q.y * 3 + k) % GBPAL.length], lm = /⛪|📚|🚓|🥭|🏛️|🖼️/.test(q.icon || ""), kind = (GBKIND.find((g) => g[0].test(q.name)) || [])[1] || ""; let name = q.name; if (GBNAMES[kind] && !q.open) { const n = cnt[kind] = (cnt[kind] || 0); name = GBNAMES[kind][n % GBNAMES[kind].length]; cnt[kind]++; } else if (kind === "worship" && name.length >= 30) name = "Place of Worship";
+  const o = []; for (const RG of WREG) { const M = RG.M, y0 = RG.y0, pre = RG.pre; const cnt = {}; M.buildings.forEach((q, k) => { const PAL = palOf(RG.id), pal = PAL[(q.x * 7 + q.y * 3 + k) % PAL.length], lm = /⛪|📚|🚓|🥭|🏛️|🖼️/.test(q.icon || ""), kind = (GBKIND.find((g) => g[0].test(q.name)) || [])[1] || ""; let name = q.name; if (GBNAMES[kind] && !q.open) { const n = cnt[kind] = (cnt[kind] || 0); name = GBNAMES[kind][n % GBNAMES[kind].length]; cnt[kind]++; } else if (kind === "worship" && name.length >= 30) name = "Place of Worship";
     const open = !!kind, b = { name: name + (open || lm ? "" : " · opening soon"), x: q.x, y: y0 + q.y, w: q.w, h: q.h, col: pal[0], roof: kind === "bar" || kind === "bazar" ? "thatch" : kind === "dholl" || kind === "bakery" || kind === "resto" ? "tile" : "flat", roofCol: pal[1], awn: pal[1], sign: pal[1], door: q.door || "S", soon: open ? 0 : 1, gb: 1, icon: q.icon, reg: RG.id }; if (kind === "bar" || kind === "bazar") b.roofCol = "#c9a45a"; if (open) { b.id = pre + k; b.gbKind = kind; }
     if (gbTile(b.x + (b.w >> 1), b.y + b.h) === 0 || ![3, 4, 9, 22].includes(gbTile(b.x + (b.w >> 1), b.y + b.h))) b.door = "N"; o.push(b); }); } return o; })();
 const PARTNERS_ON = false; // Belle's Kitchen, A* Cutz, DevCon and Clawed by Taps belong to other businesses (and to the old Flic en Flac game): off until they agree to be in Mauritius Life
@@ -1428,7 +1447,18 @@ const PARTNER_IDS = ["belle", "cutz", "devcon", "salon"];
 if (!PARTNERS_ON) for (const id of PARTNER_IDS) { const i = BUILD.findIndex((q) => q.id === id); if (i >= 0) BUILD.splice(i, 1); } // their buildings are not in the world
 const GBSHOPS = GBSOON.filter((b) => b.gbKind); for (const b of GBSHOPS) { GBSOON.splice(GBSOON.indexOf(b), 1); BUILD.push(b); } // the first Grand Baie shops you can walk into
 for (const r of WREG) r.stop = { x: r.M.stop.x, y: r.y0 + r.M.stop.y };
-const DECOH = []; for (const r of WREG) for (const [hx, hy, hw, hh] of r.M.houses || []) { const k = (hx * 7 + hy * 13) % GBPAL.length, pal = GBPAL[k]; DECOH.push({ x: hx, y: r.y0 + hy, w: hw, h: hh, col: pal[0], roofCol: GBPAL[(k + 2) % GBPAL.length][1], deco: 1, reg: r.id }); } // scenery houses that fill the blocks along the streets (from the real building density)
+const DECOH = []; for (const r of WREG) for (const [hx, hy, hw, hh] of r.M.houses || []) { const PAL = palOf(r.id), k = (hx * 7 + hy * 13) % PAL.length, pal = PAL[k]; DECOH.push({ x: hx, y: r.y0 + hy, w: hw, h: hh, col: pal[0], roofCol: PAL[(k + 2) % PAL.length][1], deco: 1, reg: r.id }); } // scenery houses that fill the blocks along the streets (from the real building density)
+const LAKAZ = []; for (const rg of ["grandbaie", "portlouis", "west"]) { // a few of each town's houses are lived in, and you can walk in
+  const R0 = regionDef(rg), cand = DECOH.filter((d) => d.reg === rg).map((d) => { const dx = d.x + (d.w >> 1), okS = [3, 4, 9, 22].includes(gbTile(dx, d.y + d.h)), okN = [3, 4, 9, 22].includes(gbTile(dx, d.y - 1)); return { d, door: okS ? "S" : "N", ok: okS || okN, dist: Math.hypot(d.x - R0.stop.x, d.y - R0.stop.y) }; }).filter((c) => c.ok && c.dist > 8 && c.dist < 48).sort((a, b) => hash(a.d.x, a.d.y) - hash(b.d.x, b.d.y)), got = [];
+  for (const c of cand) { if (got.length >= 5) break; if (got.some((g) => Math.hypot(g.d.x - c.d.x, g.d.y - c.d.y) < 10)) continue; got.push(c); }
+  if (got.length < 4) { const M = R0.M, taken = BUILD.concat(GBSOON), plots = (M.plots || []).map((q) => ({ x: q.x, y: R0.y0 + q.y })); // not enough scenery houses (Grand Baie keeps its space for players' plots): find a few empty spots beside a road
+    for (let y = R0.y0 + 6; y < R0.y0 + M.h - 8 && got.length < 4; y += 2) for (let x = 6; x < M.w - 10 && got.length < 4; x += 2) { let ok = true;
+      for (let yy = y; yy < y + 3 && ok; yy++) for (let xx = x; xx < x + 4; xx++) if (gbTile(xx, yy) !== 3) { ok = false; break; }
+      if (!ok || ![3, 4, 22, 9].includes(gbTile(x + 1, y + 3)) || ![3, 4, 22, 9].includes(gbTile(x + 2, y + 3)) || !([4, 22].includes(gbTile(x + 1, y + 4)) || [4, 22].includes(gbTile(x + 1, y + 5)))) continue;
+      if (taken.some((b) => x < b.x + b.w + 2 && x + 4 > b.x - 2 && y < b.y + b.h + 2 && y + 3 > b.y - 2) || plots.some((q) => Math.hypot(q.x - x, q.y - y) < 6) || got.some((g) => Math.hypot(g.d.x - x, g.d.y - y) < 9)) continue;
+      const dd = Math.hypot(x - R0.stop.x, y - R0.stop.y); if (dd < 8 || dd > 55) continue; const PAL = palOf(rg), pk = hash(x, y) % PAL.length; got.push({ d: { x, y, w: 4, h: 3, col: PAL[pk][0], roofCol: PAL[(pk + 2) % PAL.length][1] }, door: "S", ok: true }); } }
+  got.forEach((c, k) => { const d = c.d, di = DECOH.indexOf(d); if (di >= 0) DECOH.splice(di, 1); const b = { id: "home_" + R0.pre + k, name: "Lakaz", x: d.x, y: d.y, w: d.w, h: d.h, col: d.col, roof: "tile", roofCol: d.roofCol, awn: d.roofCol, sign: d.roofCol, door: c.door, soon: 0, gb: 1, icon: "🏠", reg: rg, gbKind: "lakaz", home: 1 }; BUILD.push(b); LAKAZ.push(b); });
+} // the houses people live in: Dev, Marie-Rose and the others, each with a home you can visit
 const GB_STOP = regionDef("grandbaie").stop; // the bus stations: each region has one, Grand Baie beside the bazaar, Port Louis by the Caudan waterfront; // // the bus stations: Grand Baie beside the bazaar, Port Louis by the Caudan waterfront
 BUILD.splice(0, BUILD.length, ...BUILD.filter((q) => q.gb)); // the old Flic en Flac, Tamarin, Bambous and Trianon buildings are not in Mauritius Life
 const SOONB = GBSOON; // every building you can see but not enter
@@ -1832,7 +1862,7 @@ const VAT = 0.15; // Mauritius VAT: the price shown includes it, and it goes to 
 const vatify = (a) => { if (a && a.cost > 0 && !/^Work|shift/i.test(a.label)) { const net = a.cost; a.cost = Math.round(net * (1 + VAT)); a.vat = a.cost - net; a.info = String(a.info || "").replace(/Rs [\d,]+/, "Rs " + a.cost.toLocaleString("en") + " incl. VAT"); } return a; };
 for (const k in GBACTS) { const f = GBACTS[k]; GBACTS[k] = () => f().map(vatify); }
 for (const b of GBSHOPS) PLACE[b.id] = GBACTS[b.gbKind]; // every open place in Grand Baie offers its kind's actions
-for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" ? b.y + b.h + 0.5 : b.y - 0.5, icon: "", name: b.name, enter: b.id }); // add a door object for every building
+for (const b of BUILD) OBJ.push({ id: b.id, x: b.x + b.w / 2, y: b.door === "S" ? b.y + b.h + 0.5 : b.y - 0.5, icon: "", get name() { return b.name; }, enter: b.id }); // add a door object for every building
 
 OBJ.push({ x: 60.5, y: 14.5, icon: "🚏", stop: true, name: "Cascavelle bus stop", acts: busActs }); // bus stop for the mall and the university
 // (Flic Motors is now a real building with a car lot: see BUILD "motors" and motorsActs)
@@ -1900,6 +1930,7 @@ const ROOMDEF = { // each building's room: two floor colours and its stations [i
 }; // end ROOMDEF
 const GBFLOOR = { dholl: ["#ead9b0", "#e0cc9a"], bar: ["#5b3a2a", "#523324"], bazar: ["#d9c7a0", "#cdb98c"], mall: ["#e6e8ea", "#d6dade"], mini: ["#e6e8ea", "#d6dade"], bakery: ["#f3e3c5", "#e8d3ac"], pharma: ["#eaf4f2", "#dcece9"], fish: ["#cfe3ec", "#bcd5e0"], resto: ["#efe2cf", "#e6d6bd"], barber: ["#16171a", "#d9d5ca"], library: ["#d9c7b0", "#cfbba2"], fuel: ["#c9ccd0", "#b9bdc2"], clothes: ["#f1e6f2", "#e4d4e6"], worship: ["#efe6d2", "#e3d7bb"], cafe: ["#d9c7b0", "#cfbba2"], cinema: ["#2a2e35", "#1f2228"], museum: ["#efe9e0", "#e0d8ca"], hotel: ["#f4efe6", "#e8dfcc"] };
 for (const b of GBSHOPS) ROOMDEF[b.id] = { floor: GBFLOOR[b.gbKind], st: [["🛎️", "Counter", "counter", 3.5, 2.4, /./], ["", "", "table", 3, 5.2, null], ["", "", "table", 8.5, 5.2, null]] }; // one counter with everything the place offers, and tables
+for (const h of LAKAZ) { PLACE[h.id] = () => homeActs(h); ROOMDEF[h.id] = { floor: ["#efe2c8", "#e3d3b4"], st: [["🛋️", "Living room", "table", 6, 4.4, /./]] }; } // the visited homes: one room, and the person who lives there
 function stationActs(id, k) { // the actions one station offers
   const all = PLACE[id](), def = ROOMDEF[id].st, mine = all.filter((a) => def[k][5].test(a.label)); // everything here, then this station's share
   if (k === 0) for (const a of all) if (!def.some((q) => q[5] && q[5].test(a.label))) mine.push(a); // unclaimed actions go to the first station
@@ -3748,6 +3779,8 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
   ]],
   ["🗺️", "Places and travel", [
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
+    ["Who lives in the towns?", "Every town has its own people with their own personalities: taxi drivers, street vendors, retired locals, visitors and a few local characters who are always short of cash. Tap one to say hello, hear a joke, ask for a local tip or buy a snack. Some of them live in houses you can walk into: look for \"…'s lakaz\" and visit after dark, when they are home. Make friends and they share their secrets.", ""],
+    ["How do I know which town I'm in?", "A card slides in when you cross into a new town, the clock card shows the town's icon and colour, and each town looks different: Grand Baie is bright and sandy, Port Louis is grey and busy with buses, and Flic en Flac is warm and golden with pickups and surfers.", ""],
     ["Can I walk between towns?", "Yes. Follow the highway out of any town (a green \"Road to…\" sign marks where it starts) and keep going. Grand Baie to Port Louis is about 19 km of real road, drawn at a scale you can cross in a few minutes on foot, faster on a scooter. You pass the real villages on the way. You cannot skip the road: the server checks your speed.", "maps"],
     ["How do I travel between towns?", "Open Maps → Island and tap a town, or walk to a bus station or a road sign (where the real road leaves town) and choose Travel. You can go by bus (cheapest, with a short wait, from a station or sign), taxi (it comes to you, quicker, dearer) or your own car (fuel only). The trip follows the real road, costs money and takes time. The server times it, so there are no shortcuts.", "maps"],
     ["How do I get a car?", "Rent one by the day or buy one at any bus station: tap it and choose Rent or buy a car. With a car you pay only for fuel on trips between towns.", "maps"],
@@ -4008,7 +4041,15 @@ function salonMenu(kind) { // the salon's price list
 // ---------- travel between towns: the real roads, a bus, a taxi or your own car. The server plans the trip and times it; the phone plays it ----------
 // ---------- where a town's highway exit meets the start of its highway: walk or ride on and you carry on along the road ----------
 let lastRgId = ""; // the region you were last standing in
-function portalStep() { if (s.inside || ride) return; const id = regionOfY(s.y); if (id === lastRgId) return; const prev = lastRgId; lastRgId = id; if (!prev || id === "old") return; const rr = regionDef(id); if (!rr) return; toast(rr.kind === "road" ? "🛣️ The road between " + RG_NAME[rr.M.a] + " and " + RG_NAME[rr.M.b] + " · " + rr.M.km + " km" : "🏙️ Welcome to " + rr.name + "."); } // the towns and highways are one continuous map: you just walk from one to the next. This only says where you are now
+const placeIcon = () => (CITY[lastRgId] || CITY_ROAD).icon;
+function cityArrive(id, first) { // say where you are: a coloured card as you cross into a town, and the colour of the clock card
+  const C = CITY[id] || CITY_ROAD, rr = regionDef(id), road = rr && rr.kind === "road"; const clk = document.querySelector(".hud.clock"); if (clk) clk.style.borderLeft = "4px solid " + C.col;
+  if (first) return; let el = document.getElementById("cityCard"); if (!el) { el = document.createElement("div"); el.id = "cityCard"; document.body.append(el); }
+  const nm = road ? "The road to " + (RG_NAME[rr.M.b] || "") : C.name, sub = road ? RG_NAME[rr.M.a] + " ⇄ " + RG_NAME[rr.M.b] + " · " + rr.M.km + " km" : C.tag;
+  el.innerHTML = ""; el.style.setProperty("--cc", C.col); const i = document.createElement("div"); i.className = "cci"; i.textContent = C.icon; const t = document.createElement("div"); const h = document.createElement("b"); h.textContent = road ? "On the road" : "Welcome to"; const n2 = document.createElement("h2"); n2.textContent = nm; const sb = document.createElement("small"); sb.textContent = sub; t.append(h, n2, sb); el.append(i, t);
+  el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 3600);
+}
+function portalStep() { if (s.inside) return; const id = regionOfY(s.y); if (id === lastRgId || id === "old") return; const prev = lastRgId; lastRgId = id; if (!regionDef(id)) return; cityArrive(id, !prev); } // the towns and highways are one continuous map: you just walk from one to the next. This only says where you are now
 const RG_NAME = { grandbaie: "Grand Baie", portlouis: "Port Louis", west: "Flic en Flac", north: "Pamplemousses and the north", east: "Flacq and Belle Mare", southeast: "Mahébourg and Grand Port", south: "Le Morne and the south", plateau: "Curepipe and the plateau" }, RG_ENTRY = {}; for (const r of WREG) RG_ENTRY[r.id] = r.stop;
 const roadApi = () => { const a = window.claude && window.claude.road; return a && a.plan ? a : null; };
 const nearTravelPoint = () => { const here = regionOfY(s.inside ? s.oy : s.y); return !s.inside && OBJ.some((o) => o.travelPoint && regionOfY(o.y) === here && Math.hypot(o.x - s.x, o.y - s.y) < 7); }; // a bus station or a road sign
@@ -4885,6 +4926,8 @@ const NPC_G = ["m", "f", "m", "m", "f", "m", "f", "m"]; // gender of each neighb
 const NPC_ROLE = ["resident", "resident", "resident", "tourist", "student", "tourist", "resident", "resident"]; // what each neighbour is
 NPC.forEach((n, i) => { n.face = 0; n.look = { g: NPC_G[i], skin: SKINS[[3, 2, 2, 1, 3, 0, 3, 4][i]], hair: ["#17100c", "#3a2414", "#17100c", "#101010", "#17100c", "#b58a4a", "#17100c", "#2a1a10"][i], shirt: n.col, pants: i % 2 ? "#2d3e50" : "#4a3b2a", role: NPC_ROLE[i] }; }); // give each neighbour a look
 function npcStep(n, dt) { // move one neighbour
+  if (n.res) { residentStep(n, dt); return; } // the residents of the towns follow their own daily routine
+  if (!n.tam) return; // the first game's neighbours stay out of Mauritius Life
   if (n.tam) { tamFolkStep(n, dt); return; } // the people of Tamarin follow their own routines
   if (n.path.length === 0) { // no route right now
     n.wait -= dt; // stand still for a bit
@@ -4906,6 +4949,178 @@ function chatActs(n) { // menu for talking to a neighbour
   return [A("Chat with " + n.name, "20 min · +25 people" + (c >= 3 ? " · friend" : " · " + c + "/3 to friend"), 20, 0, { social: 25, fun: 6 }, { why: s.t - n.last < 120 ? "You just talked" : "", run() { n.last = s.t; s.friends[n.name] = c + 1; s.cha += c === 2 ? 1 : 0; return n.name + ": \"" + LINES[rnd(0, LINES.length - 1)] + "\"" + (c === 2 ? " You are friends now." : ""); } })]; // one chat action
 } // end chatActs
 const chatActs0 = chatActs; chatActs = (n) => chatActs0(n).concat([A("Pickpocket " + n.name, "Risky · Rs 100 to 800 · you may be arrested", 5, 0, {}, { why: s.jail > s.t ? "You are in a cell" : "", run() { if (Math.random() < caughtChance()) return goJail(360, n.name + " shouted for help and the police grabbed you!"); const a = rnd(100, 800); s.money += a; txn("Pickpocketed " + n.name, a); s.friends[n.name] = 0; s.stole = (s.stole || 0) + 1; return "You lifted " + rs(a) + " from " + n.name + ". Nobody saw... this time."; } })]); // stealing from neighbours
+
+// ================= residents: the people who live in each town =================
+// Every town has its own people, speech, cars and colours, so you can tell where you are before you read a sign. They have homes you can visit,
+// a daily routine (asleep at night, out in the day), and a personality. Nothing here pays you: friendship and fun, never money from nowhere.
+const RTYPE = { driver: { title: "Taxi driver", icon: "🚕" }, vendor: { title: "Street vendor", icon: "🥭" }, uncle: { title: "Retired local", icon: "🪑" }, visitor: { title: "Visitor", icon: "🧳" }, regular: { title: "Local character", icon: "🍺" } };
+const pickOf = (a, seed) => a[Math.abs(seed === undefined ? rnd(0, a.length - 1) : seed) % a.length]; // one of a list (a fixed one for a seed)
+const LN = { // what people say, by town then by kind of person: hi, joke, tip, bub (short, shown over their head), and the thing they sell or tell
+  grandbaie: {
+    driver: { hi: ["Salut! Taxi? For you, special price. Tourist price.", "Dev's Taxi: we arrive when we arrive!"], joke: ["I told a tourist 'two minutes'. That was Tuesday.", "My GPS says turn left. My cousin lives left. We go and say hello."], tip: ["The bus from the bazaar to Port Louis is the cheapest way: Rs 25 plus Rs 5 a kilometre.", "Take a taxi at night. The bus likes to nap."], bub: ["Taxi? Taxi?", "Meter is broken!", "Beep beep!"] },
+    vendor: { hi: ["Ananas! Pineapple with chilli and salt. You will cry happy tears.", "Coconut water, cold as a cyclone warning!"], joke: ["Tourists ask if the pineapple is local. It has a Mauritian passport!", "Same price for everyone. Different price for people who bargain badly."], tip: ["Fruit is cheaper before ten, before the tourists wake up.", "The best pineapple is the one the seller will not let you touch."], bub: ["Ananas! Ananas!", "Cold coconut!", "With chilli, madame?"], snack: ["Pineapple with chilli", 40, 22], story: "" },
+    uncle: { hi: ["Sit, sit. The sea is not going anywhere.", "Ah, a young one. Do you fish? No? Nobody fishes anymore."], joke: ["I caught a fish so big my wife asked for a photo. Of the fish.", "I was thin once. Then I discovered dholl puri."], tip: ["The lagoon is calm before ten. After that come the boats, and the prices.", "Never trust a man who says the fish was 'this big' and has small hands."], bub: ["Ki manyer?", "Hot today...", "Sit with me."], story: "In '82 a cyclone took my boat and left me a coconut tree. Fair trade, I said. My wife did not say that." },
+    visitor: { hi: ["Excuse me! Where is the... beach? All of this is beach?", "Hello! Is it always this sunny? I forgot my umbrella and my plan."], joke: ["Your sun is very... enthusiastic.", "I put on factor 50. The sun put on factor 51."], tip: ["I read the island is only about 2,000 square kilometres. I have walked half of it, I think.", "The sega at the beach bars is free to watch and impossible not to join."], bub: ["Where is the beach?", "So sunny!", "Selfie time!"] },
+    regular: { hi: ["Hic! Friend! Rs 20? I pay you back in friendship.", "Psst. I am a little short today. Of money, not of charm."], joke: ["I do not drink. I only help the beer find its home.", "My doctor says walk more. I do. Between the bars."], tip: ["For a friend: Sega Bar has the best nights. The barman is my cousin, my cousin's cousin.", "The cheapest drink is the one someone else buys."], bub: ["Hic!", "Rs 20, friend?", "One more...", "La vie, la vie!"] }
+  },
+  portlouis: {
+    driver: { hi: ["Port Louis traffic is a lifestyle. Hold on.", "Taxi! I know every shortcut, and every one is closed."], joke: ["I do not get stuck in traffic. I AM traffic.", "My car has a horn that only says one word. You know the word."], tip: ["Avoid the waterfront at five. Everyone has the same good idea.", "A taxi to Grand Baie costs more than a bus, but you can complain to me, not a window."], bub: ["Beep! Beeeep!", "Traffic again!", "Taxi, madame?"] },
+    vendor: { hi: ["Dholl puri! Hot, soft, and cheaper than your problems!", "Come, come! The market is open, the prices are friendly!"], joke: ["My dholl puri has two kinds of customers: happy, and coming back.", "Fresh? It was still arguing this morning."], tip: ["The Central Market is busiest on Saturday. Bring an empty stomach and a full pocket.", "Ask for extra chutney. Smile first."], bub: ["Dholl puri, hot!", "Fresh, fresh!", "Come, come!"], snack: ["Dholl puri", 35, 26], story: "" },
+    uncle: { hi: ["Champ de Mars, Saturday. Horse number seven. Do not tell my wife.", "Sit. I will explain how the whole country works. It will take five minutes and your afternoon."], joke: ["I only bet on horses with honest eyes.", "I won once. I told the story for forty years. Best investment I ever made."], tip: ["The casino is fun, but the house always has a better chair than you.", "Port Louis never sleeps; it only closes the shops."], bub: ["Number seven!", "Ki nouvel?", "Horses, my friend."], story: "My father sold tickets at the old theatre. He said every show is the same: people come in sad, leave louder." },
+    visitor: { hi: ["Sorry, sorry, late for a meeting that is also late!", "Quick question: where is a good coffee and a shortcut? Same place?"], joke: ["I have seven alarms. I am still late.", "My phone says 5% battery and my boss says 100% urgent."], tip: ["The waterfront walk saves five minutes. The coffee there costs ten.", "Do not park near the market. The market will park near you."], bub: ["Late, late!", "Excuse me!", "Meeting! Meeting!"] },
+    regular: { hi: ["I used to work in a bank. Now the bank works on me. Rs 50?", "Psst. A little short today. The city is expensive, even the benches."], joke: ["I am not lost. I am exploring the long way home.", "The bar has no windows. That way the day cannot find me."], tip: ["The little bars behind the market are cheaper. The stories are free.", "For a friend: Wednesdays, Rs 60 a round at the waterfront bars. You did not hear it from me."], bub: ["Hic... capital!", "Rs 50, friend?", "Cheers!"] }
+  },
+  west: {
+    driver: { hi: ["Jump in the back! Kidding. Maybe.", "Pickup service! Surfboards, groceries, cousins. All welcome."], joke: ["My truck has air conditioning. It is called windows.", "I do not have a GPS. I have a mother, she knows everything."], tip: ["Sunset at the beach car park. Come early, everyone does.", "If the road floods, wait. The sea always gives up first."], bub: ["Hop in!", "Pickup, pickup!", "Sunset soon!"] },
+    vendor: { hi: ["Pwason fresh! Caught this morning. He was rude.", "Grilled fish, hot from the fire, cheaper than regret!"], joke: ["The big one got away. It was my lunch.", "Same fish as yesterday. It is just more confident today."], tip: ["The lagoon is shallow here. Walk, do not swim, if you are a rock.", "Buy the fish with the clear eye. And a lime."], bub: ["Pwason fresh!", "Hot fish!", "Lime, madame?"], snack: ["Grilled fish", 70, 34], story: "" },
+    uncle: { hi: ["Come, drink tea. You are too thin and too fast.", "Slow down. The waves do not need you, but I do, for a story."], joke: ["In my day the waves were bigger and the boys were smaller.", "I learned to surf in 1975. On a door. The door was not impressed."], tip: ["Never leave your shoes on the sand when the tide is coming. Ask me how I know.", "The casuarina shade is free. Sit there, think about nothing."], bub: ["Slow down...", "Tea, tea.", "Beautiful day."], story: "Before the hotels, there was only the sea, the casuarinas and a bus that came when it felt like it. We were happy. We were also late." },
+    visitor: { hi: ["Dude! Is the wave good? Do you even know?", "Hey! I came for one week. That was three years ago."], joke: ["I came for one week. I sold my return ticket for a board.", "The ocean is my office. The commute is a paddle."], tip: ["The break near the point is best at dawn. Bring wax and a brave face.", "Sunset session, then grilled fish. That is the whole schedule."], bub: ["Wave check!", "Surf's up!", "So good..."] },
+    regular: { hi: ["Sega, sega! Rs 50 and I sing for you all night.", "Psst. I am a bit short. Of money, not of songs."], joke: ["I have a guitar. My landlord has opinions.", "I am not drunk. The beach is tilted."], tip: ["The best sunset spot is behind the casuarinas. Do not tell the tourists.", "For a friend: the fishermen's bar, after dark. Songs for free."], bub: ["La la sega...", "Rs 50, friend?", "Hic! Sunset!"] }
+  }
+};
+const RDEF = [ // the people who live here: name, kind, town, what they are like, how they look, whether they have a home you can visit
+  { id: "dev", name: "Dev", type: "driver", city: "grandbaie", traits: ["funny", "helpful"], home: 1, catch: "Meter is broken, price is friendly!", car: { len: 1.5, col: "#f4f4f4", taxi: true }, look: { g: "m", skin: 2, hair: "#17100c", shirt: "#18b6c9", pants: "#f1e6c8", shades: true } },
+  { id: "marierose", name: "Marie-Rose", type: "vendor", city: "grandbaie", traits: ["funny", "chatty"], home: 1, catch: "Ananas, with chilli and love!", look: { g: "f", skin: 3, hair: "#17100c", shirt: "#f7c948", pants: "#2f6fd0" }, spot: "bazar" },
+  { id: "raj", name: "Oncle Raj", type: "uncle", city: "grandbaie", traits: ["wise", "slow talker"], home: 1, catch: "Sit, sit. The sea is not going anywhere.", look: { g: "m", skin: 3, hair: "#d8d8d8", shirt: "#ffffff", pants: "#6b7d90" } },
+  { id: "hans", name: "Hans", type: "visitor", city: "grandbaie", traits: ["funny", "lost"], catch: "Where is the beach?", look: { g: "m", skin: 0, hair: "#d8b45a", shirt: "#ff7a59", pants: "#ffffff", shades: true, role: "tourist" } },
+  { id: "sunil", name: "Sunil", type: "regular", city: "grandbaie", traits: ["funny", "broke"], home: 1, catch: "I only help the beer find its home.", look: { g: "m", skin: 3, hair: "#101010", shirt: "#e94f8a", pants: "#2f6fd0" } },
+  { id: "ismael", name: "Ismaël", type: "driver", city: "portlouis", traits: ["grumpy", "helpful"], home: 1, catch: "I do not get stuck in traffic. I AM traffic.", car: { len: 1.55, col: "#5d6670", taxi: true }, look: { g: "m", skin: 2, hair: "#17100c", shirt: "#c8d0d8", pants: "#26303c" } },
+  { id: "fatima", name: "Fatima", type: "vendor", city: "portlouis", traits: ["chatty", "kind"], home: 1, catch: "Cheaper than your problems!", look: { g: "f", skin: 2, hair: "#101010", shirt: "#9fb3c8", pants: "#26303c" }, spot: "bazar" },
+  { id: "cassam", name: "Cassam", type: "uncle", city: "portlouis", traits: ["funny", "gambler"], home: 1, catch: "Horse number seven.", look: { g: "m", skin: 2, hair: "#bdbdbd", shirt: "#e8ecef", pants: "#3a4a5e" } },
+  { id: "yan", name: "Yan", type: "visitor", city: "portlouis", traits: ["rushed", "funny"], catch: "Late for a meeting that is also late!", look: { g: "m", skin: 1, hair: "#101010", shirt: "#e8ecef", pants: "#26303c", top: "business", legs: "business" } },
+  { id: "amira", name: "Amira", type: "visitor", city: "portlouis", traits: ["curious", "helpful"], catch: "Three hours before my ship leaves!", look: { g: "f", skin: 3, hair: "#3a2414", shirt: "#e4572e", pants: "#f2e1a6", role: "tourist" } },
+  { id: "patrick", name: "Patrick", type: "regular", city: "portlouis", traits: ["sad-funny", "broke"], home: 1, catch: "The bank works on me now.", look: { g: "m", skin: 3, hair: "#3a2414", shirt: "#3a4a5e", pants: "#26303c" } },
+  { id: "kishan", name: "Kishan", type: "driver", city: "west", traits: ["relaxed", "funny"], home: 1, catch: "My truck has air conditioning. Windows.", car: { len: 1.7, col: "#c0392b", tall: true }, look: { g: "m", skin: 2, hair: "#17100c", shirt: "#5a7ad8", pants: "#1d6f9a" } },
+  { id: "tijean", name: "Ti-Jean", type: "vendor", city: "west", traits: ["funny", "honest"], home: 1, catch: "Pwason fresh! He was rude.", look: { g: "m", skin: 4, hair: "#101010", shirt: "#2aa4a0", pants: "#d6573a" }, spot: "fish" },
+  { id: "lucie", name: "Tante Lucie", type: "uncle", city: "west", traits: ["wise", "bossy"], home: 1, catch: "You are too thin and too fast.", look: { g: "f", skin: 3, hair: "#cfcfcf", shirt: "#d94f6a", pants: "#6b7d90" } },
+  { id: "zoe", name: "Zoé", type: "visitor", city: "west", traits: ["relaxed", "helpful"], catch: "Came for a week. Three years ago.", look: { g: "f", skin: 1, hair: "#b58a4a", shirt: "#2aa4a0", pants: "#1d6f9a", role: "tourist" } },
+  { id: "rajen", name: "Rajen", type: "regular", city: "west", traits: ["musical", "broke"], home: 1, catch: "Rs 50 and I sing all night.", look: { g: "m", skin: 3, hair: "#101010", shirt: "#f0a030", pants: "#2a2a2a" } }
+];
+const RXTRA = { grandbaie: ["Nadia", "Kélian", "Patricia", "Jerome", "Lucas", "Anaïs"], portlouis: ["Sophie", "Anil", "Brigitte", "Hassan", "Meera", "Didier"], west: ["Tom", "Maya", "Jonathan", "Sandrine", "Alex", "Noémie"] }; // passers-by who have no home here (they wander and go home off the map)
+const RXTYPES = ["visitor", "uncle", "regular", "visitor"];
+const RES = []; // everyone who lives here
+const RLOOK_ = { grandbaie: { sh: ["#ff7a59", "#18b6c9", "#f7c948", "#e94f8a", "#7ed957"], pa: ["#f1e6c8", "#ffffff", "#2f6fd0"] }, portlouis: { sh: ["#e8ecef", "#9fb3c8", "#3a4a5e", "#c8d0d8"], pa: ["#26303c", "#3a4a5e"] }, west: { sh: ["#2aa4a0", "#f0a030", "#d94f6a", "#5a7ad8"], pa: ["#1d6f9a", "#d6573a", "#2a2a2a"] } };
+for (const d of RDEF) RES.push(Object.assign({}, d, { look: Object.assign({ role: "resident" }, d.look, { skin: SKINS[d.look.skin] }) }));
+for (const c of Object.keys(RXTRA)) RXTRA[c].forEach((name, i) => { const L = RLOOK_[c], g = i % 2 ? "f" : "m", type = RXTYPES[i % RXTYPES.length]; RES.push({ id: "x" + c + i, name, type, city: c, traits: [["chatty", "funny"], ["relaxed", "kind"], ["rushed", "helpful"]][i % 3], extra: 1, catch: "", look: { g, skin: SKINS[(i * 2 + c.length) % 5], hair: ["#17100c", "#3a2414", "#101010", "#b58a4a"][(i + c.length) % 4], shirt: pickOf(L.sh, i * 3 + c.length), pants: pickOf(L.pa, i + 1), role: type === "visitor" ? "tourist" : "resident" } }); });
+const resKey = (n) => "npc:" + n.name;
+const resRel = (n) => relOf(resKey(n)); // friendship and romance with this person
+const resBump = (n, f) => { const r = resRel(n); r.f = Math.max(-100, Math.min(100, r.f + f)); s.friends[n.name] = Math.max(s.friends[n.name] || 0, r.f >= 40 ? 3 : Math.floor(r.f / 14)); };
+const cityDoors = (city, kinds) => OBJ.filter((o) => o.enter && o.id && (() => { const b = BUILD.find((q) => q.id === o.id); return b && b.reg === city && b.gbKind && kinds.includes(b.gbKind); })()); // the doors of one kind of place in a town
+// ---- finding a short way: a flood fill inside a box round both points (the whole-map one is too slow for many walkers)
+function locPath(fx, fy, tx, ty) {
+  const x0 = Math.max(0, Math.floor(Math.min(fx, tx)) - 16), x1 = Math.min(W - 1, Math.floor(Math.max(fx, tx)) + 16), y0 = Math.max(HO, Math.floor(Math.min(fy, ty)) - 16), y1 = Math.min(H - 1, Math.floor(Math.max(fy, ty)) + 16), bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+  const sx = Math.floor(fx), sy = Math.floor(fy), prev = new Int32Array(bw * bh).fill(-1), st = (sy - y0) * bw + (sx - x0); if (sx < x0 || sx > x1 || sy < y0 || sy > y1) return [];
+  prev[st] = st; const q = [st]; let best = st, bd = 1e9;
+  for (let i = 0; i < q.length; i++) { const c = q[i], cx = c % bw + x0, cy = Math.floor(c / bw) + y0, d = Math.hypot(cx + 0.5 - tx, cy + 0.5 - ty); if (d < bd) { bd = d; best = c; if (d < 0.9) break; }
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (nx < x0 || nx > x1 || ny < y0 || ny > y1) continue; const n = (ny - y0) * bw + (nx - x0); if (prev[n] !== -1 || isSolid(nx, ny) || terr[ny * W + nx] === 1 || terr[ny * W + nx] === 0) continue; prev[n] = c; q.push(n); } }
+  const out = []; for (let c = best; c !== st; c = prev[c]) out.unshift({ x: (c % bw) + x0 + 0.5, y: Math.floor(c / bw) + y0 + 0.5 }); return out;
+}
+const rTown = (id) => { const r = regionDef(id); return r; };
+// ---- set everyone up: a home, a place to be, a pitch
+for (const n of RES) {
+  const r = rTown(n.city); n.res = 1; n.hide = false; n.path = []; n.face = 0; n.wait = rnd(0, 6); n.last = -999; n.say = ""; n.sayUntil = 0; n.nextSay = rnd(4, 14); n.tick = rnd(0, 3); n.mode = "walk"; n.atHome = false; n.col = n.look.shirt; n.lines = LN[n.city][n.type]; n.title = RTYPE[n.type].title; n.tam = 0;
+  n.speed = { driver: 0, vendor: 0.9, uncle: 0.8, visitor: 1.9, regular: 1.3 }[n.type]; n.spawn = r.stop;
+  n.x = r.stop.x + rnd(-3, 3) + 0.5; n.y = r.stop.y + rnd(1, 3) + 0.5; n.sway = n.type === "regular" ? 1 : 0;
+  n.hash = hash(n.name.length * 31 + n.city.length, n.name.charCodeAt(0));
+}
+
+{ const used = {}; for (const n of RES) if (n.home) { const hs = LAKAZ.filter((h) => h.reg === n.city), h = hs[(used[n.city] = used[n.city] || 0)]; used[n.city]++; if (h) { n.homeB = h; h.res = n; h.name = n.name + "'s lakaz"; n.x = h.x + h.w / 2 + 0.5; n.y = h.door === "S" ? h.y + h.h + 0.8 : h.y - 0.8; } } } // each resident with a home gets one of the town's enterable houses
+NPC.push(...RES);
+const resDoor = (n) => { const h = n.homeB; return h ? { x: h.x + h.w / 2, y: h.door === "S" ? h.y + h.h + 0.7 : h.y - 0.7 } : null; };
+const resSpots = {}; // the places each kind of person likes to be
+function spotsOf(n) {
+  const key = n.city + n.type + (n.spot || ""); if (resSpots[key]) return resSpots[key];
+  const r = rTown(n.city), roadsT = [], park = []; for (let y = r.y0 + 2; y < r.y0 + r.M.h - 2; y += 1) for (let x = 3; x < r.M.w - 3; x += 1) { const t = terr[y * W + x]; if (t === 22 && hash(x, y) % 17 === 0) roadsT.push({ x: x + 0.5, y: y + 0.5 }); else if (t === 9 && hash(x, y) % 9 === 0) park.push({ x: x + 0.5, y: y + 0.5 }); }
+  const door = (kinds) => cityDoors(n.city, kinds).map((o) => ({ x: o.x, y: o.y + (o.y > 0 ? 0.9 : 0) })), benches = (r.M.props || []).filter((q) => q.k === "bench").map((q) => ({ x: q.x + 0.5, y: r.y0 + q.y + 1.2 }));
+  let list; if (n.type === "vendor") list = door([n.spot, "bazar", "dholl", "fish"].filter(Boolean)).slice(0, 2); else if (n.type === "regular") list = door(["bar"]).concat(door(["dholl"])); else if (n.type === "uncle") list = benches.concat(park, door(["cafe", "worship", "library"])); else list = door(["museum", "hotel", "cafe", "bazar", "bar", "mall", "cinema", "worship"]).concat(roadsT.slice(0, 20));
+  if (!list || !list.length) list = roadsT.length ? roadsT : [{ x: r.stop.x + 0.5, y: r.stop.y + 1.5 }]; return (resSpots[key] = list);
+}
+function resWant(n, h) { // where should this person be now? "home", or "out"
+  if (n.type === "driver") return h >= 6 && h < 22 ? "out" : "home";
+  if (n.type === "regular") return h >= 10.5 || h < 1 ? "out" : "home";
+  if (n.type === "vendor") return h >= 7 && h < 19 ? "out" : "home";
+  if (n.type === "uncle") return h >= 6.5 && h < 21 ? "out" : "home";
+  return h >= 8 && h < 22 ? "out" : "home"; // visitors and passers-by go back to their hotel (off the map) at night
+}
+function resAnchor(n) { return n.homeB ? resDoor(n) : { x: n.spawn.x + 0.5, y: n.spawn.y + 1.5 }; }
+for (const n of RES) if (n.type !== "driver" && (!n.homeB || n.type === "vendor")) { const sp = pickOf(spotsOf(n)); n.x = sp.x + (Math.random() - 0.5); n.y = sp.y + 0.3; n.wait = rnd(0, 12); } // start the day in different places, not all at the bus station
+function residentStep(n, dt) {
+  const px = s.inside ? s.ox : s.x, py = s.inside ? s.oy : s.y, dist = Math.hypot(n.x - px, n.y - py), near = dist < 70, inside = !!s.inside;
+  if (n.type === "driver") { driverStep(n, dt, dist); return; }
+  n.tick -= dt; if (n.tick <= 0) { n.tick = 3; const want = resWant(n, hour()); // check the clock every few seconds
+    if (want === "home" && !n.atHome && n.mode !== "going") { const d = resDoor(n) || resAnchor(n); if (!near || inside) { n.atHome = true; n.hide = true; n.x = d.x; n.y = d.y; n.path = []; n.mode = "walk"; } else { n.mode = "going"; n.path = locPath(n.x, n.y, d.x, d.y); } }
+    if (want === "out" && n.atHome) { const d = resAnchor(n); n.atHome = false; n.hide = false; n.mode = "walk"; n.x = d.x; n.y = d.y; n.path = []; n.wait = rnd(1, 5); if (!n.homeB) { const sp = pickOf(spotsOf(n)); n.x = sp.x; n.y = sp.y + 0.5; } } }
+  if (inside) return; // while you are indoors only the clock moves them
+  if (n.atHome || !near) { if (!n.atHome && !near && n.mode === "going") { const d = resDoor(n) || resAnchor(n); n.atHome = true; n.hide = true; n.x = d.x; n.y = d.y; n.path = []; } return; } // a long way off: nobody bothers moving them
+  n.nextSay -= dt; if (n.nextSay <= 0 && dist < 7) { n.nextSay = rnd(10, 24); n.say = pickOf(n.lines.bub); if (n.catch && Math.random() < 0.3) n.say = n.catch; n.sayUntil = performance.now() + 3600; } else if (n.nextSay <= 0) n.nextSay = rnd(8, 16);
+  if (n.path.length === 0) { n.wait -= dt; if (n.wait > 0) return;
+    if (n.mode === "going") { const d = resDoor(n) || resAnchor(n); if (Math.hypot(n.x - d.x, n.y - d.y) < 1.2) { n.atHome = true; n.hide = true; n.path = []; n.mode = "walk"; return; } n.path = locPath(n.x, n.y, d.x, d.y); n.wait = 1; return; }
+    const sp = pickOf(spotsOf(n)), tx = sp.x + (Math.random() - 0.5) * 2, ty = sp.y + Math.random() * 1.2; n.path = locPath(n.x, n.y, tx, ty); n.wait = n.type === "vendor" ? rnd(25, 60) : n.type === "uncle" ? rnd(14, 40) : n.type === "regular" ? rnd(8, 26) : rnd(4, 12); return; }
+  const p = n.path[0], d = Math.hypot(p.x - n.x, p.y - n.y); if (d < 0.12) { n.path.shift(); return; }
+  if (n.sway) { n.x += Math.sin(performance.now() / 260) * 0.45 * dt; n.y += Math.cos(performance.now() / 310) * 0.3 * dt; } // staggers a little
+  n.face = Math.abs(p.x - n.x) > Math.abs(p.y - n.y) ? (p.x < n.x ? 2 : 3) : (p.y < n.y ? 1 : 0); const sp = n.speed * (n.sway ? 0.8 : 1) * dt; n.x += (p.x - n.x) / d * Math.min(sp, d); n.y += (p.y - n.y) / d * Math.min(sp, d);
+}
+// ---- the drivers and the traffic
+const TRAF = [];
+function roadRuns(city) { // long straight stretches of road in a town, for cars to drive up and down
+  const r = rTown(city), runs = []; for (let y = r.y0 + 6; y < r.y0 + r.M.h - 6; y++) { let x = 3; while (x < r.M.w - 3) { if (terr[y * W + x] === 4) { let e = x; while (e < r.M.w - 3 && terr[y * W + e] === 4) e++; if (e - x >= 16 && terr[(y - 1) * W + x + 3] === 4 && terr[(y + 1) * W + x + 3] === 4) runs.push({ len: e - x, pts: [{ x: x + 1.5, y: y + 0.5 }, { x: e - 1.5, y: y + 0.5 }] }); x = e; } else x++; } }
+  for (let x = 3; x < r.M.w - 3; x++) { let y = r.y0 + 4; while (y < r.y0 + r.M.h - 4) { if (terr[y * W + x] === 4) { let e = y; while (e < r.y0 + r.M.h - 4 && terr[e * W + x] === 4) e++; if (e - y >= 16 && terr[(y + 3) * W + x - 1] === 4 && terr[(y + 3) * W + x + 1] === 4) runs.push({ len: e - y, pts: [{ x: x + 0.5, y: y + 1.5 }, { x: x + 0.5, y: e - 1.5 }] }); y = e; } else y++; } }
+  runs.sort((a, b) => b.len - a.len); const out = []; for (const q of runs) if (!out.some((o) => Math.abs(o.pts[0].x - q.pts[0].x) < 5 && Math.abs(o.pts[0].y - q.pts[0].y) < 5)) out.push(q); return out;
+}
+function highwayRoute(road) { const r = regionDef(road), pts = []; for (let i = 6; i < r.M.h - 6; i += 3) pts.push({ x: r.M.cx[i] + 0.5, y: r.y0 + i + 0.5 }); return pts; }
+const routeLen = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return d; };
+const CITYCAR = { // the traffic of each place looks different
+  grandbaie: [{ len: 1.4, col: "#f4f4f4", taxi: true }, { len: 1.45, col: "#18b6c9", conv: true }, { len: 0.9, col: "#e94f8a", moto: true }, { len: 1.4, col: "#f7c948" }],
+  portlouis: [{ len: 2.4, col: "#2f6fd0", bus: true }, { len: 1.45, col: "#5d6670" }, { len: 1.4, col: "#c8d0d8", taxi: true }, { len: 1.5, col: "#3a4a5e" }, { len: 1.6, col: "#c0392b", tall: true }, { len: 2.4, col: "#e4572e", bus: true }, { len: 1.4, col: "#f4f4f4", taxi: true }],
+  west: [{ len: 1.7, col: "#c0392b", tall: true }, { len: 1.4, col: "#2aa4a0" }, { len: 1.7, col: "#f0a030", tall: true }, { len: 0.9, col: "#2a2a2a", moto: true }]
+};
+function addVeh(pts, v, o) { const len = routeLen(pts); if (len < 8) return null; const t = { v, pts, len, d: Math.random() * len, dir: Math.random() < 0.5 ? 1 : -1, sp: (o && o.sp) || 3 + Math.random() * 1.6, m: null, x: 0, y: 0, hx: 1, hy: 0, wait: 0 }; Object.assign(t, o || {}); TRAF.push(t); vehPos(t); return t; }
+function vehPos(t) { let d = Math.max(0, Math.min(t.len, t.d)), i = 1; for (; i < t.pts.length - 1; i++) { const sg = Math.hypot(t.pts[i].x - t.pts[i - 1].x, t.pts[i].y - t.pts[i - 1].y); if (d <= sg) break; d -= sg; } const a = t.pts[i - 1], b = t.pts[i], sg = Math.hypot(b.x - a.x, b.y - a.y) || 1, f = Math.min(1, d / sg), hx = (b.x - a.x) / sg * t.dir, hy = (b.y - a.y) / sg * t.dir; t.hx = hx; t.hy = hy; t.x = a.x + (b.x - a.x) * f + hy * 0.8; t.y = a.y + (b.y - a.y) * f - hx * 0.8; } // keep to the left of the road, as in Mauritius
+function vehStep(t, dt) {
+  const dp = Math.hypot(t.x - s.x, t.y - s.y); if (dp > 80 && !t.drv) return; // far away: asleep
+  const yielding = !s.inside && dp < 2.8 && Math.abs((s.x - t.x) * t.hx + (s.y - t.y) * t.hy) < 3 && (s.x - t.x) * t.hx + (s.y - t.y) * t.hy > -0.5; // someone is on the road ahead: stop
+  if (t.drv) { if (yielding) t.stopT = (t.stopT || 0) + dt; else if (t.stopT) t.stopT = Math.max(0, t.stopT - dt * 0.25); }
+  if (yielding && !(t.drv && (t.stopT || 0) > 9)) return;
+  const hr = hour(); if (t.drv && !(hr >= 6 && hr < 22)) return;
+  t.d += t.sp * dt * t.dir; if (t.d > t.len) { t.d = t.len; t.dir = -1; } else if (t.d < 0) { t.d = 0; t.dir = 1; } vehPos(t);
+}
+function driverStep(n, dt, dist) { const t = n.veh; if (!t) return; const hr = hour(), on = hr >= 6 && hr < 22; n.inCar = on; n.hide = !on; n.atHome = !on; if (on) { n.x = t.x; n.y = t.y; n.face = Math.abs(t.hx) > Math.abs(t.hy) ? (t.hx < 0 ? 2 : 3) : (t.hy < 0 ? 1 : 0); n.path = t.stopT > 0.5 ? [] : [1]; n.say = n.say; } else { const d = resDoor(n) || resAnchor(n); n.x = d.x; n.y = d.y; } n.nextSay -= dt; if (n.nextSay <= 0 && dist < 8 && on && !s.inside) { n.nextSay = rnd(9, 20); n.say = pickOf(n.lines.bub); n.sayUntil = performance.now() + 3200; } else if (n.nextSay <= 0) n.nextSay = rnd(8, 16); }
+let trafficReady = false;
+function trafficInit() { // fill the roads: each town with its own kind of traffic, the highways with a mix
+  trafficReady = true; const towns = ["grandbaie", "portlouis", "west"];
+  for (const c of towns) { const runs = roadRuns(c), cars = CITYCAR[c], want = { grandbaie: 4, portlouis: 7, west: 4 }[c]; for (let i = 0; i < Math.min(want, runs.length * 2); i++) { const run = runs[i % runs.length], v = cars[i % cars.length]; addVeh(run.pts, v, { sp: v.bus ? 2.6 : v.moto ? 4.4 : 3 + (i % 3) * 0.6, town: c }); } }
+  for (const [road, a, b] of [["road_grandbaie_portlouis", "grandbaie", "portlouis"], ["road_portlouis_west", "portlouis", "west"]]) { const pts = highwayRoute(road), mix = CITYCAR[a].concat(CITYCAR[b]); for (let i = 0; i < 5; i++) addVeh(pts, mix[(i * 3) % mix.length], { sp: 5.5 + (i % 3) * 1.2, town: road }); }
+  for (const n of RES) if (n.type === "driver") { const runs = roadRuns(n.city), run = runs[Math.min(runs.length - 1, 1)]; if (run) { n.veh = addVeh(run.pts, n.car, { sp: 3.4, drv: n, town: n.city }); n.inCar = true; } }
+}
+function trafficStep(dt) { if (!trafficReady) trafficInit(); for (const t of TRAF) vehStep(t, dt); }
+function trafficDraw3d() {
+  for (const t of TRAF) { const dp = Math.hypot(t.x - s.x, t.y - s.y), on = !s.inside && dp < 55 && (!t.drv || (hour() >= 6 && hour() < 22)); if (!on) { if (t.m) t.m.visible = false; continue; }
+    if (!t.m) { t.m = makeCar(t.v); R.dyn.add(t.m); } t.m.visible = true; t.m.position.set(t.x, 0, t.y); t.m.rotation.y = -Math.atan2(t.hy, t.hx); }
+}
+// ---- homes you can visit
+function homeActs(h) {
+  const n = h.res; if (!n) return [A("🚪 Nobody lives here", "A quiet house", 0, 0, {}, { why: "Nobody is home." })];
+  if (!n.atHome) return [A("🚪 Nobody is home", "Try after dark", 0, 0, {}, { why: n.name + " is out. " + n.name + " is usually back " + (n.type === "regular" ? "late, and a bit wobbly." : "after dark.") })];
+  const f = resRel(n).f;
+  return [A("☕ Share tea and chat", "Free · 30 min · people and calm", 30, 0, { social: 14, fun: 6, energy: 4 }, { why: s.t - n.last < 90 ? "You just talked" : "", run() { n.last = s.t; resBump(n, 6); return n.name + ": \"" + pickOf(n.lines.joke) + "\" You both laugh." + (f < 20 ? " You are getting to know each other." : ""); } }),
+    A("📺 Watch TV together", "Free · 1 hour · fun", 60, 0, { fun: 16, social: 8, energy: 2 }, { run() { resBump(n, 4); return "You watch the news, then a sega contest, then argue about both. " + n.name + " wins."; } }),
+    A("💡 Ask for a local tip", f >= 30 ? "A secret, since you are friends" : "Free · 10 min", 10, 0, { social: 4 }, { run() { resBump(n, 2); return n.name + ": \"" + (f >= 30 ? "Between us... " : "") + pickOf(n.lines.tip) + "\""; } })];
+}
+function homeDraw3d(now) { const h = BUILD.find((q) => q.id === s.inside); if (!h || !h.res || !h.res.atHome) return; const n = h.res; personAt("homeres" + n.id, n.look, 6.5, 3.6, 0, false, { name: n.name, bubble: n.sayUntil > now ? n.say : "" }); }
+// ---- talking to a resident
+function resMenu(n) {
+  const L = n.lines, f = resRel(n).f, T = RTYPE[n.type], acts = [];
+  const hi = A("👋 Say hello", "Free · 10 min · people", 10, 0, { social: 10, fun: 4 }, { why: s.t - n.last < 60 ? "You just talked" : "", run() { n.last = s.t; resBump(n, 4); n.say = pickOf(n.lines.bub); n.sayUntil = performance.now() + 3000; return n.name + ": \"" + pickOf(L.hi, n.hash + (resRel(n).f | 0)) + "\"" + (resRel(n).f >= 40 ? " You are friends now." : ""); } });
+  const joke = A("😂 Hear a joke", "Free · 10 min · fun", 10, 0, { fun: 16, social: 5 }, { why: s.t - (n.jokeAt || -999) < 90 ? "Give them a minute to think of another" : "", run() { n.jokeAt = s.t; resBump(n, 2); return n.name + ": \"" + pickOf(L.joke) + "\" 😄"; } });
+  const tip = A("💡 Ask for a local tip", f >= 30 ? "A secret, since you are friends" : "Free · 10 min", 10, 0, { social: 4 }, { run() { resBump(n, 2); return n.name + ": \"" + (f >= 30 ? "Between us... " : "") + pickOf(L.tip) + "\""; } });
+  acts.push(hi, joke, tip);
+  if (n.type === "driver") { acts.push(A("🚕 Where to? Book a ride", "Bus, taxi or your own car", 0, 0, {}, { go: () => { closeMenu(); const here = regionOfY(s.y); openMenu("Where to?", ["grandbaie", "portlouis", "west"].filter((id) => id !== here).flatMap((id) => intercityActs(id)), n.name + " knows every road."); } })); }
+  if (n.type === "vendor" && L.snack) { acts.push(vatify(A("🍽️ Buy " + L.snack[0].toLowerCase(), "Rs " + L.snack[1] + " · +food", 15, L.snack[1], { hunger: L.snack[2] * 2, fun: 6 }, { run() { resBump(n, 3); return "You eat " + L.snack[0].toLowerCase() + " from " + n.name + ". Perfect."; } }))); }
+  if (n.type === "uncle") acts.push(A("📖 Listen to a story", "Free · 30 min · fun and calm", 30, 0, { fun: 14, energy: 6, social: 8 }, { run() { resBump(n, 4); return n.name + " tells you: \"" + (L.story || pickOf(L.joke)) + "\""; } }));
+  if (n.type === "visitor") acts.push(A("🧭 Give directions", "Free · 10 min · feel good", 10, 0, { social: 10, fun: 8 }, { why: s.t - (n.dirAt || -999) < 90 ? "They are already on their way" : "", run() { n.dirAt = s.t; resBump(n, 5); return "You point them the right way. " + n.name + ": \"You are a lifesaver! Merci, thank you, danke!\""; } }), A("🤳 Take a selfie together", "Free · 5 min · fun", 5, 0, { fun: 10, social: 6 }, { run() { resBump(n, 2); return "Click! " + n.name + " looks great. You look... present."; } }));
+  if (n.type === "regular") { acts.push(A("🍺 Buy a round", "Rs 80 · people and fun", 30, 80, { social: 18, fun: 14 }, { run() { resBump(n, 8); return n.name + " raises a glass: \"" + pickOf(L.joke) + "\" You are a good friend."; } }), A("💸 Lend Rs 20", "Rs 20 · you may not see it again", 5, 20, { social: 6 }, { run() { resBump(n, 6); return n.name + ": \"A friend in need is a friend with a Rs 20 note! " + pickOf(L.tip) + "\""; } })); }
+  openMenu(n.name + " · " + T.icon + " " + T.title, acts.concat(socialActs(n.name, resKey(n), (row, ok) => { n.last = s.t; resBump(n, ok ? 1 : -1); }, [], [])), (n.traits || []).join(", ") + (n.catch ? " · \"" + n.catch + "\"" : "") + " · " + socialNote(resKey(n)));
+}
 
 // ================= street dogs =================
 const DOGS = [[11, 12], [20, 13], [36, 28], [45, 12], [12, 30]].map(([x, y], i) => ({ x: x + 0.5, y: y + 0.5, path: [], wait: i, chase: 0, cool: 20, dir: 1, col: ["#b98a5e", "#6b4a2f", "#d9c7a0", "#3a3a3a", "#a86b3c"][i] })); // five strays around town
@@ -7567,7 +7782,7 @@ function draw() { // paint one frame
   luxDraw2d(); // the luxury cars in Tamarin
   if (NAV && !s.inside) { const nx = NAV.x * T, ny = NAV.y * T, pk = 1 + 0.15 * Math.sin(performance.now() / 300); g.strokeStyle = "#ffa733"; g.lineWidth = 4; g.beginPath(); g.arc(nx, ny, T * 0.9 * pk, 0, 7); g.stroke(); g.fillStyle = "rgba(255,167,51,0.3)"; g.fillRect(nx - 5, ny - T * 5, 10, T * 5); g.font = Math.round(T * 0.9) + "px sans-serif"; g.fillStyle = "#fff"; g.fillText("📍", nx, ny - T * 5); } // where you are heading (2D view)
   if (ride) drawCar({ v: ride.vert, lane: ride.vert ? ride.x : ride.y, a: (ride.vert ? ride.y : ride.x) - ride.v.len / 2, len: ride.v.len, col: ride.v.col, bus: ride.v.bus, taxi: ride.v.taxi, plate: ride.v.plate, rev: ride.rev }); // your ride
-  const folk = NPC.filter((n) => !n.hide && (!n.tam || Math.hypot(n.x - s.x, n.y - s.y) < 40)).map((n) => ({ x: n.x, y: n.y, look: n.look, name: n.name, moving: n.path.length > 0, face: n.face })); // people to draw
+  const folk = NPC.filter((n) => !n.hide && !n.inCar && (n.tam || n.res) && (!n.tam || Math.hypot(n.x - s.x, n.y - s.y) < 40)).map((n) => ({ x: n.x, y: n.y, look: n.look, name: n.name, moving: n.path.length > 0, face: n.face })); // people to draw
   govFolk(folk);
   if (!(ride && ride.on) && !s.jf) folk.push({ x: s.x, y: s.y, look: kit(myLook(), s.team, s.x, s.y), me: true, moving: meMoving, face: s.face, bubble: myBubble.until > performance.now() ? myBubble.text : "" }); // add yourself unless you are in a vehicle
   for (const k in others) { const o = others[k]; if (!o.p.in && !o.p.hid) folk.push({ x: o.x, y: o.y, look: kit(peerLook(o.p), o.p.tm, o.x, o.y), name: peerName(o), tag: relTag(o), real: true, moving: !!o.p.mv, face: o.p.face | 0, bubble: o.until > performance.now() ? o.bubble : "" }); } // other real players in the street
@@ -7688,7 +7903,7 @@ function hud() { // refresh the text panels
   jailTick();
   try { msTick(); } catch (e) {} try { wealthTick(); } catch (e) {} try { if (!document.documentElement.dataset.theme) applyTheme(); } catch (e) {} raidCheck(); if (RAID.done) s.seenAt = Date.now(); periodStep(); periodSoon(); bizTick(); fdTick(); navTick(); wooTick(); theftTick(); pregTick(); promoTick(); tamCheck(); caseTick(); govTick(); sugarTick(); ledTick(); buildTick(); salonWatch(); probTick(); loanTick(); if (s.made && !introOn && welcomeShown && $("sheet").hidden && !fdOn()) { if ((s.seenVer || "") < UPDATE_NOW) whatsNewCheck(); else { fdOffer(); rewardOffer(); hwOffer(); fashionOffer(); } } scootChip(); if (s.made && !introOn) outdoorSafe(); // a new day of the cycle? a period coming? business news? stuck somewhere impossible?
   const h = Math.floor(hour()), m = Math.floor(s.t % 60); // clock parts
-  $("clock").textContent = "Day " + showDay() + " " + DAYS[(day() - 1) % 7] + " " + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + WEATHER[weather().k].e; // day, time and the sky
+  $("clock").textContent = "Day " + showDay() + " " + DAYS[(day() - 1) % 7] + " " + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + WEATHER[weather().k].e + (lastRgId ? " " + placeIcon() : ""); // day, time and the sky, and which town you are in
   $("cash").textContent = rsShort(s.money); // money, short form
   { const dv = $("deliv"); if (dv) { if (s.driverWait) { dv.hidden = false; dv.textContent = "🛵 Driver at your home — collect"; } else if (s.deliverMs && Date.now() < s.deliverMs) { dv.hidden = false; dv.textContent = "🛵 Food arriving in " + Math.ceil((s.deliverMs - Date.now()) / 1000) + "s"; } else dv.hidden = true; } } // live delivery status
   { const nm = !!s.needsMin, nd = $("needs"); nd.classList.toggle("min", nm); $("needsTog").textContent = nm ? "▾" : "▴"; $("needsTog").setAttribute("aria-expanded", String(!nm)); $("needsTog").setAttribute("aria-label", nm ? "Show need bars" : "Collapse needs"); // open, or folded down to icons
@@ -7919,7 +8134,7 @@ function buildGround() { // the ground as painted pictures (the north, then the 
   for (const [gx0, gx1, gy0, gy1] of [[0, BZS_X1 + 1, 0, NH], [BZS_X1 + 1, W, 0, NH], [0, TAM_W + 4, NH, HO], [TAM_W + 4, 340, BZ_Y1, TRI.y1 + 2], [BZS_X1 + 1, W, NH, BZ_Y1], [BZS_X1 + 1, 340, TRI.y1 + 2, 196], ].concat(WREG.flatMap((r) => { const out = [], wd = Math.max(GBW, r.M.w + 4); for (let x0 = 0; x0 < wd; x0 += 220) for (let y0 = r.block, e = regionEnd(r.id); y0 < e; y0 += 200) out.push([x0, Math.min(wd, x0 + 220), y0, Math.min(e, y0 + 200)]); return out; }))) { if (gy1 <= HO) continue; // only Grand Baie is painted: the old Flic en Flac, Tamarin and Trianon ground is not in Mauritius Life, each under 4,096 pixels wide so phones keep them sharp: the north, the far north-east (Ebène), the south and Tamarin, Trianon, the M1 north, and Tribeca Airport
   const c = document.createElement("canvas"); c.width = (gx1 - gx0) * P; c.height = (gy1 - gy0) * P; const x2 = c.getContext("2d"); // 16 pixels per tile
   for (let y = gy0; y < gy1; y++) for (let x = gx0; x < gx1; x++) { // every tile
-    const t2 = terr[y * W + x], X = (x - gx0) * P, Y = (y - gy0) * P; const bzg = x > GATE && x <= BZS_X1 && y < BZ_Y1 && (t2 === 3 || t2 === 8 || t2 === 9); x2.fillStyle = bzg ? "#4a7d3f" : t2 === 8 ? COL[3] : t2 === 6 ? "#8a6a48" : COL[t2]; x2.fillRect(X, Y, P, P); if (t2 === 4 && y >= HO) { x2.fillStyle = "#737a83"; x2.fillRect(X, Y, P, P); const rd = (xx, yy) => terr[yy * W + xx] === 4; x2.fillStyle = "#f6f2dc"; if (rd(x - 1, y) && rd(x + 1, y) && rd(x, y - 1) && rd(x, y + 1) && !rd(x, y - 2) && !rd(x, y + 2) && x % 3 !== 0) x2.fillRect(X + 1, Y + P / 2 - 1, P - 2, 2); if (rd(x, y - 1) && rd(x, y + 1) && rd(x - 1, y) && rd(x + 1, y) && !rd(x - 2, y) && !rd(x + 2, y) && y % 3 !== 0) x2.fillRect(X + P / 2 - 1, Y + 1, 2, P - 2); } // base colour; the roads of the real towns are lighter and the wide ones have dashed centre lines (grass under trees, floor under walls); Bambous has its own rough village green
+    const t2 = terr[y * W + x], X = (x - gx0) * P, Y = (y - gy0) * P; const bzg = x > GATE && x <= BZS_X1 && y < BZ_Y1 && (t2 === 3 || t2 === 8 || t2 === 9); x2.fillStyle = bzg ? "#4a7d3f" : t2 === 8 ? tintOf(y, 3, COL[3]) : t2 === 6 ? "#8a6a48" : tintOf(y, t2, COL[t2]); x2.fillRect(X, Y, P, P); if (t2 === 4 && y >= HO) { x2.fillStyle = tintOf(y, "road", "#737a83"); x2.fillRect(X, Y, P, P); const rd = (xx, yy) => terr[yy * W + xx] === 4; x2.fillStyle = "#f6f2dc"; if (rd(x - 1, y) && rd(x + 1, y) && rd(x, y - 1) && rd(x, y + 1) && !rd(x, y - 2) && !rd(x, y + 2) && x % 3 !== 0) x2.fillRect(X + 1, Y + P / 2 - 1, P - 2, 2); if (rd(x, y - 1) && rd(x, y + 1) && rd(x - 1, y) && rd(x + 1, y) && !rd(x - 2, y) && !rd(x + 2, y) && y % 3 !== 0) x2.fillRect(X + P / 2 - 1, Y + 1, 2, P - 2); } // base colour; the roads of the real towns are lighter and the wide ones have dashed centre lines (grass under trees, floor under walls); Bambous has its own rough village green
     if (x >= CY.x0 && x <= CY.x1 && y >= CY.y0 && y <= CY.y1) { if (t2 === 4) { x2.fillStyle = "#15171c"; x2.fillRect(X, Y, P, P); x2.fillStyle = "#00e5ff"; if (y === 30 && x % 2 === 0) x2.fillRect(X + 4, Y + P - 1, 8, 2); if ((x - CXO === 262 || x - CXO === 300) && y % 2 === 0) x2.fillRect(X + P - 1, Y + 4, 2, 8); } else { x2.fillStyle = (x + y) % 2 ? "#2a2d33" : "#26292f"; x2.fillRect(X, Y, P, P); x2.fillStyle = "rgba(0,0,0,0.3)"; x2.fillRect(X + P - 1, Y, 1, P); x2.fillRect(X, Y + P - 1, P, 1); if (hash(x, y) % 9 === 0) { x2.fillStyle = "rgba(0,229,255,0.12)"; x2.fillRect(X + 2, Y + 5, 10, 4); } } continue; } // Ebène: dark wet paving, black roads with neon lines
     if (bzg) { if (hash(x, y) % 4 === 1) { x2.fillStyle = "rgba(20,60,25,0.28)"; x2.fillRect(X + hash(y, x) % 10, Y + hash(x, y + 3) % 10, 5, 3); } if (hash(x, y) % 9 === 4) { x2.fillStyle = "rgba(120,96,58,0.38)"; x2.fillRect(X + 2 + hash(y, x) % 6, Y + 3 + hash(x, y) % 6, 7, 5); } } // darker tufts and bare dirt patches
     if (t2 === 2 && hash(x, y) % 3 === 0) { x2.fillStyle = "#e2cb8c"; x2.fillRect(X + hash(y, x) % 12, Y + hash(x, x + y) % 12, 2, 2); } // sand grains
@@ -9125,7 +9340,7 @@ function render3d(dt) { // draw one 3D frame
     for (const k in others) { const o = others[k]; if (o.p.in === s.inside) personAt("peer" + k, peerLook(o.p), o.x, o.y, o.p.face | 0, !!o.p.mv, { dance: o.p.dn, pose: POSES.includes(o.p.po) ? { k: o.p.po, h: Math.max(-0.5, Math.min(1, Number(o.p.pz) || 0)) } : null, name: (o.p.away ? "💤 " : "") + peerName(o) + relTag(o) + clsTag(o.p.cls), real: true, md: o.p.md, bubble: o.until > now ? o.bubble : "" }); } // real players in here
     personAt("me", myLook(), s.x, s.y, s.face, meMoving, { me: true, dance: dancing, pose: curPose(), name: myClass() ? CLASSES[myClass()].icon + " " + CLASSES[myClass()].name : "", bubble: myBubble.until > now ? myBubble.text : curPose() && curPose().k === "sleep" ? (wooLie && wooLie.until > Date.now() ? "💞" : "💤 z z z") : "" }); // you
     for (const id of ["fb", "bb"]) R[id === "fb" ? "fball" : "bball"].visible = false; for (const m of R.carM || []) m.visible = false; if (R.rideM) R.rideM.visible = false; for (const m of R.dogM || []) m.visible = false; // hide outdoor things
-    pets3d(); hideUnused(); R.renderer.render(R.scene, R.camera); return; // draw the room
+    trafficDraw3d(); homeDraw3d(now); pets3d(); hideUnused(); R.renderer.render(R.scene, R.camera); return; // draw the room
   } // end inside
   syncEstate(); syncJets(); siteTick(now); scaleLabels(); fadeBuildings(); navBeaconTick(now); richStatueTick(now); // estate houses, and the beam over where you are heading
   for (const mk of R.marks) { // markers on usable things
@@ -9136,11 +9351,11 @@ function render3d(dt) { // draw one 3D frame
   setSpriteText(R.fbScore, "WEST " + BALL.fb.a + " : " + BALL.fb.b + " EAST", "rgba(6,28,40,0.85)", "#ffffff", 0.45); setSpriteText(R.bbScore, "YOU " + s.hoops + " PTS", "rgba(6,28,40,0.85)", "#ffffff", 0.4); // scoreboards
   R.fball.visible = R.bball.visible = true; R.fball.position.set(BALL.fb.x, 0.14, BALL.fb.y); const c = BALL.bb, held = c.h && (c.h === meId() ? meMoving : others[c.h] && others[c.h].p.mv); R.bball.position.set(c.x, fly ? 0.7 + fly.z * 1.6 : c.h ? 0.62 + (held ? Math.abs(Math.sin(now / 110)) * 0.35 : 0) : 0.17, c.y); // balls, with dribble bounce and shot arc
   for (const i of [0, 1]) personAt("keeper" + i, { g: "m", skin: SKINS[i ? 3 : 1], hair: "#17100c", shirt: i ? "#ffd23c" : "#35c4bb", pants: "#15171a", role: "resident" }, i ? FB.x1 - 0.6 : FB.x0 + 0.6, keeper[i], i ? 2 : 3, true); // goalkeepers
-  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
+  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
   if (ride) { if (!R.rideM || R.rideKind !== ride.kind) { if (R.rideM) R.dyn.remove(R.rideM); R.rideM = makeCar(ride.v); R.rideKind = ride.kind; } R.rideM.visible = true; placeCar(R.rideM, ride.x, ride.y, ride.vert, ride.rev); } else if (R.rideM) R.rideM.visible = false; // your ride
   if (!R.dogM) R.dogM = DOGS.map((d) => makeDog(d.col)); DOGS.forEach((d, i) => { const m = R.dogM[i]; m.visible = true; m.position.set(d.x, 0, d.y); m.rotation.y = d.dir > 0 ? 0 : Math.PI; m.position.y = d.chase > 0 ? Math.abs(Math.sin(now / 60)) * 0.08 : 0; }); // street dogs (they bounce when chasing)
   govGuards3d(); // the President's bodyguards
-  for (const n of NPC) { if (n.hide || (n.tam && Math.hypot(n.x - s.x, n.y - s.y) > 45)) continue; personAt("npc" + n.name, hwNpcLook(n), n.x, n.y, n.face, n.path.length > 0, { name: Math.hypot(n.x - s.x, n.y - s.y) < 3 ? n.name + ((s.friends[n.name] || 0) >= 3 ? " ♥" : "") : "", swim: inLagoon(n.x, n.y), bubble: n.sayUntil > performance.now() ? n.say : "" }); } // neighbours
+  for (const n of NPC) { if (n.hide || n.inCar || (!n.tam && !n.res) || ((n.tam || n.res) && Math.hypot(n.x - s.x, n.y - s.y) > 45)) continue; personAt("npc" + n.name, hwNpcLook(n), n.x, n.y, n.face, n.path.length > 0, { name: Math.hypot(n.x - s.x, n.y - s.y) < 3 ? n.name + ((s.friends[n.name] || 0) >= 3 ? " ♥" : "") : "", swim: inLagoon(n.x, n.y), bubble: n.sayUntil > performance.now() ? n.say : "" }); } // neighbours
   for (const k in others) { const o = others[k]; if (!o.p.in && !o.p.hid) personAt("peer" + k, kit(peerLook(o.p), o.p.tm, o.x, o.y), o.x, o.y, o.p.face | 0, !!o.p.mv, { dance: o.p.dn, pose: POSES.includes(o.p.po) ? { k: o.p.po, h: Math.max(-0.5, Math.min(1, Number(o.p.pz) || 0)) } : null, name: (o.p.away ? "💤 " : "") + peerName(o) + relTag(o) + clsTag(o.p.cls), real: true, scoot: !!o.p.sc, cyc: !!o.p.bk, md: o.p.md, bubble: o.until > now ? o.bubble : "", swim: inLagoon(o.x, o.y) }); } // other real players
   if (run && run.group) { const el2 = (now - run.t0) / 1000; for (let k = 0; k < 4; k++) { const [rx, rz, rf] = routePoint(el2 * (4.4 + k * 0.25) + 2 - k * 1.6); personAt("runner" + k, { g: k % 2 ? "f" : "m", skin: SKINS[(k + 1) % 5], hair: "#17100c", shirt: "#15171a", pants: "#ff6a1a", role: "resident" }, rx + (k % 2 ? 0.4 : -0.4), rz, rf, true, { name: k === 0 ? "No Tomorrow" : "" }); } } // the club running with you
   if (!R.inside) runwayTick(now); // the Fashion Show runway
@@ -9916,6 +10131,7 @@ function socialActs(name, key, onDo, extra, after, peerId) { // the interaction 
 } // end socialActs
 function socialNote(key) { const r = relOf(key); return (r.partner ? "💍 Partner" : relWords(r)) + " · ❤️ friendship " + r.f + " · 💕 romance " + r.r; } // the menu subtitle
 function npcSocial(n) { // talk to a neighbour
+  if (n.res) { resMenu(n); return; }
   const say = (row, ok) => { n.say = row[1]; n.sayUntil = performance.now() + 3500; myBubble = { text: row[1], until: performance.now() + 3500 }; n.last = s.t; if (ok && row[9] !== "mean") { s.friends[n.name] = Math.max(s.friends[n.name] || 0, relOf("npc:" + n.name).f >= 40 ? 3 : (s.friends[n.name] || 0) + (row[0] === "chat" ? 1 : 0)); } }; // speech icons, and the older friend counter
   openMenu(n.name, socialActs(n.name, "npc:" + n.name, say, [npcFoodAct(n)], chatActs(n).slice(chatActs0(n).length)), socialNote("npc:" + n.name)); // interactions, then anything else (like pickpocketing)
 } // end npcSocial
@@ -10568,6 +10784,12 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.14", "5 Nov 2026", "Meet the locals", [
+    ["🧑‍🤝‍🧑", "People with personalities", "Every town now has its own residents: funny taxi drivers, street vendors, retired uncles, lost visitors and a few characters who are always short of cash. Chat, hear a joke, ask for tips, or buy them a round.", null],
+    ["🏠", "Visit their lakaz", "Some residents live in houses you can walk into. They are out in the day and home at night, so knock after dark and share some tea.", null],
+    ["🚕", "Cars and drivers", "Taxis, buses, pickups and scooters drive along the roads and between the towns. Step in front of a taxi and the driver will stop for a chat.", null],
+    ["🎨", "Every town looks different", "A coloured card tells you which town you have arrived in. Grand Baie is bright and sandy, Port Louis grey and busy, Flic en Flac warm and golden.", null]
+  ]],
   ["2027.03.13", "5 Nov 2026", "One island, no gaps", [
     ["🗺️", "The towns are joined", "Grand Baie, Port Louis and Flic en Flac now sit on one continuous map. The town streets run straight into the highway and out the other side, with no jump and no empty sea in between.", () => openPhone("maps", "island")],
     ["🛣️", "Roads that bend", "The highways follow the real road from town to town, curving past the real coast, cane fields and villages, with signs and kilometre posts along the way.", null]
@@ -12874,7 +13096,7 @@ function frame(now) { // runs every animation frame
       if (pending && path.length === 0 && Math.hypot(pending.x - s.x, pending.y - s.y) < 1.6) { near = pending; pending = null; useNear(); } // open the thing you tapped
     } // end free
     for (const n of NPC) npcStep(n, dt); luxStep(dt); stepSugar(dt); bzStep(dt); bzFx(dt, performance.now()); triStep(); maybePoliceStop(dt); maybeCarHit(dt); maybeOddJob(dt); deliverCheck(); workCallStep(); // neighbours/beachgoers, police, accidents, odd jobs, deliveries, time for work
-    for (const c of CARS) carStep(c, dt); // traffic moves
+    for (const c of CARS) carStep(c, dt); trafficStep(dt); // traffic moves
     for (const d of DOGS) dogStep(d, dt); // dogs wander or chase
     sportStep(dt); // balls roll, keepers move
     creepStep(dt); // street harassment for female characters
