@@ -97,6 +97,10 @@
 #cityCard b { display: block; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cc, #14b8c9); }
 #cityCard h2 { margin: 1px 0 1px; font-size: 1.35rem; line-height: 1.1; }
 #cityCard small { color: rgba(255,255,255,0.78); font-size: 0.78rem; }
+.wmpin.locked i { background: #b9bbbd; filter: grayscale(1); } .wmpin.locked span { background: #d6d8da; color: #55595e; }
+.wmcard { flex-direction: column; align-items: flex-start; gap: 6px; } .wmcard small { opacity: 0.85; font-size: 0.78rem; line-height: 1.35; }
+body.wmOn .hud, body.wmOn .dock { display: none !important; }
+.wmcard { top: auto !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
 </style>
 <script src="grandbaie-map.js"></script>
 <script src="portlouis-map.js"></script>
@@ -3779,6 +3783,7 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
   ]],
   ["🗺️", "Places and travel", [
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
+    ["How do I see the whole island?", "Zoom out with a pinch or the minus button. The map shows Mauritius: coloured regions are open and grey ones with a lock are coming soon. Tap a region to read about it, or a coloured town to travel there. Zoom in again to go back to the game.", ""],
     ["Who lives in the towns?", "Every town has its own people with their own personalities: taxi drivers, street vendors, retired locals, visitors and a few local characters who are always short of cash. Tap one to say hello, hear a joke, ask for a local tip or buy a snack. Some of them live in houses you can walk into: look for \"…'s lakaz\" and visit after dark, when they are home. Make friends and they share their secrets.", ""],
     ["How do I know which town I'm in?", "A card slides in when you cross into a new town, the clock card shows the town's icon and colour, and each town looks different: Grand Baie is bright and sandy, Port Louis is grey and busy with buses, and Flic en Flac is warm and golden with pickups and surfers.", ""],
     ["Can I walk between towns?", "Yes. Follow the highway out of any town (a green \"Road to…\" sign marks where it starts) and keep going. Grand Baie to Port Louis is about 19 km of real road, drawn at a scale you can cross in a few minutes on foot, faster on a scooter. You pass the real villages on the way. You cannot skip the road: the server checks your speed.", "maps"],
@@ -10836,6 +10841,9 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.16", "5 Nov 2026", "The whole island", [
+    ["🗺️", "Zoom out to see Mauritius", "Pinch out or press minus to see the real island. The towns you can visit are in colour and the places coming later are grey with a lock. Tap any region to see what is planned.", null]
+  ]],
   ["2027.03.15", "5 Nov 2026", "Busier, smoother streets", [
     ["🚶", "Crowds on every street", "Towns now have people on foot walking from place to place all day, and ten locals with names in every town to stop and talk to.", null],
     ["🚗", "Cars that really drive", "Cars follow the real junctions, turn corners and loop round the blocks, wait behind each other and stop for you. They come and go out of sight instead of vanishing in front of you.", null]
@@ -13178,46 +13186,49 @@ const ZMIN = 0.03, ZMAX = 1.8; // furthest and closest zoom: past 0.085 the game
 const WM = { on: false, k: 1, x: 0, y: 0, key: "", cv: null, el: null, pins: null, lastT: 0, sel: null };
 const WM_Z = 0.085; // zoom out past this and the 3D view becomes the map
 const WM_COL = { 0: "#58b2e2", 1: "#9be3ee", 2: "#f5e6b4", 3: "#c6e6a8", 4: "#ffffff", 5: "#e8dfcf", 6: "#cfc7b8", 7: "#b98b5e", 8: "#a5d48a", 9: "#b6e2a0", 10: "#ece0b4", 11: "#d3e69a", 12: "#a9dc8c", 13: "#f2c6a2", 14: "#a7c7d9", 15: "#a2cd96", 16: "#f4f1ea", 17: "#b5e29a", 18: "#9ad88a", 19: "#f5e6b4", 20: "#7ec3e6", 21: "#cfd3d8", 22: "#dedad2" }; // soft, bright map colours
-function wmPins() { // every city and the places people look for
-  const ok = triAllowed(), P = [["fef", "🏖️", "Flic en Flac", 48, 26, 1], ["cas", "🛍️", "Cascavelle", 66, 20, 2], ["bam", "🏚️", "Bambous Town", 206, 42, 1], ["tam", "🏄", "Tamarin", 50, 140, 1], ["air1", "✈️", "SSR Airport", 90, 45, 3], ["air2", "✈️", "Tamarin Airport", 150, 176, 3], ["bzs", "⚽", "Bambous South", 205, 80, 3]];
-  if (ok) P.push(["tri", "🏙️", "Trianon", 285, 134, 1], ["mall", "🛍️", "Tribeca Mall", 258, 118, 2], ["air3", "✈️", "Tribeca Airport", 316, 176, 3], ["cy", "🌃", "Ebène Cyber City", 285 + CXO, 30, 1], ["hel", "🚁", "Trianon heliport", CHOP_PADS.tri.x, CHOP_PADS.tri.y, 3]);
-  for (const r of WREG) if (r.kind !== "road") P.push([r.pinKey, rgLocked(r.id) ? "🔒" : r.pin, r.name + (rgLocked(r.id) ? " (not open yet)" : ""), 60, r.y0 + 40, 1]); // the walkable regions, reached by the intercity bus
-  return P.filter((q) => q[4] >= HO); // only the open region has pins
+const ISL_CITIES = { // the closed regions' main towns: a grey pin and a line about what is coming
+  north: { icon: "🌿", name: "Pamplemousses", lon: 57.58, lat: -20.10, tag: "Gardens, sugar fields and the old north", plan: "The Botanical Garden, the sugar mill museum and the quiet villages behind Grand Baie." },
+  east: { icon: "🏝️", name: "Belle Mare", lon: 57.77, lat: -20.19, tag: "Long beaches and golf", plan: "Flacq market, lagoon resorts and the longest beaches on the island." },
+  southeast: { icon: "⚓", name: "Mahébourg", lon: 57.70, lat: -20.405, tag: "The old port and the airport", plan: "The waterfront market, the naval museum and the airport." },
+  south: { icon: "🏔️", name: "Le Morne", lon: 57.325, lat: -20.455, tag: "Mountains, waterfalls and kite surfing", plan: "Le Morne's mountain, Chamarel's coloured earth and the wild south coast." },
+  plateau: { icon: "🏙️", name: "Curepipe", lon: 57.52, lat: -20.318, tag: "The cool, rainy heart of the island", plan: "Curepipe's shops, Quatre Bornes market and Moka's university." }
+};
+const rgLocked = (id) => { const r = (ISL.regions || []).find((q) => q.id === id); return !!r && !r.open; }, gbLocked = () => rgLocked("grandbaie"); // the server decides; this only colours the maps
+function wmPins() { // one pin per region: the open towns in colour, the closed regions' main towns in grey
+  const P = []; for (const r of ISL.regions || []) { const t = regionDef(r.id); if (r.open && t && t.kind !== "road") { const [x, y] = islTile(t.isl[0], t.isl[1]); P.push({ id: r.id, ic: (CITY[r.id] || {}).icon || t.pin, name: r.name.replace(/ and the.*/, ""), x, y, open: 1 }); } else if (!r.open && ISL_CITIES[r.id]) { const c = ISL_CITIES[r.id], [x, y] = islTile(c.lon, c.lat); P.push({ id: r.id, ic: "🔒", name: c.name, x, y, open: 0 }); } } return P;
 }
-const rgLocked = (id) => { const r = (ISL.regions || []).find((q) => q.id === id); return !!r && !r.open; }, gbLocked = () => rgLocked("grandbaie"); // the server decides; this only colours the maps // the server decides; this only colours the maps
-function wmBuild() { // paint the map picture once: land, sea, roads, buildings
-  const ok = triAllowed(), key = (ok ? "open" : "closed") + WREG.map((r) => (rgLocked(r.id) ? "-" + r.pre : "")).join(""); if (WM.key === key && WM.cv) return; WM.key = key; const S = 3, c = document.createElement("canvas"); c.width = W * S; c.height = H * S; const g2 = c.getContext("2d");
-  const hid = (x, y) => !ok && (x > BZS_X1 || (x >= 113 && y >= 106 && y <= 196)); // the closed areas are drawn as plain hills
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let t2 = y < HO ? 0 : terr[y * W + x]; if (hid(x, y)) t2 = 15; if (x > BZS_X1 && y < NH && t2 === 15 && ok) t2 = 15; g2.fillStyle = WM_COL[t2] || "#c6e6a8"; if (y >= HO && t2 !== 0 && rgLocked(regionOfY(y))) g2.fillStyle = "#b9bbbd"; g2.fillRect(x * S, y * S, S, S); } // a locked Grand Baie is grey
-  g2.fillStyle = "rgba(60,110,70,0.10)"; for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (terr[y * W + x] === 15 && (x + y) % 4 === 0) g2.fillRect(x * S, y * S, S * 2, S * 2); // hill texture
-  const bl = (b, col) => { if (hid(b.x, b.y)) return; g2.fillStyle = "rgba(0,0,0,0.12)"; g2.fillRect(b.x * S + 1, b.y * S + 1, b.w * S, b.h * S); g2.fillStyle = col; g2.fillRect(b.x * S, b.y * S, b.w * S, b.h * S); };
-  for (const b of SOONB) bl(b, "#efe9de"); for (const b of BUILD) bl(b, "#f4efe6");
-  for (const b of CY_BLOCKS) if (ok) { g2.fillStyle = "#cdb8e8"; g2.fillRect(b[0] * S, b[1] * S, b[2] * S, b[3] * S); }
-  for (const [x0, y0, x1, y1] of TRI_SOLID) if (ok) { g2.fillStyle = "#efe9de"; g2.fillRect(x0 * S, y0 * S, (x1 - x0 + 1) * S, (y1 - y0 + 1) * S); }
-  WM.cv = c;
+function wmBuild() {} // the island picture comes from the Maps app's island map
+function meTile() { const y = s.inside ? s.oy : s.y, r = regionDef(regionOfY(y)); if (!r) return islTile(ISL_HOME[0], ISL_HOME[1]); if (r.kind === "road") { const A2 = regionDef(r.M.a).isl, B2 = regionDef(r.M.b).isl, f = Math.max(0, Math.min(1, (y - r.y0) / r.M.h)); return islTile(A2[0] + (B2[0] - A2[0]) * f, A2[1] + (B2[1] - A2[1]) * f); } return islTile(r.isl[0], r.isl[1]); }
+function wmFill() { // draw the island into the map overlay (once the island data has arrived)
+  const view = $("wmView"), inner = $("wmInner"); if (!view || !inner || !WM.on) return; if (!ISL.d || !ISL.regions) { inner.innerHTML = '<p style="color:#fff;padding:24px;font-weight:700">Loading the map of Mauritius...</p>'; inner.style.width = "100%"; inner.style.height = "auto"; islandLoad(); clearTimeout(WM.ft); WM.ft = setTimeout(wmFill, 600); return; }
+  const d = ISL.d, vw = view.clientWidth || 360, vh = view.clientHeight || 600, fit = Math.min(vw / (d.w * 2), vh / (d.h * 2)); WM.mw = d.w; WM.mh = d.h; WM.base = fit; inner.innerHTML = ""; inner.style.width = d.w * 2 * fit + "px"; inner.style.height = d.h * 2 * fit + "px";
+  const src = islandImage(), c2 = document.createElement("canvas"); c2.width = src.width; c2.height = src.height; c2.getContext("2d").drawImage(src, 0, 0); c2.style.cssText = "width:100%;height:100%;display:block;image-rendering:auto"; c2.onclick = (ev) => { if ((WM.moved || 0) > 8) return; const b = c2.getBoundingClientRect(), x = Math.floor((ev.clientX - b.left) / b.width * d.w), y = Math.floor((ev.clientY - b.top) / b.height * d.h); if (x < 0 || y < 0 || x >= d.w || y >= d.h) return; const rid = d.regions[ISL.rg[y * d.w + x]]; if (ISL.t[y * d.w + x] && rid) wmSelect({ id: rid }); }; inner.append(c2);
+  WM.pins = []; for (const q of wmPins()) { const b = document.createElement("button"); b.type = "button"; b.className = "wmpin l1" + (q.open ? "" : " locked"); b.style.left = q.x / d.w * 100 + "%"; b.style.top = q.y / d.h * 100 + "%"; b.innerHTML = "<i>" + q.ic + "</i><span>" + q.name + "</span>"; b.onclick = (e) => { e.stopPropagation(); wmSelect({ id: q.id }); }; inner.append(b); WM.pins.push(b); }
+  WM.me = document.createElement("div"); WM.me.className = "wmme"; WM.me.innerHTML = "<i></i><b>You</b>"; inner.append(WM.me); WM.dots = []; WM.k = 1; WM.x = Math.max(0, (vw - d.w * 2 * fit) / 2); WM.y = Math.max(0, (vh - d.h * 2 * fit) / 2); wmApply(); wmTick(true);
 }
 function wmOpen() {
-  if (WM.on) return; WM.on = true; wmBuild(); let el = WM.el; if (!el) { el = WM.el = document.createElement("div"); el.id = "wmap"; el.innerHTML = '<div class="wmtop"><b>🗺️ World map</b><span>Pinch or scroll in to go back</span><button type="button" id="wmClose">✕</button></div><div class="wmview" id="wmView"><div class="wminner" id="wmInner"></div></div><div class="wmcard" id="wmCard" hidden></div>'; $("world").after(el);
+  if (WM.on) return; WM.on = true; document.body.classList.add("wmOn"); let el = WM.el; if (!el) { el = WM.el = document.createElement("div"); el.id = "wmap"; el.innerHTML = '<div class="wmtop"><b>🗺️ Mauritius</b><span>Grey places are coming soon · pinch in to go back</span><button type="button" id="wmClose">✕</button></div><div class="wmview" id="wmView"><div class="wminner" id="wmInner"></div></div><div class="wmcard" id="wmCard" hidden></div>'; $("world").after(el);
     $("wmClose").onclick = () => setZoomTo(0.5); const v = $("wmView"); let drag = null, pts = new Map(), pd = 0, pk = 1;
-    v.addEventListener("pointerdown", (e) => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); v.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, ox: WM.x, oy: WM.y, moved: 0 }; if (pts.size === 2) { const [a, b] = [...pts.values()]; pd = Math.hypot(a.x - b.x, a.y - b.y); pk = WM.k; } });
-    v.addEventListener("pointermove", (e) => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (pd) { const nk = Math.max(0.6, Math.min(6, pk * d / pd)); if (nk < 0.62 && d < pd * 0.8) { pts.clear(); setZoomTo(0.03); return; } wmZoom(nk); } return; } if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved = Math.max(drag.moved, Math.hypot(dx, dy)); WM.x = drag.ox + dx; WM.y = drag.oy + dy; wmApply(); });
+    v.addEventListener("pointerdown", (e) => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); v.setPointerCapture(e.pointerId); WM.moved = 0; drag = { x: e.clientX, y: e.clientY, ox: WM.x, oy: WM.y, moved: 0 }; if (pts.size === 2) { const [a, b] = [...pts.values()]; pd = Math.hypot(a.x - b.x, a.y - b.y); pk = WM.k; } });
+    v.addEventListener("pointermove", (e) => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (pd) { const nk = Math.max(0.6, Math.min(6, pk * d / pd)); if (nk < 0.62 && d < pd * 0.8) { pts.clear(); setZoomTo(0.03); return; } wmZoom(nk); } return; } if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved = Math.max(drag.moved, Math.hypot(dx, dy)); WM.moved = drag.moved; WM.x = drag.ox + dx; WM.y = drag.oy + dy; wmApply(); });
     v.addEventListener("pointerup", (e) => { pts.delete(e.pointerId); if (pts.size < 2) pd = 0; });
     v.addEventListener("pointercancel", (e) => { pts.delete(e.pointerId); });
     v.addEventListener("wheel", (e) => { e.preventDefault(); if (e.deltaY < 0 && WM.k >= 5.9) { setZoomTo(0.5); return; } wmZoom(WM.k * (e.deltaY < 0 ? 1.18 : 0.85)); }, { passive: false }); }
-  el.hidden = false; const view = $("wmView"), inner = $("wmInner"); inner.innerHTML = ""; const asp = W / H, vw = view.clientWidth || 360, vh = view.clientHeight || 600, fit = Math.min(vw / W, vh / H);
-  WM.base = fit; inner.style.width = W * fit + "px"; inner.style.height = H * fit + "px"; const c2 = document.createElement("canvas"); c2.width = WM.cv.width; c2.height = WM.cv.height; c2.getContext("2d").drawImage(WM.cv, 0, 0); c2.style.cssText = "width:100%;height:100%;display:block;image-rendering:auto"; inner.append(c2);
-  WM.pins = []; for (const [id, ic, name, x, y, lvl] of wmPins()) { const d = document.createElement("button"); d.type = "button"; d.className = "wmpin l" + lvl; d.style.left = x / W * 100 + "%"; d.style.top = y / H * 100 + "%"; d.innerHTML = "<i>" + ic + "</i><span>" + name + "</span>"; d.onclick = (e) => { e.stopPropagation(); wmSelect({ id, ic, name, x, y }); }; inner.append(d); WM.pins.push(d); }
-  WM.me = document.createElement("div"); WM.me.className = "wmme"; WM.me.innerHTML = "<i></i><b>You</b>"; inner.append(WM.me); WM.dots = []; WM.k = 1; WM.x = Math.max(0, (vw - W * fit) / 2); WM.y = Math.max(0, (vh - H * fit) / 2); wmApply(); wmTick(true);
+  el.hidden = false; wmFill();
 }
 function wmApply() { const inner = $("wmInner"); if (!inner) return; inner.style.setProperty("--k", WM.k); inner.style.transform = "translate(" + WM.x + "px," + WM.y + "px) scale(" + WM.k + ")"; }
 function wmZoom(nk) { const view = $("wmView"), cx = view.clientWidth / 2, cy = view.clientHeight / 2, f = nk / WM.k; WM.x = cx - (cx - WM.x) * f; WM.y = cy - (cy - WM.y) * f; WM.k = nk; wmApply(); for (const d of WM.pins || []) d.classList.toggle("far", false); const inner = $("wmInner"); inner.dataset.lv = WM.k < 1.3 ? "1" : WM.k < 2.6 ? "2" : "3"; }
-function wmSelect(p) { WM.sel = p; const c = $("wmCard"); c.hidden = false; c.innerHTML = ""; const h = document.createElement("b"); h.textContent = p.ic + " " + p.name; const go = document.createElement("button"); go.type = "button"; go.className = "primary"; go.textContent = "📍 Guide me there"; go.onclick = () => { setZoomTo(0.5); const tr = WREG.find((r) => r.pinKey === p.id), target = tr ? tr.id : "", here = regionOfY(s.inside ? s.oy : s.y); if (target && target !== here) { if (rgLocked(target)) { toast("🔒 " + (RG_NAME[target] || "That region") + " is not open yet. Coming soon!"); return; } const st = (regionDef(here) || WREG[0]).stop; navTo(st.x, st.y, (RG_NAME[here] || "Bus") + " bus station: intercity bus to " + RG_NAME[target]); return; } navTo(p.x, p.y, p.name); }; const x = document.createElement("button"); x.type = "button"; x.textContent = "Close"; x.onclick = () => { c.hidden = true; WM.sel = null; }; c.append(h, go, x); }
-function wmTick(force) { // update the dots: you, other players and your route
-  if (!WM.on || !WM.me) return; const now = performance.now(); if (!force && now - WM.lastT < 400) return; WM.lastT = now; const me = s.inside ? { x: s.ox || s.x, y: s.oy || s.y } : s; WM.me.style.left = me.x / W * 100 + "%"; WM.me.style.top = me.y / H * 100 + "%";
-  const inner = $("wmInner"); let i = 0; for (const k in others) { const o = others[k]; if (!o || !o.p || o.p.in || o.p.hid) continue; let d = WM.dots[i]; if (!d) { d = WM.dots[i] = document.createElement("div"); d.className = "wmdot"; inner.append(d); } d.hidden = false; d.style.left = o.x / W * 100 + "%"; d.style.top = o.y / H * 100 + "%"; d.title = peerName(o); i++; } for (; i < WM.dots.length; i++) WM.dots[i].hidden = true;
-  if (NAV) { if (!WM.nav) { WM.nav = document.createElement("div"); WM.nav.className = "wmnav"; WM.nav.textContent = "📍"; inner.append(WM.nav); } WM.nav.hidden = false; WM.nav.style.left = NAV.x / W * 100 + "%"; WM.nav.style.top = NAV.y / H * 100 + "%"; } else if (WM.nav) WM.nav.hidden = true;
+function wmSelect(p) { // a region: open (travel there) or grey (coming soon, with what is planned)
+  const c = $("wmCard"), r = (ISL.regions || []).find((q) => q.id === p.id); if (!r) return; WM.sel = p; c.hidden = false; c.innerHTML = ""; const t = regionDef(r.id), open = !!r.open, info = open ? (CITY[r.id] || {}) : (ISL_CITIES[r.id] || {}), here = regionOfY(s.inside ? s.oy : s.y);
+  const h = document.createElement("b"); h.textContent = (open ? (info.icon || "📍") : "🔒") + " " + r.name; const st = document.createElement("span"); st.textContent = open ? (r.id === here ? "You are here" : "Open · " + (info.tag || "")) : (r.opensAt ? "Opens " + new Date(r.opensAt).toLocaleDateString(undefined, { day: "numeric", month: "long" }) : "Coming soon") + (info.tag ? " · " + info.tag : ""); c.append(h, st);
+  if (!open && info.plan) { const pl = document.createElement("small"); pl.textContent = "Planned: " + info.plan + " Nobody can go there until it opens."; c.append(pl); }
+  if (open && t && r.id !== here) { const go = document.createElement("button"); go.type = "button"; go.className = "primary"; go.textContent = "🛣️ Travel to " + r.name.replace(/ and the.*/, ""); go.onclick = () => { setZoomTo(0.5); travelMenu(r.id); }; c.append(go); }
+  const x = document.createElement("button"); x.type = "button"; x.textContent = "Close"; x.onclick = () => { c.hidden = true; WM.sel = null; }; c.append(x);
 }
-function wmClose() { if (!WM.on) return; WM.on = false; if (WM.el) WM.el.hidden = true; }
+function wmTick(force) { // update the dot: you
+  if (!WM.on || !WM.me || !ISL.d) return; const now = performance.now(); if (!force && now - WM.lastT < 400) return; WM.lastT = now; const [mx, my] = meTile(); WM.me.style.left = mx / ISL.d.w * 100 + "%"; WM.me.style.top = my / ISL.d.h * 100 + "%";
+}
+function wmClose() { if (!WM.on) return; WM.on = false; document.body.classList.remove("wmOn"); if (WM.el) WM.el.hidden = true; }
 function wmCheck() { if (s.zoom < WM_Z && !s.inside && !introOn) wmOpen(); else if (WM.on) wmClose(); wmTick(false); }
 
 function setZoomTo(z) { // set an exact zoom level

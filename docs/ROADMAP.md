@@ -50,6 +50,15 @@ This is the build order for the three big upgrades. Work one phase at a time. Wh
 - Repeat Phase 2 art for each region before opening it.
 - Open regions on a schedule: Region 1 at launch, then one new region per season. (Port Louis was built early and is open alongside Grand Baie.)
 
+## The five closed regions (to build slowly, one at a time)
+The zoom-out map is now the real island: the three open towns in colour, the rest grey with a "Coming soon" card (`ISL_CITIES` in `index.html`). Each closed region needs its own town and its highway, built the same way as the first three, then opened with the admin card:
+1. **Curepipe, Quatre Bornes and Moka** (`plateau`): the cool, rainy centre; the first one to build, because it joins Port Louis and Flic en Flac. Highway from Port Louis.
+2. **Pamplemousses and the north** (`north`): botanical garden, sugar mill; highway from Grand Baie or Port Louis.
+3. **Mahébourg and Grand Port** (`southeast`): old port, airport.
+4. **Flacq and Belle Mare** (`east`): beaches and golf.
+5. **Le Morne, Chamarel and the south** (`south`): mountains, waterfalls, kite surfing.
+For each: a config in `tools/build-region.mjs` (centre, name, `stopNear`), its own look in `CITY` (colours, tagline, palette), its residents in `RDEF`/`LN`, and a highway from `tools/build-road.mjs`. The map chain is north to south today; the island is a graph, so the world layout (`WREG`, `LAKAZ`, server `LAYOUT`) will need a branch for the first region that is not on that line.
+
 ## Rules that apply to every phase
 - Read `CLAUDE.md` first. The server decides money, positions and prizes.
 - Check a region is open before putting any event or content in it.
