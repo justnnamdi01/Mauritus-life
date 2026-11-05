@@ -55,3 +55,6 @@ Sleeps when energy is under 30, eats when food is under 35, otherwise works a sh
 
 ## Measure in the closed test
 Money at 30 minutes, 1 hour, 3 hours and 1 day of play, split by Resident/Student/Tourist; how many shifts per hour; what players buy first; who runs out of money and quits.
+
+## Port Louis jobs (session 16)
+Two new shifts use the standard shift formula (4 hours, level every 4 shifts): **Bank clerk** (Rs 700, 1,100, 1,700) at the two towers, 9 to 16, and **Bus conductor** (Rs 550, 800, 1,100) at Victoria Urban Terminal, 6 to 19. The **Metro Express** ride costs Rs 20, the **Oceanarium** ticket Rs 250 and the terminal's supermarket shop Rs 500 (8 meals), all with 15% VAT. Retune with the rest of the economy when it is measured.
