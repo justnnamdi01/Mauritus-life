@@ -44,7 +44,8 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     // The walkable maps and the roads between them. You only change town by travelling; the server times the trip and refuses jumps.
     const ask = (t, extra) => new Promise((res) => { const rid = "r" + Math.random().toString(36).slice(2, 8), h = (d) => { try { const m = JSON.parse(d); if (m.rid === rid) { ws.off("message", h); res(m); } } catch (e) {} }; ws.on("message", h); ws.send(JSON.stringify(Object.assign({ t, rid }, extra))); });
     { const uidOf = got.find((m) => m.t === "welcome").uid; ws.send(JSON.stringify({ t: "doc.set", path: "players/" + uidOf, data: { name: "Tester", money: 5000, savedAt: Date.now() }, rid: "d1" })); await wait(400); } // a saved player, so the server knows what they can pay
-    const stop = { x: 56.5, y: 259.5 }, plStop = { x: 48.5, y: 370.5 }, flStop = { x: 52.5, y: 428.5 };
+    const mapOf = (id) => { const t = fs.readFileSync(path.join(__dirname, "..", "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); }, stopOf = (id, row) => { const m = mapOf(id); return { x: m.stop.x, y: row + 4 + m.stop.y }; }; // the bus stations come from the real maps
+    const stop = stopOf("grandbaie", 232), plStop = stopOf("portlouis", 320), flStop = stopOf("west", 408);
     pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "a new player cannot start in Port Louis");
     pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "a new player starts at the Grand Baie bus station");
     pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel" && l.back.y < 320, "jumping to Port Louis without a trip is refused and put back");

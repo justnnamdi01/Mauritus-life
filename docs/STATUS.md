@@ -28,6 +28,15 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Done, session 9 (5 Nov 2026): towns rebuilt so they look better and connect
+- **Problem (measured):** the real roads had been copied one tile at a time, which left Grand Baie's roads in 79 broken pieces (6 of 18 shop doors cut off), 773 zigzag corners against 128 straight tiles, buildings on only 4% of the land. Port Louis: 49 pieces, 11 of 37 doors cut off.
+- **Roads rebuilt** (`tools/build-region.mjs`): simplified, snapped to a 4-tile grid and drawn as straight runs (main roads 3 tiles, streets 2), through streets and small streets thinned so blocks stay open. Result: each town's road network is now one connected piece (0 loose fragments), zigzags cut by about two thirds, every shop door gets a paved path to the main road (a place nobody can walk to is dropped).
+- **Highways:** the builder draws a 3-wide main road from the network to the map edge towards each neighbour town (one per direction) and records it as `exits`; the game puts a "Road to ..." sign there (`M.exits` in `index.html`), and the sign's menu offers every other town.
+- **Scenery houses:** where the real map has buildings, the blocks are filled with simple houses facing the streets (`M.houses`, `decoHouse()`): cheap to draw, solid, no door or label. Only 3 to 37 per town so far.
+- Bus stations now sit at the middle of each town (anchored on the Bazaar, a market, or the shopping centre).
+- Tested: server tests pass (stations read from the maps), full browser tour of the three towns by real trips, no errors.
+- **Honest limits:** diagonal roads are still staircases (a tile grid can't draw a slanted road); Grand Baie's estate area is still mostly empty grass with house plots; only 45 scenery houses in total, so towns are still sparse compared with real ones; the look is still blocky boxes (art pass is Phase 2); there is no driving along the road between towns, only the trip screen.
+
 ## Done, session 8 (3 Nov 2026): the towns are connected by real roads
 - **Problem:** the three towns were pockets joined by a Rs 75 bus that jumped you across. Real distances cannot be walked tile by tile (Grand Baie to Port Louis is about 21 km).
 - **Roads:** `game/roads.js` finds the route between two towns along the real road network on the island map (A* over the OpenStreetMap roads, from each town's gate in `regions.json`). Grand Baie to Port Louis 20.7 km through the north, Port Louis to Flic en Flac 22.9 km, Grand Baie to Flic en Flac 43.5 km.
