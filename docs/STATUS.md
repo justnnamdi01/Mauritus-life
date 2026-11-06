@@ -28,6 +28,11 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Done, session 21c (6 Nov 2026): sit down and chill
+- Benches are now seats: Port Louis' own benches, four new ones by the stage and the Ferris wheel, and one at every town's bus station. Tap a bench, choose "Sit and watch the world": the character sits (existing `sit` pose) and the camera drifts to a low third-person view behind them, slowly swinging side to side (`SIT`, `sitStart`, `sitCam` in `index.html`). Energy and mood creep up every 3 seconds. "Stand up", tapping the ground, walking or starting anything else ends it, and the camera eases back.
+- Tested in the headless browser: sitting on a Port Louis bench gives the sit pose, the camera blends in (k 0.2 to 0.8) and back out, needs rise, no page errors; the screenshot shows the third-person view behind the seated character.
+- Not tested: Grand Baie and Flic en Flac bus-station benches (placed at a fixed offset from the stop, so one may sit on a bad tile), seating on real phones, and a longer sit with other players watching.
+
 ## Done, session 21b (6 Nov 2026): Chapter 1, the first step outside
 - When a new player first leaves their Port Louis flat, a skippable camera tour (about 12 s, with captions) shows the town: the flat, Victoria Terminal, the waterfront, then a red suitcase left by the stage. A card offers "Go and find it" (glowing arrows). Pick it up (walk onto the gold ring), take it to Guide Anita at the terminal: lunch box (+1 meal), a little fun, and a tip about the courier job and the Island Pass. No money is paid by the phone. Code: `STORY`, `storyMaybe`, `storyCam`, `storyTick` in `game/public/index.html`; progress is `s.story` (0 not started, 1 suitcase out, 2 carrying it, 3 done), so a reload resumes. It waits while another card is open and only starts for players at goal 0 living in a Victoria Heights flat.
 - Tested in the headless browser: tour starts on the first exit, ends or skips into the card, picking up and returning the suitcase moves `s.story` 1, 2, 3 and gives the meal; no page errors.
