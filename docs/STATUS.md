@@ -28,6 +28,12 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Done, session 18 (6 Nov 2026): casino rules and self-exclusion
+- **Rules page** (`casinoRules`): how each game works, the real odds pulled from the server (`casino.state` returns `rtp` and the slot payouts), the limits, the hourly loss break, and safe-play advice. Linked from the casino menu and the foot of every game.
+- **Self-exclusion** (`casino.exclude`, `db.casino.excl`): 24 hours, 7 or 30 days, two taps to confirm. The server refuses every bet (roulette, slots, new blackjack hands) until it ends. It can be made longer, never shorter, and there is **no admin button to lift it** (to lift one by hand, delete the player's entry in `db.casino.excl` in the save, only if the player asks and you are sure). The menu shows why the games are blocked.
+- **Reality check:** after every 30 minutes at the tables a reminder appears.
+- Tested: 7 new server checks in `test/capital.test.js` (real odds on the page, only 1/7/30 days, bets refused while excluded, never shorter, can be longer) and the screens in the browser. Not done: a daily deposit-style limit the player sets themselves; a link to a real helpline (the page only names the Gambling Regulatory Authority: check the contact details before launch).
+
 ## Done, session 17 (6 Nov 2026): the casino, the market, the job challenges, street food and the harbour sounds
 - **Server side (`game/capital.js`, `game/casino.js`, wired in `server.js`; the phone only shows results):**
   - **Casino:** roulette (European, 37 pockets), blackjack (one deck, dealer stands on 17, blackjack 3:2, double on the first move) and slots (three reels). `crypto.randomInt` on the server. Bets Rs 20 to 2,000, only in Port Louis, the server checks your last saved money, one blackjack hand at a time. **Take-a-break rule:** after Rs 30,000 of net losses in a rolling hour the server refuses bets. House edge: slots pay back 93.3%, roulette 97.3%, blackjack about 94% with simple play. The client applies the server's `paid`/`payout` to your cash (`csnApply`). Opening hours 11:00 to 04:00 (client).

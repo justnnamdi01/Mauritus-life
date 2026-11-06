@@ -300,6 +300,7 @@
     },
     casino: { // the Port Louis casino: the server spins, deals and rolls
       state: function () { return ask({ t: "casino.state" }); },
+      exclude: function (days) { return ask({ t: "casino.exclude", days: days }); },
       roulette: function (bet, stake) { return ask({ t: "casino.roulette", bet: bet, stake: stake }); },
       slots: function (stake) { return ask({ t: "casino.slots", stake: stake }); },
       bjStart: function (stake) { return ask({ t: "casino.bj.start", stake: stake }); },

@@ -42,6 +42,15 @@ async function travelToPortLouis(p) { const gb = REG.STOPS.grandbaie, pl = REG.S
     let doubled = 0; for (let i = 0; i < 12 && !doubled; i++) { await wait(150); const d = await A.ask("casino.bj.start", { stake: 100 }); if (d.view.done) continue; await wait(150); const h2 = await A.ask("casino.bj.hit"); if (h2.view.done) continue; await wait(150); const dd = await A.ask("casino.bj.double"); ok(!dd.ok, "you cannot double after you have hit"); await A.ask("casino.bj.stand"); doubled = 1; }
     await wait(150); const poor = await player("Poor", 30); await travelToPortLouis(poor); r = await poor.ask("casino.slots", { stake: 100 }); ok(!r.ok, "a player who cannot afford the bet is refused");
 
+    // the rules and self-exclusion
+    const X = await player("Excl", 50000); await travelToPortLouis(X); let st = await X.ask("casino.state"); ok(st.ok && st.excluded === 0 && Math.abs(st.rtp.slots - CASINO.slotsRtp()) < 1e-9 && st.triples["7️⃣"] === 275, "the rules page gets the real odds from the server");
+    r = await X.ask("casino.exclude", { days: 3 }); ok(!r.ok, "only 1, 7 or 30 days can be chosen");
+    r = await X.ask("casino.exclude", { days: 7 }); ok(r.ok && r.excluded > Date.now() + 6 * 86400000, "a player can exclude themselves for 7 days");
+    await wait(150); r = await X.ask("casino.slots", { stake: 100 }); ok(!r.ok && r.excluded, "while excluded the house refuses slots (" + r.error.slice(0, 40) + "...)");
+    await wait(150); r = await X.ask("casino.roulette", { bet: { type: "red" }, stake: 100 }); ok(!r.ok, "and roulette"); await wait(150); r = await X.ask("casino.bj.start", { stake: 100 }); ok(!r.ok, "and blackjack");
+    await wait(150); r = await X.ask("casino.exclude", { days: 1 }); ok(r.ok && r.excluded > Date.now() + 6 * 86400000, "exclusion can never be made shorter");
+    r = await X.ask("casino.exclude", { days: 30 }); ok(r.ok && r.excluded > Date.now() + 29 * 86400000, "but it can be made longer");
+
     // the job challenges
     const B = await player("Bank", 5000); await travelToPortLouis(B);
     let c = await B.ask("job.start", { game: "banker" }); ok(c.ok && c.qs.length === 5 && !JSON.stringify(c).includes("ans"), "the banker challenge has 5 sums and no answers");
