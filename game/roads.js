@@ -45,6 +45,6 @@ function plan(from, to) {
   const r = route(from, to); if (!r) return null;
   return { from, to, km: r.km, via: r.via, path: r.path, modes: Object.values(MODES).map((m) => ({ id: m.id, name: m.name, icon: m.icon, needsCar: !!m.needsCar, where: m.where, fare: Math.round(m.base + m.perKm * r.km), minutes: Math.round(r.km / m.kmh * 60), wait: !!m.wait })) };
 }
-// real seconds a journey takes on screen: a game minute is half a real second, but a trip is squeezed so it never drags
-const journeySecs = (minutes) => Math.max(8, Math.min(45, minutes / 4));
+// real seconds a journey takes: you ride along the road in the world, so it lasts 32 to 55 seconds
+const journeySecs = (minutes) => Math.max(32, Math.min(55, minutes / 1.5)); // long enough to watch the ride along the real road
 module.exports = { MODES, GATES, route, plan, journeySecs };

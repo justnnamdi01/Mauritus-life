@@ -101,24 +101,9 @@ module.exports = function (X) {
 
   // ---------------- discovery: the "new in town" checklist (paid once per town by the server) and the City Pulse (who is where)
   const AREA = { caudan: "Caudan Waterfront", centre: "Place d'Armes", gare: "Immigration Square", chinatown: "Chinatown", terminal: "Victoria Terminal" };
-  const LM_PAY = 100, LM_BONUS = 200, LM_RADIUS = 7;
   const TOWN_NAME = { grandbaie: "Grand Baie", portlouis: "Port Louis", west: "Flic en Flac" };
-  const lmCache = {};
-  function landmarksOf(town) { // three places worth walking to in each town: where they are comes from the town's own map
-    if (lmCache[town]) return lmCache[town]; const r = REG.LAYOUT.find((q) => q.id === town); if (!r) return []; const M = r.M, out = [];
-    if (town === "portlouis") { for (const k of ["caudan", "centre", "chinatown"]) { const z = (M.zones || []).find((q) => q.k === k); if (z) out.push({ id: k, name: AREA[k], x: z.x, y: r.y0 + z.y }); } }
-    else { const pats = town === "grandbaie" ? [/Baza+r|Foire/i, /Shopping Centre|Supermarket|Library/i, /Police|School|Government|Church|Temple/i] : [/Tourist Office|Market/i, /Post Office|Police|Clinic|Library/i, /Hotel|Caf|Pizz|Restaurant/i];
-      for (const re of pats) { const b = (M.buildings || []).find((q) => re.test(q.name) && !out.some((o) => o.id === q.name)); if (b) out.push({ id: b.name, name: b.name.replace(/ · .*/, ""), x: b.x + b.w / 2, y: r.y0 + b.y + b.h + 1 }); }
-      const st = REG.STOPS[town]; for (const b of [...(M.buildings || [])].sort((a, c) => Math.hypot(c.x - st.x, r.y0 + c.y - st.y) - Math.hypot(a.x - st.x, r.y0 + a.y - st.y))) { if (out.length >= 3) break; if (!out.some((o) => o.id === b.name)) out.push({ id: b.name, name: b.name.replace(/ · .*/, ""), x: b.x + b.w / 2, y: r.y0 + b.y + b.h + 1 }); } }
-    return (lmCache[town] = out.slice(0, 3));
-  }
-  const visitOf = (uid, town) => { const v = (db.capital.visit = db.capital.visit || {}); const u = (v[uid] = v[uid] || {}); return (u[town] = u[town] || { ids: [], bonus: false }); };
   const townOfPeer = (p) => { const rg = p.presence && !p.presence.in ? REG.regionOfPresence(p.presence) : ""; return TOWN_NAME[rg] ? rg : ""; };
-  function visitTick() { for (const [, p] of peers) { if (!p.uid || !db.players[p.uid]) continue; const town = townOfPeer(p); if (!town) continue; const lms = landmarksOf(town), v = visitOf(p.uid, town), px = Number(p.presence.x), py = Number(p.presence.y); let changed = false;
-      for (const lm of lms) if (!v.ids.includes(lm.id) && Math.hypot(px - lm.x, py - lm.y) <= LM_RADIUS) { v.ids.push(lm.id); changed = true; mailTo(p.uid, LM_PAY, "New in town: " + lm.name, "Mauritius Life"); send(p.ws, { t: "zone", ev: "landmark", town, id: lm.id, name: lm.name, paid: LM_PAY, done: v.ids.length, of: lms.length }); }
-      if (changed && v.ids.length >= lms.length && !v.bonus) { v.bonus = true; mailTo(p.uid, LM_BONUS, "New in town: you know " + TOWN_NAME[town], "Mauritius Life"); send(p.ws, { t: "zone", ev: "complete", town, paid: LM_BONUS }); } if (changed) persist(); } }
   function zoneWs(me, m, reply) {
-    if (m.t === "zone.state") { const town = String(m.town || regionOf(me)); if (!TOWN_NAME[town]) return reply({ ok: true, town: "", landmarks: [] }); const v = visitOf(me.uid, town); return reply({ ok: true, town, name: TOWN_NAME[town], pay: LM_PAY, bonus: LM_BONUS, bonusPaid: v.bonus, landmarks: landmarksOf(town).map((l) => ({ id: l.id, name: l.name, x: l.x, y: l.y, done: v.ids.includes(l.id) })) }); }
     if (m.t === "zone.pulse") { const towns = Object.keys(TOWN_NAME).map((id) => ({ id, name: TOWN_NAME[id], players: 0, areas: [] })), byId = Object.fromEntries(towns.map((t) => [t.id, t])), pl = PL(); const zs = pl ? (pl.M.zones || []).map((z) => ({ k: z.k, x: z.x, y: pl.y0 + z.y, r: z.r })) : []; for (const z of zs) byId.portlouis.areas.push({ k: z.k, name: AREA[z.k] || z.k, n: 0 }); let road = 0, all = 0;
       for (const [, p] of peers) { if (!p.uid || !db.players[p.uid] || p.away) continue; all++; const rg = p.presence && !p.presence.in ? REG.regionOfPresence(p.presence) : ""; if (byId[rg]) { byId[rg].players++; if (rg === "portlouis") { const px = Number(p.presence.x), py = Number(p.presence.y); zs.forEach((z, i) => { if (Math.hypot(px - z.x, py - z.y) <= z.r + 2) byId.portlouis.areas[i].n++; }); } } else if (String(rg).startsWith("road_")) road++; }
       return reply({ ok: true, online: all, onRoad: road, towns, stalls: stalls.size }); }
@@ -133,6 +118,5 @@ module.exports = function (X) {
       if (away || now - st.openedAt > STALL_LIFE) { stalls.delete(uid); if (p) send(p.ws, { t: "market", ev: "closed", why: away ? "You walked away from your blanket." : "Your pitch time is up." }); continue; }
       if (!st.licensed && now - st.openedAt > RAID_AFTER_T && Math.random() < RAID_CHANCE_T) { stalls.delete(uid); for (const [, q] of peers) send(q.ws, { t: "market", ev: "raid", x: st.x, y: st.y, name: st.name }); if (p) send(p.ws, { t: "market", ev: "raided", why: "The Police Municipale took your blanket and everything on it. A licensed pitch at the terminal or Immigration Square is safe." }); } }
   }
-  setInterval(visitTick, TEST ? 400 : 3000).unref();
   return { handle, tick, GOODS, hands, stalls, TEST };
 };

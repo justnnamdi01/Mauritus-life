@@ -91,12 +91,6 @@
 .bizunlock { margin: 6px 0 10px; padding: 10px 12px; border-radius: 14px; font-size: 0.8rem; font-weight: 700; line-height: 1.35; color: #fff; background: linear-gradient(135deg, #1f6fa8, #7a4fd1); }
 
 .housepic { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto 10px; border-radius: 16px; border: 2px solid rgba(255, 255, 255, 0.25); }
-#cityCard { position: fixed; left: 50%; top: 14%; transform: translate(-50%, -30px) scale(0.92); z-index: 60; display: flex; align-items: center; gap: 12px; padding: 12px 20px 12px 14px; border-radius: 18px; background: rgba(10,22,30,0.9); border: 2px solid var(--cc, #14b8c9); box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 0 0 4px rgba(255,255,255,0.05); color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.35s, transform 0.45s cubic-bezier(.2,1.3,.4,1); max-width: calc(100% - 32px); }
-#cityCard.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
-#cityCard .cci { font-size: 2.3rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
-#cityCard b { display: block; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cc, #14b8c9); }
-#cityCard h2 { margin: 1px 0 1px; font-size: 1.35rem; line-height: 1.1; }
-#cityCard small { color: rgba(255,255,255,0.78); font-size: 0.78rem; } #cityCard .ccl { margin: 6px 0 4px; font-size: 0.8rem; line-height: 1.5; } #cityCard .cch { display: block; color: #ffd23c; margin-top: 2px; }
 .wmpin.locked i { background: #b9bbbd; filter: grayscale(1); } .wmpin.locked span { background: #d6d8da; color: #55595e; }
 .wmcard { flex-direction: column; align-items: flex-start; gap: 6px; } .wmcard small { opacity: 0.85; font-size: 0.78rem; line-height: 1.35; }
 body.wmOn .hud, body.wmOn .dock { display: none !important; }
@@ -1431,9 +1425,6 @@ const CITY = { // what each town is like: its colour, its ground, its houses. So
   portlouis: { name: "Port Louis", icon: "🏙️", col: "#e4572e", tag: "The busy capital", gc: { 3: "#7b9a64", 9: "#6f9560", 2: "#d4c9a8", 22: "#bdbbb3" }, road: "#565d66", pal: [["#d9d6cc", "#5f6f82"], ["#e8d9b5", "#8d4a3a"], ["#c9ced4", "#46566c"], ["#e2c9a0", "#7a5a3a"], ["#cfc7bb", "#6b3f35"]] },
   west: { name: "Flic en Flac", icon: "🏖️", col: "#f0a030", tag: "Waves, sunsets and slow days", gc: { 3: "#a9b862", 9: "#97b055", 2: "#f0d9a0", 22: "#e0cfa6" }, road: "#8f887a", pal: [["#ffd9c7", "#c8553d"], ["#fff2b8", "#4a8fb8"], ["#cfe8d8", "#a85a3a"], ["#f7c6d0", "#5a7a4a"], ["#d8e6ff", "#d2693f"]] }
 };
-CITY.grandbaie.loops = [["🌴", "Eat, shop and relax on the beach front"], ["💼", "Work a shift at the bazaar, bakery or fish market"], ["🚌", "Bus station: ride to Port Louis or Flic en Flac"]];
-CITY.portlouis.loops = [["💼", "Work: conductor, bank clerk, courier dashes"], ["🎰", "Caudan: casino, museum and the Metro Express"], ["🧺", "Sell from a blanket and try the street food"]];
-CITY.west.loops = [["🏖️", "Beach, surf and the sunset"], ["💼", "Shifts at the restaurants and the fish market"], ["🚌", "Bus station: ride to Port Louis"]];
 const CITY_ROAD = { name: "The road", icon: "🛣️", col: "#7a8896", tag: "", gc: {}, road: "#6a7078", pal: CITY.grandbaie.pal.slice(0, 2).concat(CITY.portlouis.pal.slice(0, 2), CITY.west.pal.slice(0, 2)) }; // between the towns
 const palOf = (reg) => (CITY[reg] || CITY_ROAD).pal;
 const mixHex = (a, b, f) => { const h = (x) => [1, 3, 5].map((i) => parseInt(x.slice(i, i + 2), 16)); const A2 = h(a), B2 = h(b); return "rgb(" + A2.map((v, i) => Math.round(v + (B2[i] - v) * f)).join(",") + ")"; };
@@ -3808,7 +3799,7 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
   ]],
   ["🗺️", "Places and travel", [
     ["How do I find a place?", "Phone → Maps. Tap a place to be guided there with an arrow. Rides, buses and taxis are in the Ride menu.", "maps"],
-    ["I just arrived in a town. What can I do?", "Look for the glowing rings on the ground: green is work (Rs), gold is shops, pink is food and fun, blue is travel. The closest places show a name tag. Tap the 🧭 button for the City Pulse: it lists what you can do in each town, how much you can earn and where the other players are, and tap any place for glowing arrows to its door. A town guide stands where you arrive, and the New in town list pays you Rs 100 for each of three places you walk to.", "pulse"],
+    ["I just arrived in a town. What can I do?", "Look for the glowing rings on the ground: green is work (Rs), gold is shops, pink is food and fun, blue is travel. Tap the 🧭 button for the City Pulse: it lists what you can do in each town, how much you can earn and where the other players are, and a tap on a place in your town lays glowing arrows to its door. A town guide stands where you arrive.", "pulse"],
     ["How do I stop myself gambling?", "At the casino cashier or in any game, open Rules, odds and self-exclusion at the bottom and choose 24 hours, 7 days or 30 days. Tap twice to confirm. The server then refuses all your bets until the time is up, nobody can end it early, and you can make it longer but never shorter. The game also reminds you every 30 minutes at the tables.", ""],
     ["How does the casino work?", "The casino on the Caudan quay is open from 11:00 to 04:00. Choose roulette, blackjack or slots. Bets run from Rs 20 to Rs 2,000 and the server decides every spin, card and reel, so there is nothing to hack. The house keeps a small edge, and if you lose Rs 30,000 in an hour it asks you to take a break. It is play money with no real value.", ""],
     ["How do I sell from a blanket?", "In Port Louis, open the Street market from the Victoria terminal or Immigration Square menu, or ask a hawker. Lay out a blanket, stock it from the wholesaler, set your prices and stay near it. Other players buy from it and you are paid by mail, minus 6%. A licensed pitch (Rs 150, two hours) at the terminal or the square is safe. A blanket anywhere else is free but the Police Municipale may take it with all its stock.", ""],
@@ -4080,13 +4071,7 @@ function salonMenu(kind) { // the salon's price list
 // ---------- where a town's highway exit meets the start of its highway: walk or ride on and you carry on along the road ----------
 let lastRgId = ""; // the region you were last standing in
 const placeIcon = () => (CITY[lastRgId] || CITY_ROAD).icon;
-function cityArrive(id, first) { // say where you are: a coloured card as you cross into a town, and the colour of the clock card
-  const C = CITY[id] || CITY_ROAD, rr = regionDef(id), road = rr && rr.kind === "road"; const clk = document.querySelector(".hud.clock"); if (clk) clk.style.borderLeft = "4px solid " + C.col;
-  s.seenCity = s.seenCity || {}; if (first && s.seenCity[id]) return; s.seenCity[id] = 1; let el = document.getElementById("cityCard"); if (!el) { el = document.createElement("div"); el.id = "cityCard"; document.body.append(el); }
-  const nm = road ? "The road to " + (RG_NAME[rr.M.b] || "") : C.name, sub = road ? RG_NAME[rr.M.a] + " ⇄ " + RG_NAME[rr.M.b] + " · " + rr.M.km + " km" : C.tag;
-  el.innerHTML = ""; el.style.setProperty("--cc", C.col); const i = document.createElement("div"); i.className = "cci"; i.textContent = C.icon; const t = document.createElement("div"); const h = document.createElement("b"); h.textContent = road ? "On the road" : "Welcome to"; const n2 = document.createElement("h2"); n2.textContent = nm; const sb = document.createElement("small"); sb.textContent = sub; t.append(h, n2, sb); if (C.loops && !road) { const ul = document.createElement("div"); ul.className = "ccl"; for (const [ic, tx0] of C.loops) { const li = document.createElement("div"); li.textContent = ic + " " + tx0; ul.append(li); } t.append(ul); const hint = document.createElement("small"); hint.className = "cch"; hint.textContent = "Look for the glowing rings · tap 🧭 for the City Pulse"; t.append(hint); } el.append(i, t);
-  el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), road ? 3600 : 5600);
-}
+function cityArrive(id, first) { const C = CITY[id] || CITY_ROAD, clk = document.querySelector(".hud.clock"); if (clk) clk.style.borderLeft = "4px solid " + C.col; } // the clock card takes the town's colour (no pop-up card)
 function portalStep() { if (s.inside) return; const id = regionOfY(s.y); if (id === lastRgId || id === "old") return; const prev = lastRgId; lastRgId = id; if (!regionDef(id)) return; cityArrive(id, !prev); } // the towns and highways are one continuous map: you just walk from one to the next. This only says where you are now
 const RG_NAME = { grandbaie: "Grand Baie", portlouis: "Port Louis", west: "Flic en Flac", north: "Pamplemousses and the north", east: "Flacq and Belle Mare", southeast: "Mahébourg and Grand Port", south: "Le Morne and the south", plateau: "Curepipe and the plateau" }, RG_ENTRY = {}; for (const r of WREG) RG_ENTRY[r.id] = r.stop;
 const roadApi = () => { const a = window.claude && window.claude.road; return a && a.plan ? a : null; };
@@ -4106,9 +4091,26 @@ async function travelMenu(to) { // the ways to get to another town, with price a
 function tripGo(to, m, plan) { closeMenu(); (async () => { const a = roadApi(); if (!a) return; const r = await a.start(to, m.id, hasCar()).catch(() => null); if (!r || !r.ok) { toast((r && r.error) || "Couldn't start that trip."); return; }
   if (!r.again && r.fare > 0) { s.money -= r.fare; txn("Trip to " + (RG_NAME[to] || to) + " (" + m.name + ")", -r.fare); }
   startTransit({ to, mode: m.id, icon: m.icon, secs: r.secs, minutes: r.minutes, path: r.path || plan.path, via: r.via || plan.via, km: r.km || plan.km, startedAt: Date.now() - (r.again ? Math.max(0, (r.minutes ? ROADSECS(r.minutes) : r.secs) - r.secs) * 1000 : 0), endAt: Date.now() + r.secs * 1000 }); })(); }
-const ROADSECS = (minutes) => Math.max(8, Math.min(45, minutes / 4)); // the same journey length the server uses
+const ROADSECS = (minutes) => Math.max(32, Math.min(55, minutes / 1.5)); // the same journey length the server uses
 let TRN = null; // the journey on screen
+const TRIP_KIND = { bus: "bus", taxi: "taxi", car: "mine" };
+function tripRoute(from, to) { // the way from where you stand to the stop of the town you are going to: through each town's exit, along the real highway, into the next town
+  const chain = ["grandbaie", "portlouis", "west"], i = chain.indexOf(from), j = chain.indexOf(to); if (i < 0 || j < 0 || i === j) return null; const dir = j > i ? 1 : -1, pts = [{ x: s.x, y: s.y }]; let cur = { x: s.x, y: s.y };
+  const leg = (x, y) => { const p = locPath(cur.x, cur.y, x, y); if (p.length) for (const q of p) pts.push(q); else pts.push({ x, y }); cur = pts[pts.length - 1]; };
+  for (let k = i; k !== j; k += dir) { const A = regionDef(chain[k]), B = regionDef(chain[k + dir]), road = regionDef("road_" + (dir > 0 ? chain[k] + "_" + chain[k + 1] : chain[k + dir] + "_" + chain[k])); if (!A || !B || !road) return null;
+    const exA = (A.M.exits || []).find((e) => e.to === chain[k + dir]), exB = (B.M.exits || []).find((e) => e.to === chain[k]); if (!exA || !exB) return null; leg(exA.x, A.y0 + exA.y);
+    const rows = road.M.cx.map((_, r) => r); if (dir < 0) rows.reverse(); for (let q = 0; q < rows.length; q += 3) pts.push({ x: road.M.cx[rows[q]] + 0.5, y: road.y0 + rows[q] + 0.5 }); cur = pts[pts.length - 1]; leg(exB.x, B.y0 + exB.y); }
+  const stop = regionDef(to).stop; leg(stop.x, stop.y); return pts;
+}
+function startWorldTrip(T) { // ride the bus, taxi or your car along the road in the world instead of watching a map
+  if (!s.made || !R.ok || ride) return false; if (s.inside) leaveBuilding(); const from = regionOfY(s.y); if (from === T.to || s.jail > s.t) return false; let pts = null; try { pts = tripRoute(from, T.to); } catch (e) { pts = null; } if (!pts || pts.length < 6) return false;
+  let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); const total = Math.max(1, T.endAt - T.startedAt), done = Math.max(0, Math.min(0.97, (Date.now() - T.startedAt) / total)), left = Math.max(5, (T.endAt - Date.now()) / 1000);
+  let skip = len * done, k = 1; while (k < pts.length - 1 && skip > 0) { const sg = Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y); if (sg > skip) { const f = skip / sg; pts[k - 1] = { x: pts[k - 1].x + (pts[k].x - pts[k - 1].x) * f, y: pts[k - 1].y + (pts[k].y - pts[k - 1].y) * f }; break; } skip -= sg; k++; } pts = pts.slice(k - 1);
+  const kind = TRIP_KIND[T.mode] || "bus", spd = Math.min(11, Math.max(5, len * (1 - done) / left)); s.transit = { to: T.to, mode: T.mode, icon: T.icon || "🚌", minutes: T.minutes, path: T.path, via: T.via, km: T.km, startedAt: T.startedAt, endAt: T.endAt }; save(); closeMenu(); closePhone(); path = []; pending = null; keys = {}; scoot = false; cyc = false;
+  ride = { kind, v: VEH[kind], x: pts[0].x, y: pts[0].y, pts: pts.slice(1), phase: "go", on: true, world: true, T, spd, text: "On the " + VEH[kind].name, mins: 0, msg: "", t: 0, vert: false, rev: false, P: pts[0], D: pts[pts.length - 1], dest: pts[pts.length - 1] }; toast(T.icon + " " + (T.mode === "bus" ? "The bus sets off" : T.mode === "taxi" ? "The taxi sets off" : "You set off") + " for " + (RG_NAME[T.to] || T.to) + ". Sit back and watch the road."); return true;
+}
 function startTransit(T) { // the journey screen: the island, the real road, and a dot that follows it
+  if (startWorldTrip(T)) return;
   s.transit = { to: T.to, mode: T.mode, icon: T.icon || "🚌", minutes: T.minutes, path: T.path, via: T.via, km: T.km, startedAt: T.startedAt, endAt: T.endAt }; save(); closeMenu(); closePhone();
   let ov = $("transit"); if (!ov) { ov = document.createElement("div"); ov.id = "transit"; ov.style.cssText = "position:fixed;inset:0;z-index:99990;background:#0b1e2b;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center;font-family:inherit"; ov.innerHTML = '<div id="trnTitle" style="font-size:1.25rem;font-weight:800"></div><canvas id="trnMap" style="width:min(92vw,420px);height:auto;border-radius:14px;background:#0f3b55"></canvas><div id="trnSub" style="opacity:.85"></div><div style="width:min(92vw,420px);height:10px;border-radius:6px;background:rgba(255,255,255,.15);overflow:hidden"><i id="trnBar" style="display:block;height:100%;width:0;background:#ffa733"></i></div><div id="trnVia" style="opacity:.7;font-size:.85rem"></div>'; document.body.append(ov); }
   ov.hidden = false; $("trnTitle").textContent = (T.icon || "🚌") + " On the road to " + (RG_NAME[T.to] || T.to); $("trnVia").textContent = T.km + " km" + (T.via && T.via.length > 2 ? " · through " + T.via.slice(1, -1).join(", ") : ""); TRN = { T, last: performance.now(), done: false }; islandLoad().then(() => { if (TRN && !TRN.done) trnFrame(); });
@@ -4142,10 +4144,13 @@ function driveWhy() { // reason you cannot go on duty, or ""
   if (s.money < 80) return "You need Rs 80 for fuel"; // fuel money
   return s.energy < 20 ? "Too tired to drive" : ""; // tired or fine
 } // end driveWhy
+function parkCar() { if (ride && ride.manual) { ride = null; closeMenu(); toast("🅿️ You parked your car."); } }
+function driveOn() { if (ride || s.inside || busy) return; if (!hasCar()) { toast("You need a car: rent or buy one at a bus station."); return; } if (scoot) scootOff(true); if (cyc) cycOff(true); closeMenu(); path = []; ride = { kind: "mine", v: VEH.mine, x: s.x, y: s.y, pts: [], phase: "go", on: true, manual: true, vert: false, rev: false, t: 0, text: "Driving", mins: 0 }; toast("🚗 You are driving your car: tap or use the keys. Open Ride to park. It can go on any road to any open town."); }
 function rideMenu() { // step 1: choose where to go
   if (s.jail > s.t) { toast("You are in a cell. No rides from here."); return; } // jailed
+  if (ride && ride.manual) { openMenu("🚗 Your car", [{ label: "🅿️ Park your car", info: "Get out here", go: parkCar }], "You are driving."); return; }
   if (ride || busy) return; // already travelling or busy
-  closeMenu(); openPhone("ride"); // the Rides app: pick a place, then how to get there
+  closeMenu(); if (hasCar() && !s.inside) { openMenu("🚗 Ride", [{ label: "🚗 Drive your car", info: "Drive it yourself on any road, to any open town", go: driveOn }, { label: "📱 Taxis, buses and trips", info: "Open the Rides app", go: () => { closeMenu(); openPhone("ride"); } }], "Your car is waiting."); return; } openPhone("ride"); // the Rides app: pick a place, then how to get there
 } // end rideMenu
 const RIDE_CAT = [ // destination groups in the Rides app: [icon, title, building ids]
   ["🍔", "Food & drinks", ["snack", "cafe", "gelato", "maravan", "coq", "burgo", "sapphire", "belle"]],
@@ -4263,12 +4268,14 @@ function startRide(kind, dest, mins, msg) { // a vehicle comes to get you
 function follow(o, sp, dt) { // move something along its list of points; true when it has arrived
   if (!o.pts.length) return true; // nothing left to drive
   const p = o.pts[0], dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy), step = sp * dt; // next point and how far we can go
-  if (d > 0.01) { o.vert = Math.abs(dy) > Math.abs(dx); o.rev = o.vert ? dy < 0 : dx < 0; } // which way it faces
+  if (d > 0.01) { o.vert = Math.abs(dy) > Math.abs(dx); o.rev = o.vert ? dy < 0 : dx < 0; const a = Math.atan2(dy, dx); o.ang = o.ang === undefined ? a : o.ang + wrapA(a - o.ang) * Math.min(1, dt * 7); } // which way it faces
   if (d <= step) { o.x = p.x; o.y = p.y; o.pts.shift(); } else { o.x += dx / d * step; o.y += dy / d * step; } // reach the point or move towards it
   return false; // still driving
 } // end follow
 function rideStep(dt) { // run the trip each frame
   const r = ride; r.t += dt; // the trip and its timer
+  if (r.manual) { if (s.inside) { ride = null; return; } movePlayer(dt); r.x = s.x; r.y = s.y; if (meMoving) r.ang = Math.atan2(mvy, mvx); return; } // you are driving your own car
+  if (r.world) { follow(r, r.spd, dt); s.x = r.x; s.y = r.y; try { advance(r.T.minutes * dt / Math.max(1, (r.T.endAt - r.T.startedAt) / 1000), true); } catch (e) {} if (!r.pts.length) { ride = null; trnArrive(r.T, 0); } return; } // a bus, taxi or car ride to another town
   if (r.phase === "come") { // vehicle is driving to you
     const here = follow(r, r.v.sp, dt); // drive
     movePlayer(dt); // you walk to the kerb
@@ -5253,8 +5260,6 @@ function capCss() { if (document.getElementById("capCss")) return; const st = do
 #csn .foot { margin-top: auto; padding-top: 16px; font-size: 0.74rem; opacity: 0.7; line-height: 1.4; }
 #csn .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 8px 0; } #csn select, #jgm input { border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; padding: 8px; font: 700 0.9rem Figtree, sans-serif; }
 #jgm { position: fixed; inset: 0; z-index: 80; background: rgba(8,16,22,0.96); color: #fff; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 24px; overflow: auto; font-family: Figtree, sans-serif; } #jgm h2 { margin: 0 0 4px; } #jgm p { opacity: 0.8; margin: 4px 0 12px; } #jgm .q { display: flex; align-items: center; gap: 8px; margin: 8px 0; } #jgm .q span { flex: 1; font-weight: 700; } #jgm input { width: 96px; text-align: right; } #jgm button { border: 0; border-radius: 12px; padding: 12px 22px; background: #ffa733; color: #1a1a1a; font: 800 1rem Figtree, sans-serif; margin: 10px 8px 0 0; } #jgm .res { margin-top: 14px; font-weight: 800; font-size: 1.05rem; }
-#bcnTags { position: fixed; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; } .bcnTag { position: absolute; padding: 3px 10px; border-radius: 999px; background: rgba(8,18,26,0.82); border: 2px solid #fff; color: #fff; font: 800 0.74rem Figtree, sans-serif; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transition: opacity 0.2s; }
-#nit { position: fixed; left: 10px; top: calc(env(safe-area-inset-top, 0px) + 150px); z-index: 40; max-width: min(300px, calc(100% - 90px)); background: rgba(10,22,30,0.9); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; color: #fff; font-family: Figtree, sans-serif; overflow: hidden; } #nit[hidden] { display: none; } #nit button { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: #fff; font: 700 0.8rem Figtree, sans-serif; padding: 8px 12px; } #nit .nh { font-weight: 800; color: #ffd23c; } #nit .nr { border-top: 1px solid rgba(255,255,255,0.08); } #nit .nr.ok { opacity: 0.55; } #nit .nf { padding: 6px 12px 9px; font-size: 0.7rem; opacity: 0.7; }
 #courier { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 56px); transform: translateX(-50%); z-index: 60; background: rgba(10,22,30,0.92); color: #fff; padding: 8px 16px; border-radius: 999px; border: 2px solid #ffa733; font: 800 0.9rem Figtree, sans-serif; pointer-events: none; }
 `; document.head.append(st); }
 const csnRs = (n) => "Rs " + Math.round(n).toLocaleString("en");
@@ -5373,14 +5378,11 @@ function bcnBuild() { // the glowing rings and turning icons (built once, shown 
   if (BCN.built || !R.world) return; BCN.built = true; capCss(); BCN.list = bcnSpots(); const g = R.beacons = new THREE.Group(); R.world.add(g); const ringGeo = new THREE.RingGeometry(0.7, 1.05, 36);
   for (const h of BCN.list) { const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: BCN_COL[h.col], transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.set(h.x, 0.07, h.y); m.visible = false; g.add(m); h.ring = m;
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex(h.icon, h.icon === "Rs" ? "#0b8f55" : null, "#ffffff", 72), transparent: true, depthTest: false })); const tx = sp.material.map; sp.scale.set(0.95 * (tx.userData.aspect || 1), 0.95, 1); sp.renderOrder = 9; sp.position.set(h.x, 2.5, h.y); sp.visible = false; g.add(sp); h.sp = sp; }
-  const host = document.createElement("div"); host.id = "bcnTags"; document.body.append(host); for (let i = 0; i < 7; i++) { const d = document.createElement("div"); d.className = "bcnTag"; d.hidden = true; host.append(d); BCN.tags.push(d); }
 }
 const bcnV = new THREE.Vector3();
-function bcnTick(now) {
-  if (!R.world || !R.camera || !s.made) return; if (!BCN.built) bcnBuild(); const vis = !s.inside && $("phone").hidden && $("sheet").hidden && !introOn, near = [];
-  for (const h of BCN.list) { const d = Math.hypot(h.x - s.x, h.y - s.y), on = vis && d < 42; if (h.ring.visible !== on) { h.ring.visible = on; h.sp.visible = on; } if (!on) continue; const k = 1 + 0.12 * Math.sin(now / 350 + h.x); h.ring.scale.set(k, k, k); h.ring.material.opacity = d < 4 ? 0.95 : 0.6 + 0.25 * Math.sin(now / 420 + h.y); h.sp.position.y = 2.4 + 0.18 * Math.sin(now / 500 + h.x * 2); h.sp.material.opacity = d < 24 ? 1 : 0.55; if (d < 24) near.push([d, h]); }
-  near.sort((a, b) => a[0] - b[0]); const el0 = R.renderer.domElement, rc = el0.getBoundingClientRect(); BCN.tags.forEach((tag, i) => { const n = near[i]; if (!vis || !n) { tag.hidden = true; return; } const [d, h] = n; bcnV.set(h.x, 3.5, h.y).project(R.camera); if (bcnV.z > 1 || Math.abs(bcnV.x) > 1.05 || Math.abs(bcnV.y) > 1.05) { tag.hidden = true; return; }
-    tag.hidden = false; const txt = h.icon === "Rs" ? "Rs " + h.name : h.icon + " " + h.name; if (tag.textContent !== txt) { tag.textContent = txt; tag.style.borderColor = "#" + BCN_COL[h.col].toString(16).padStart(6, "0"); } tag.style.left = rc.left + (bcnV.x * 0.5 + 0.5) * rc.width + "px"; tag.style.top = rc.top + (-bcnV.y * 0.5 + 0.5) * rc.height + "px"; const sc = d < 8 ? 1 : d < 16 ? 0.9 : 0.78; tag.style.transform = "translate(-50%,-100%) scale(" + sc + ")"; tag.style.opacity = d < 12 ? 1 : 0.55 + 0.45 * (1 - (d - 12) / 12); });
+function bcnTick(now) { // the rings pulse and the icons turn, only near you
+  if (!R.world || !R.camera || !s.made) return; if (!BCN.built) bcnBuild(); const vis = !s.inside && $("phone").hidden && $("sheet").hidden && !introOn;
+  for (const h of BCN.list) { const d = Math.hypot(h.x - s.x, h.y - s.y), on = vis && d < 42; if (h.ring.visible !== on) { h.ring.visible = on; h.sp.visible = on; } if (!on) continue; const k = 1 + 0.12 * Math.sin(now / 350 + h.x); h.ring.scale.set(k, k, k); h.ring.material.opacity = d < 4 ? 0.95 : 0.6 + 0.25 * Math.sin(now / 420 + h.y); h.sp.position.y = 2.4 + 0.18 * Math.sin(now / 500 + h.x * 2); h.sp.material.opacity = d < 24 ? 1 : 0.55; }
 }
 // ---- chevron trail: glowing arrows on the ground, from your feet to the door you chose
 const CHEV = { m: [], t: 0, pts: [], tex: null };
@@ -5397,23 +5399,13 @@ function guideTo(x, y, label) { closePhone(); closeMenu(); if (s.inside) leaveBu
 const dirOf = (rg) => { const seen = {}, rows = [], me = { x: s.inside ? s.ox : s.x, y: s.inside ? s.oy : s.y }; if (!BCN.built) BCN.list = bcnSpots(); for (const h of BCN.list.filter((q) => q.reg === rg).sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))) { if (seen[h.kind]) continue; seen[h.kind] = 1; rows.push(h); } return rows; };
 const BCN_RING = { work: "🟢", shop: "🟡", fun: "🩷", go: "🔵" };
 async function pulseApp(box, link) {
-  box.append(el("p", "pnote", "Rings on the ground: 🟢 work (Rs) · 🟡 shops · 🩷 food and fun · 🔵 travel. Tap a place to get a trail of glowing arrows to its door.")); const a = capApi("zone"), slot = el("div"); box.append(slot); let r = null; if (a) { try { r = await a.pulse(); } catch (e) { r = null; } }
+  box.append(el("p", "pnote", "Rings on the ground: 🟢 work (Rs) · 🟡 shops · 🩷 food and fun · 🔵 travel. Tap a place in your town for glowing arrows to its door.")); const a = capApi("zone"), slot = el("div"); box.append(slot); let r = null; if (a) { try { r = await a.pulse(); } catch (e) { r = null; } }
   slot.append(el("p", "psec", r ? "Right now: " + r.online + " player" + (r.online === 1 ? "" : "s") + " online" + (r.onRoad ? " (" + r.onRoad + " on the road)" : "") + (r.stalls ? " · " + r.stalls + " market blanket" + (r.stalls === 1 ? "" : "s") : "") : "Right now"));
   const here = regionOfY(s.inside ? s.oy : s.y), order = ["grandbaie", "portlouis", "west"].sort((x, y) => (x === here ? -1 : y === here ? 1 : 0));
   for (const id of order) { const T = r && r.towns.find((q) => q.id === id), c = CITY[id]; const hot = T && T.areas.filter((q) => q.n > 0).sort((p2, q) => q.n - p2.n).slice(0, 3).map((q) => q.n + " at " + q.name).join(", "); slot.append(el("p", "psec", c.icon + " " + c.name + (id === here ? " · you are here" : "") + (T ? " · " + T.players + " here now" + (hot ? " (" + hot + ")" : "") : "")));
     for (const h of dirOf(id).slice(0, 9)) { const rowB = el("button", "prow"), l = el("span", "", BCN_RING[h.col] + " " + h.name); l.append(el("small", "", h.gets)); rowB.type = "button"; rowB.append(l, el("b", "", id === here ? "📍" : "›")); rowB.onclick = () => { if (id === here) guideTo(h.x, h.y, h.name); else { closePhone(); travelMenu(id); } }; slot.append(rowB); } }
 }
-// ---- the "new in town" checklist: the server ticks off places as you reach them and pays Rs 100 each, Rs 200 more when all three are done
-const NIT = { town: "", d: null, open: true, t: 0, hide: 0 };
-async function nitPoll(force) { const a = capApi("zone"); if (!a || !s.made) return; const rg = s.inside ? regionOfY(s.oy) : regionOfY(s.y), town = ["grandbaie", "portlouis", "west"].includes(rg) ? rg : ""; if (!town) { NIT.town = ""; nitDraw(); return; } if (!force && town === NIT.town && Date.now() - NIT.t < 15000) return; NIT.t = Date.now(); let r; try { r = await a.state(town); } catch (e) { return; } if (!r || !r.ok || !r.landmarks) { NIT.t = 0; return; } NIT.town = town; NIT.d = r; nitDraw(); }
-function nitDraw() {
-  capCss(); let box = document.getElementById("nit"); const d = NIT.d, done = d && d.landmarks.every((l) => l.done) && d.bonusPaid; if (!NIT.town || !d || d.town !== NIT.town || done || s.inside || introOn) { if (box) box.hidden = true; return; }
-  if (!box) { box = document.createElement("div"); box.id = "nit"; document.body.append(box); } if (NIT.shown !== NIT.town) { NIT.shown = NIT.town; NIT.open = true; setTimeout(() => { NIT.open = false; nitDraw(); }, 12000); } box.hidden = false; box.innerHTML = ""; const n = d.landmarks.filter((l) => l.done).length, head = el("button", "nh", "📍 New in " + d.name + " · " + n + "/" + d.landmarks.length + " · Rs " + (d.pay * d.landmarks.length + d.bonus) + " to earn " + (NIT.open ? "▾" : "▸")); head.type = "button"; head.onclick = () => { NIT.open = !NIT.open; nitDraw(); }; box.append(head);
-  if (NIT.open) { for (const l of d.landmarks) { const row = el("button", "nr" + (l.done ? " ok" : ""), (l.done ? "✅ " : "⬜ ") + l.name + (l.done ? "" : " · Rs " + d.pay)); row.type = "button"; row.onclick = () => { if (!l.done) guideTo(l.x, l.y, l.name); }; box.append(row); } box.append(el("div", "nf", "Walk to each place. All three: +Rs " + d.bonus + " (paid by mail, once per town).")); }
-}
-window.addEventListener("fef-zone", (e) => { const d = e.detail || {}; if (d.ev === "landmark") { toast("✅ " + d.name + ": +Rs " + d.paid + " (" + d.done + "/" + d.of + ")"); NIT.t = 0; nitPoll(true); } if (d.ev === "complete") { toast("🎉 You know " + (RG_NAME[d.town] || "the town") + "! +Rs " + d.paid + " bonus, by mail."); NIT.t = 0; nitPoll(true); } });
-let nitT = 0;
-function discoveryStep(dt, now) { bcnTick(now); chevTick(now, dt); nitT -= dt; if (nitT <= 0) { nitT = 3; nitPoll(false); } }
+function discoveryStep(dt, now) { bcnTick(now); chevTick(now, dt); }
 // ---- the town guide at the arrival point: a friendly face with a bubble that changes every 8 seconds
 const GREET_TIPS = {
   grandbaie: ["Welcome to Grand Baie! The bazaar is just down the street: snacks, fruit and a stall job.", "Green rings mean work, gold shops, pink food and fun. Look for the glowing circles!", "Take the bus to Port Louis from the bus station: the casino and the Metro are waiting.", "Tap the 🧭 button for the City Pulse: see what to do and where the other players are."],
@@ -5424,7 +5416,7 @@ function greeterStep(n, dt, dist) {
   if (!n.set) { n.set = 1; const r = rTown(n.city); if (n.zone === "gare" && (r.M.lots || [])[0]) { const l = r.M.lots[0]; n.x = l.x + l.w / 2 - 3; n.y = r.y0 + l.y + l.h + 1.4; } else { n.x = r.stop.x + 1.8; n.y = r.stop.y + 1.6; } n.face = 0; n.tipI = rnd(0, 3); n.tipAt = 0; }
   const h = hour(); n.hide = !(h >= 6 && h < 23); if (n.hide) return; const now = performance.now(); if (now > n.tipAt) { n.tipAt = now + 8000; const tips = GREET_TIPS[n.city]; n.say = tips[n.tipI++ % tips.length]; n.sayUntil = now + 7800; }
 }
-function greeterActs(n) { const a = []; const lm = NIT.d && NIT.d.town === n.city ? NIT.d.landmarks : null; a.push({ label: "🧭 Open the City Pulse", info: "What to do and where the players are", go: () => { closeMenu(); openPhone("pulse"); } }); if (lm) for (const l of lm) a.push({ label: "📍 Show me " + l.name, info: l.done ? "You have been here" : "Rs " + NIT.d.pay + " the first time", go: () => guideTo(l.x, l.y, l.name) }); return a; }
+function greeterActs(n) { return [{ label: "🧭 Open the City Pulse", info: "What to do and where the players are", go: () => { closeMenu(); openPhone("pulse"); } }]; }
 
 // ================= street dogs =================
 const DOGS = [[11, 12], [20, 13], [36, 28], [45, 12], [12, 30]].map(([x, y], i) => ({ x: x + 0.5, y: y + 0.5, path: [], wait: i, chase: 0, cool: 20, dir: 1, col: ["#b98a5e", "#6b4a2f", "#d9c7a0", "#3a3a3a", "#a86b3c"][i] })); // five strays around town
@@ -7918,7 +7910,7 @@ function speed() { // how fast you move in tiles per second
   const swim = inLagoon(s.x, s.y); // in the lagoon?
   if (swim) return 2.2; // swimming is slow
   const sprint = chased() && s.energy > 20 ? 1.5 + Math.min(s.fit, 10) * 0.02 : 1; // you sprint from a dog while you have stamina
-  return 4.2 * buffSpeed() * (scoot ? 2.3 : cyc ? 1.8 : s.scooter ? 2 : s.bike ? 1.4 : 1) * sprint * (s.sick ? 0.6 : 1) * (bzFloodAt(s.x, s.y) ? 0.55 : 1); // vehicles are faster, an infected bite slows you
+  return 4.2 * buffSpeed() * (ride && ride.manual ? 2.7 : 1) * (scoot ? 2.3 : cyc ? 1.8 : s.scooter ? 2 : s.bike ? 1.4 : 1) * sprint * (s.sick ? 0.6 : 1) * (bzFloodAt(s.x, s.y) ? 0.55 : 1); // vehicles are faster, an infected bite slows you
 } // end speed
 function movePlayer(dt) { // read input and move
   meMoving = false; // assume standing until we move
@@ -9682,7 +9674,7 @@ function render3d(dt) { // draw one 3D frame
   R.fball.visible = R.bball.visible = true; R.fball.position.set(BALL.fb.x, 0.14, BALL.fb.y); const c = BALL.bb, held = c.h && (c.h === meId() ? meMoving : others[c.h] && others[c.h].p.mv); R.bball.position.set(c.x, fly ? 0.7 + fly.z * 1.6 : c.h ? 0.62 + (held ? Math.abs(Math.sin(now / 110)) * 0.35 : 0) : 0.17, c.y); // balls, with dribble bounce and shot arc
   for (const i of [0, 1]) personAt("keeper" + i, { g: "m", skin: SKINS[i ? 3 : 1], hair: "#17100c", shirt: i ? "#ffd23c" : "#35c4bb", pants: "#15171a", role: "resident" }, i ? FB.x1 - 0.6 : FB.x0 + 0.6, keeper[i], i ? 2 : 3, true); // goalkeepers
   if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); ambDraw3d(now); marketDraw3d(); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
-  if (ride) { if (!R.rideM || R.rideKind !== ride.kind) { if (R.rideM) R.dyn.remove(R.rideM); R.rideM = makeCar(ride.v); R.rideKind = ride.kind; } R.rideM.visible = true; placeCar(R.rideM, ride.x, ride.y, ride.vert, ride.rev); } else if (R.rideM) R.rideM.visible = false; // your ride
+  if (ride) { if (!R.rideM || R.rideKind !== ride.kind) { if (R.rideM) R.dyn.remove(R.rideM); R.rideM = makeCar(ride.v); R.rideKind = ride.kind; } R.rideM.visible = true; if (ride.ang !== undefined) { R.rideM.position.set(ride.x, 0, ride.y); R.rideM.rotation.y = -ride.ang; } else placeCar(R.rideM, ride.x, ride.y, ride.vert, ride.rev); } else if (R.rideM) R.rideM.visible = false; // your ride
   if (!R.dogM) R.dogM = DOGS.map((d) => makeDog(d.col)); DOGS.forEach((d, i) => { const m = R.dogM[i]; m.visible = true; m.position.set(d.x, 0, d.y); m.rotation.y = d.dir > 0 ? 0 : Math.PI; m.position.y = d.chase > 0 ? Math.abs(Math.sin(now / 60)) * 0.08 : 0; }); // street dogs (they bounce when chasing)
   govGuards3d(); // the President's bodyguards
   for (const n of NPC) { if (n.hide || n.inCar || (!n.tam && !n.res) || ((n.tam || n.res) && Math.hypot(n.x - s.x, n.y - s.y) > 45)) continue; personAt("npc" + n.name, hwNpcLook(n), n.x, n.y, n.face, n.path.length > 0, { name: Math.hypot(n.x - s.x, n.y - s.y) < 3 ? n.name + ((s.friends[n.name] || 0) >= 3 ? " ♥" : "") : "", swim: inLagoon(n.x, n.y), bubble: n.sayUntil > performance.now() ? n.say : "" }); } // neighbours
@@ -11114,12 +11106,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
-  ["2027.03.20", "6 Nov 2026", "Never lost in a new town", [
-    ["🧭", "City Pulse", "A new button opens a guide to every town: what you can do, how much you can earn, and where the other players are right now. Tap a place and glowing arrows lead you to its door.", () => openPhone("pulse")],
-    ["🟢", "Glowing rings", "Green rings mean work, gold shops, pink food and fun, blue travel. Name tags appear on the closest places.", null],
-    ["📍", "New in town", "Walk to three places in each new town and the server pays you Rs 100 each, plus Rs 200 when you have seen them all.", null],
-    ["🧑‍💼", "Town guides", "A friendly guide stands where you arrive and tells you what to do next.", null],
-    ["🪧", "Welcome card", "Arriving in a town now shows its three main things to do.", null]
+  ["2027.03.20", "6 Nov 2026", "Find your way", [
+    ["🧭", "City Pulse", "A new 🧭 button opens a guide to every town: what you can do there, how much you can earn, and where the other players are. Tap a place and glowing arrows lead you to its door.", () => openPhone("pulse")],
+    ["🟢", "Glowing rings", "Rings on the ground mark places you can use: green for work, gold for shops, pink for food and fun, blue for travel.", null],
+    ["🧑‍💼", "Town guides", "A friendly guide stands where you arrive and tells you what to do next.", null]
   ]],
   ["2027.03.19", "6 Nov 2026", "Play it safe", [
     ["📜", "Casino rules and odds", "A rules page explains every game, the real odds from the server and the house edge, and how the hourly loss limit works.", null],
