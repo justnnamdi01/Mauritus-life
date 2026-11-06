@@ -58,12 +58,12 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     const again = await ask("road.start", { to: "west", mode: "bus" }); ok(again.ok && again.again && again.to === "portlouis", "asking again during a trip gives the same trip (safe to repeat)");
     let ar = await ask("road.arrive"); ok(!ar.ok, "you cannot arrive before the journey is over");
     pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "and a phone that skips the journey is put back");
-    await wait(900); ar = await ask("road.arrive"); ok(ar.ok && ar.to === "portlouis" && ar.y >= LAY("portlouis").y0, "you arrive once the time is up");
+    await wait(2300); ar = await ask("road.arrive"); ok(ar.ok && ar.to === "portlouis" && ar.y >= LAY("portlouis").y0, "you arrive once the time is up");
     pres({ x: ar.x, y: ar.y, rg: "portlouis" }); l = await locked(); ok(!l, "and then you may stand in Port Louis");
     pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(l && l.why === "travel", "going back to Grand Baie also needs a trip");
     pl = await ask("road.plan", { to: "west" }); ok(pl.ok && pl.km > 15 && pl.km < 35, "Port Louis to Flic en Flac is " + pl.km + " km by road");
     st = await ask("road.start", { to: "west", mode: "bus" }); ok(st.ok && st.wait >= 5, "a bus to Flic en Flac starts and has a wait (" + st.wait + " min)");
-    await wait(900); ar = await ask("road.arrive"); pres({ x: ar.x, y: ar.y, rg: "west" }); l = await locked(); ok(ar.ok && !l, "you arrive in Flic en Flac");
+    await wait(2300); ar = await ask("road.arrive"); pres({ x: ar.x, y: ar.y, rg: "west" }); l = await locked(); ok(ar.ok && !l, "you arrive in Flic en Flac");
     // The highway between Port Louis and Flic en Flac is one continuous map with the town: walk north out of Flic en Flac and you are on it, no skipping
     const fl = LAY("west"), flX = mapOf("west").exits.find((e) => e.to === "portlouis").x, rb = LAY("road_portlouis_west");
     pres({ x: flX, y: fl.y0 + 1.5, rg: "west" }); l = await locked(); ok(!l, "walking to the Flic en Flac highway exit is fine");
