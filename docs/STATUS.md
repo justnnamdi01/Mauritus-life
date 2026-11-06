@@ -30,12 +30,28 @@ Keep this file current. Claude reads it at the start of every session and update
 
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
-**Not yet visual (to fix, in this order):**
-1. Work shifts: the character does a generic "work" pose where they stand (`poseFor`, `/shift|Work|.../`), not at a desk, till or counter, and there are no colleagues or customers in the room. Needs per-job stations (bank desk, terminal ticket window, market stall, kitchen) and NPC co-workers and customers.
-2. Sitting is only on benches; chairs, café tables, the Ferris wheel gondola, buses and trains are not seats yet.
-3. Casino, arcade, courier dash, market selling, barber, shop buying: menu or card only, no character animation at a machine, table or counter.
-4. Ferris wheel, stage and games room: the action is a menu line; the player should walk on, sit in a gondola, stand in the crowd or at a machine.
-5. Eating and drinking have poses, but food is not shown on the table and other diners are not there.
+
+## Done, session 22 (6 Nov 2026): every job in its own real workplace
+- **Phase:** launch build, Port Louis polish; this is the owner's visual rule applied to jobs. Eight workplaces, one for each kind of building where your three open towns have a job: restaurant (kitchen, pass with heat lamps, dining room, host stand), bank (vault, teller windows, queue lane, loans desks, manager's glass office, ATMs), bakery (brick oven, kneading table, display counter), bar (back bar, taps, stools, sega stage), street-food shop (tawa, rolling table, high tables), supermarket (fridges, three aisles, two checkouts, clothes corner), Central Market (striped stalls, lorry and crates, bunting) and Victoria Urban Terminal (ticket booths, departures board, two real buses, food court, benches).
+- How it works: `game/public/workplaces.js` is the engine (3D building blocks, a timeline for every co-worker and customer, a spot for you by job level); one file per workplace (`wk-resto.js`, `wk-bank.js`, `wk-bakery.js`, `wk-bar.js`, `wk-dholl.js`, `wk-mall.js`, `wk-bazar.js`, `wk-terminal.js`); `wk-init.js` applies them to every matching building (`ROOMDEF`, `ROOM`). Hooks in `index.html`: `poseFor` (your post), `startAction` (you walk to your post first; a shift now plays for 18 s so it can be watched, and you walk back out after), the room draw (`WKX.draw`), the indoor camera (fits big rooms on a phone; closer while you work), `isSolid` (furniture blocks tiles) and new poses (wash, chop, knead, pour, stack, call, carry, serve, scan, wipe, stand) with things people hold (tray, plate, crate, box, bread, basket, suitcase, ticket, bottle, papers) in `applyPose` / `propSet`.
+- The student part-time jobs (Stack shelves, Help on a stall) use the same posts. Which post you get depends on your promotion level (dishwasher at the sink, then cook at the stove; teller, then loans officer, then manager).
+
+## Tested, session 22
+- Headless browser: every workplace opens, draws its staff and customers and starts its shift with no page errors; screenshots of all eight.
+- A script walks every co-worker and customer loop for each workplace and checks none passes through furniture or walls, and that every post and station stands on free floor (all clear after fixes).
+- Full cycle on the bank and the restaurant: character walks to the post, works 18 s, is paid, and walks back toward the door.
+
+## Not tested / not done, session 22
+- Not on a real phone; the rooms are drawn small on a portrait screen (pinch to zoom). Rooms are heavier to draw than before (up to 17 people).
+- Jobs that exist only in the closed old world (fast-food crews, fish market, fashion store, beach club, pub, golf, court clerk, dive and surf school, resort, freelance coder) have no workplace yet: build them when those towns open.
+- Still not visual: the casino, arcade, courier dash, street-market selling, barber, shopping, the Ferris wheel and the stage (see the list below). Customers never talk to you at your post and the tills do not react to your work yet.
+- The shift is a stationary pose; no one is handed anything and the dishes, bread or cash do not change while you work.
+
+**Still not visual (next, in this order):**
+1. Casino, arcade, courier dash, market selling, barber chair, shop buying: menu or card only, no character at a machine, table or counter.
+2. Sitting is only on benches; chairs, café tables and seats in buses and trains are not seats yet.
+3. Ferris wheel, stage and games room: the action is a menu line; the player should sit in a gondola, stand in the crowd or play at a machine.
+4. Eating and drinking have poses, but food is not shown on the table.
 
 ## Done, session 21d (6 Nov 2026): ships that dock, load and sail off
 - Ships now live a cycle: sail in from the open ocean, dock at a berth of their own in the lagoon beside the shore, stop (cruise 46 s, ferry 34 s, cargo and tanker 40 s, small boats 26 s), sail out and vanish over the horizon, stay away 35 to 145 s, return. Every lane has one ship. Docked ships put out a gangway; cruise ships, ferries, fishing boats, pirogues and yachts unload and load passengers (`PAX`, using the same looks as the street crowd). Ships wait for any ship in front of them, pass head-on traffic starboard to starboard (small sideways offset), and wait for ships that are docked or stopped; a real deadlock is broken after 20 s. Code: the ships block in `game/public/index.html` (`shipPath`, `shipsStep`, `shipBlocked`, `paxAdd`).

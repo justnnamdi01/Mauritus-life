@@ -1627,7 +1627,7 @@ function buildMap() { // fill the terrain and collision grids
   }
 } // end buildMap
 function isSolid(tx, ty) { // can this tile be walked on?
-  if (s.inside) { const d = ROOMDEF[s.inside]; return tx < 1 || ty < 1 || tx > rw() - 2 || ty > rh() - 2 || !!(d && d.solid && d.solid.has(tx + "," + ty)); } // indoors: only the room floor is free, and inner walls block
+  if (s.inside) { const d = ROOMDEF[s.inside]; return tx < 1 || ty < 1 || tx > rw() - 2 || ty > rh() - 2 || !!(d && d.solid && d.solid.has(tx + "," + ty)) || !!(d && d.block && d.block.has(tx + "," + ty)); } // indoors: only the room floor is free (and not the furniture), and inner walls block
   if (tx < 0 || ty < 0 || tx >= W || ty >= H) return true; // outside the map
   if (tx === 22 && ty === 9 && s.debt > 0) return true; // landlord locked your door
   if (isCrownGate(tx, ty) && !crownOpen()) return true; // the Crown Estate gate: residents and their guests only
@@ -1691,7 +1691,7 @@ function shift(id) { // build the "work a shift" action for a career
   if (j.surf && sf().lvl < j.surf) why = "Needs Surfing level " + j.surf + " (lessons at the surf school)"; // not a good enough surfer
   if (s.energy < 25) why = "Too tired to work"; // exhausted
   if (s.role === "tourist" && id !== "cafe") why = "Tourists cannot take local jobs"; // no work permit
-  return { label: "Work a shift: " + j.titles[lv], info: "4 hours · about " + rs(j.pay[lv]) + (j.fee ? " · " + rs(j.fee) + " coffee and wifi" : ""), min: 240, cost: j.fee || 0, why, // menu text and rules
+  return { job: id, label: "Work a shift: " + j.titles[lv], info: "4 hours · about " + rs(j.pay[lv]) + (j.fee ? " · " + rs(j.fee) + " coffee and wifi" : ""), min: 240, cost: j.fee || 0, why, // menu text and rules
     fx: { energy: -30, hunger: -22, bladder: -35, hygiene: -15, fun: -20, social: 6 }, // what a shift does to you
     run() { // when the shift ends
       const m = mood(), f = m > 65 ? 1.15 : m < 35 ? 0.8 : 1; // mood changes your pay
@@ -3820,6 +3820,7 @@ function feedbackSend() {
 // ================= the Guide: how to play, how to do things, and every update =================
 const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (add to this whenever the game changes; the Updates section fills itself from UPDATES)
   ["🚀", "Getting started", [
+    ["What does a job look like?", "Open the staff door, stove, sink, bus bay or delivery bay in a bank, restaurant, bakery, bar, food shop, supermarket, market or the bus terminal and choose Work a shift. Your character walks to their post and works there (teller at the window, cook at the stove, baker at the table, conductor at the bus door) while co-workers and customers go about their day. Part-time student jobs work the same way."],
     ["Why do ships stop at the shore?", "Ferries, cruise ships, fishing boats and yachts dock by the shore for a while. People walk down the gangway, others walk on, and then the ship sails out to sea. Big cargo ships and tankers dock too. Ships far out at sea sail away and come back later."],
     ["Can I sit down?", "Yes. Walk to any bench (there are seats at every bus station, and in Port Louis by the stage and the Ferris wheel), tap it and choose Sit and watch the world. The camera drifts behind you and slowly swings round while you rest and your energy and mood creep up. Tap Stand up or just walk away."],
     ["What is the suitcase by the stage?", "The first time you step out of your flat the camera shows you Port Louis, then a red suitcase turns up by the waterfront stage. Pick it up (walk onto the gold ring), take it to Guide Anita at Victoria Terminal, and you get a lunch box and a tip about jobs. Follow the glowing arrows if you get lost."],
@@ -7663,9 +7664,14 @@ function stopWalking() { path = []; pending = null; keys = {}; if (NAV) { NAV = 
 function cancelAction() { // stop what you are doing: nothing is charged until an action finishes
   if (busy) { if (busy.from) { s.x = busy.from[0]; s.y = busy.from[1]; } const lbl = busy.a.label; busy = null; save(); toast("✋ Cancelled: " + lbl + ". You were not charged."); } stopWalking();
 } // end cancelAction
+let WKGO = null; // a job waiting for you to reach your post
+setInterval(() => { try { if (!WKGO) return; const g = WKGO, a = g.a; if (busy || !s.inside || performance.now() - g.t0 > 15000) { WKGO = null; return; } if (!path.length || Math.hypot(s.x - g.x, s.y - g.y) < 0.7) { WKGO = null; a._there = true; startAction(a); a._there = false; if (busy && busy.a === a) busy.org = g.org; } } catch (e) { WKGO = null; } }, 250);
 function startAction(a) { // begin an action
   if (!a.min) { finish(a); return; } // instant actions finish now
-  const secs = Math.max(1.6, Math.min(a.min >= 240 ? 8 : 5, a.min / 40)); stopDance(); const po = poseFor(a); // real seconds on screen, and how to act it out // real seconds it takes on screen
+  stopDance(); const po0 = poseFor(a);
+  if (po0 && po0.spotI !== undefined && !a._there && Math.hypot(s.x - po0.x, s.y - po0.y) > 0.9) { // a job: walk to the desk, till, stove or sink first, then start work
+    const route = findPath(s.x, s.y, po0.x, po0.y); if (route && route.length) { path = route; pending = null; WKGO = { a, t0: performance.now(), x: po0.x, y: po0.y, org: { x: s.x, y: s.y } }; toast("🚶 Walking to your post…"); return; } }
+  const secs = a.job !== undefined || /Part-time|Stack shelves|Help on/.test(a.label || "") ? 18 : Math.max(1.6, Math.min(a.min >= 240 ? 8 : 5, a.min / 40)), po = po0; // real seconds on screen (a job is slow enough to watch), and how to act it out
   busy = { a, left: a.min, total: a.min, rate: a.min / secs, pose: po, from: po ? [s.x, s.y] : null }; if (po) { s.x = po.x; s.y = po.y; s.face = po.face; } // walk into position // time passes fast while busy
   path = []; pending = null; // stop walking
 } // end startAction
@@ -7675,6 +7681,7 @@ function finish(a) { // apply an action's results
   for (const k in a.fx) s[k] = clamp(s[k] + a.fx[k] * (k === "fun" && a.fx[k] > 0 && s.role === "tourist" ? 1.25 : 1)); // change needs (tourists enjoy more)
   moodFromAction(a); toast(a.run ? a.run() : a.msg); // feelings, then show what happened
   if (busy && busy.from) { s.x = busy.from[0]; s.y = busy.from[1]; } // stand back up where you were
+  if (busy && busy.org && s.inside) { const back = findPath(s.x, s.y, busy.org.x, busy.org.y); if (back && back.length) { path = back; pending = null; } } // and after a shift, walk back out from your post
   busy = null; save(); // done, store
 } // end finish
 function useNear() { // press E or the yellow button
@@ -9270,6 +9277,7 @@ function personAt(id, L, x, z, face, moving, opt) { // show one person this fram
   p.g.rotation.x = 0; p.g.rotation.z = 0; p.g.scale.y = 1; const want = [0, Math.PI, -Math.PI / 2, Math.PI / 2][face | 0]; let da = want - p.ang; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; p.ang += da * 0.25; p.g.rotation.y = p.ang; // turn smoothly to face the way you walk
   const ph = moving ? performance.now() / 110 + x : 0, sw = Math.sin(ph); p.parts.legL.rotation.x = sw * 0.6; p.parts.legR.rotation.x = -sw * 0.6; p.parts.armL.rotation.x = -sw * 0.5; p.parts.armR.rotation.x = sw * 0.5; p.parts.armL.rotation.z = 0; p.parts.armR.rotation.z = 0; // walking swing
   if (opt && opt.pose && POSES.includes(opt.pose.k)) applyPose(p, opt.pose); else if (opt && GENRES[opt.dance]) danceMoves(p, opt.dance, x + z); // dancing replaces the walk
+  propSet(p, (opt && ((opt.pose && opt.pose.prop) || opt.prop)) || ""); // what they carry: a tray, a crate, bread...
   if (opt && opt.scoot) { if (!p.sc) { p.sc = makeScooterMesh(); p.g.add(p.sc); } p.sc.visible = true; p.g.position.y += 0.11; p.sc.position.y = -0.11; p.parts.legL.rotation.x = 0.05; p.parts.legR.rotation.x = -0.05; p.parts.armL.rotation.x = -1.05; p.parts.armR.rotation.x = -1.05; p.g.rotation.x = moving ? -0.06 : 0; } else if (p.sc) p.sc.visible = false; // riding: standing on the deck, hands on the handlebar
   if (opt && opt.cyc) { if (!p.bk) { p.bk = makeBikeMesh(); p.g.add(p.bk); } p.bk.visible = true; p.g.position.y += 0.05; const pd = moving ? Math.sin(performance.now() / 120) * 0.7 : 0; p.parts.legL.rotation.x = -0.9 + pd; p.parts.legR.rotation.x = -0.9 - pd; p.parts.armL.rotation.x = -1.1; p.parts.armR.rotation.x = -1.1; } else if (p.bk) p.bk.visible = false; // pedalling an old bicycle
   if (p.sync) { p.sync(moving, !!(opt && ((opt.pose && POSES.includes(opt.pose.k)) || GENRES[opt.dance] || opt.scoot))); const lx = p.parts.legL.rotation.x; if (lx < -1) p.g.position.y += (0.52 - p.hip) * Math.min(1, -lx / 1.5); } // real models: move the arm bones, and lift seated people whose legs are shorter than the simple ones
@@ -9794,10 +9802,10 @@ function render3d(dt) { // draw one 3D frame
   { const sel = decorMode && s.inside === "home" && decorSel !== -1 ? (decorDrag && decorDrag.moved ? decorDrag : decorItems().find((o) => o.di === decorSel)) : null; // the piece you hold in Buy mode
     if (sel && !R.selRing) { R.selRing = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.78, 40), new THREE.MeshBasicMaterial({ color: 0x5fd38a, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false })); R.selRing.rotation.x = -Math.PI / 2; R.selRing.renderOrder = 5; R.scene.add(R.selRing); } // a green ring under it
     if (R.selRing) { R.selRing.visible = !!sel; if (sel) { R.selRing.position.set(sel.x, 0.05, sel.y - 0.9); const k = 1 + Math.sin(now / 220) * 0.06; R.selRing.scale.set(k, k, k); } } }
-  const snap = R.wasInside !== inside; R.wasInside = inside; if (snap || introOn) { R.pan.x = 0; R.pan.z = 0; } if (meMoving || (ride && ride.on)) { const f = Math.max(0, 1 - dt * 4); R.pan.x *= f; R.pan.z *= f; } const zin = inside && s.zoom > 1.05, tx = (inside && !zin ? rw() / 2 : s.x) + R.pan.x, tz = (inside && !zin ? rh() / 2 + 0.6 + (decorMode ? rh() * 0.3 : 0) : s.y) + R.pan.z; /* zoomed in indoors: follow you */ $("centerBtn").hidden = Math.hypot(R.pan.x, R.pan.z) < 1.5; // where the camera looks (you, plus any dragging), and glide back when you walk // where the camera looks
+  const snap = R.wasInside !== inside; R.wasInside = inside; if (snap || introOn) { R.pan.x = 0; R.pan.z = 0; } if (meMoving || (ride && ride.on)) { const f = Math.max(0, 1 - dt * 4); R.pan.x *= f; R.pan.z *= f; } const wkc = inside && busy && busy.a && (busy.a.job !== undefined) && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk, zin = inside && s.zoom > 1.05, tx = (inside && !zin ? (wkc ? rw() * 0.55 + s.x * 0.45 : rw() / 2) : s.x) + R.pan.x, tz = (inside && !zin ? (wkc ? rh() * 0.55 + s.y * 0.45 : rh() / 2 + 0.6 + (decorMode ? rh() * 0.3 : 0)) : s.y) + R.pan.z; /* zoomed in indoors: follow you */ $("centerBtn").hidden = Math.hypot(R.pan.x, R.pan.z) < 1.5; // where the camera looks (you, plus any dragging), and glide back when you walk // where the camera looks
   const dyE = inside ? 0 : elevAt(s.x, s.y); R.dyn.position.y = snap ? dyE : R.dyn.position.y + (dyE - R.dyn.position.y) * Math.min(1, dt * 8); R.plane.constant = -R.dyn.position.y; // people and cars rise with the ground you stand on, and taps hit that height
   if (s.jf || s.hf) R.tgt.set(tx, 0.6 + R.dyn.position.y + JFH * 0.9, tz); else if (snap) R.tgt.set(tx, 0.6 + dyE, tz); else R.tgt.lerp(new THREE.Vector3(tx, 0.6 + R.dyn.position.y + (s.jf ? JFH * 0.9 : 0), tz), Math.min(1, dt * 6)); // follow smoothly (up with your jet when you fly), jump when going through a door
-  const dist = inside ? Math.max(rw(), rh()) * 1.15 / Math.max(0.6, s.zoom) : 17 / s.zoom + (s.jf || s.hf ? JFH * 1.2 + 5 : 0); R.scene.fog.near = Math.max(70, dist * 1.3); R.scene.fog.far = Math.max(160, dist * 3); /* less haze when far out */ R.camera.position.set(R.tgt.x + dist * 0.36, R.tgt.y + dist * 0.98, R.tgt.z + dist * 0.56); R.camera.lookAt(R.tgt); // camera above and to the south-east
+  const dist = inside ? (inside && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk ? (rw() + rh() * 0.6) * (wkc ? 0.8 : 1.0) * (innerWidth / innerHeight < 0.8 ? 1.28 : 0.9) : Math.max(rw(), rh()) * 1.15) / Math.max(0.6, s.zoom) : 17 / s.zoom + (s.jf || s.hf ? JFH * 1.2 + 5 : 0); R.scene.fog.near = Math.max(70, dist * 1.3); R.scene.fog.far = Math.max(160, dist * 3); /* less haze when far out */ R.camera.position.set(R.tgt.x + dist * 0.36, R.tgt.y + dist * 0.98, R.tgt.z + dist * 0.56); R.camera.lookAt(R.tgt); // camera above and to the south-east
   try { vfxTick(dt, now, dayK, glow, inside, wet, sd); } catch (e) { if (!R.vfxErr) { R.vfxErr = 1; console.error(e); } } try { hwFrame(dt, now, dayK, inside, wet); } catch (e) { if (!R.hwErr) { R.hwErr = 1; console.error(e); } } // glow, flare, particles and colour
   R.sun.target.position.copy(R.tgt); R.sun.position.copy(R.tgt).addScaledVector(R.sunL, 40); // the light follows you so shadows stay sharp, from wherever the sun is in the sky
   if (introOn) introCam(now); else if (TAMC.on) tamCam(now); else if (STORY.cam) storyCam(now); else if (SIT.on || SIT.k > 0) sitCam(now); // the intro and the Tamarin arrival fly the camera instead
@@ -9820,7 +9828,7 @@ function render3d(dt) { // draw one 3D frame
     for (const k in others) { const o = others[k]; if (o.p.in === s.inside) personAt("peer" + k, peerLook(o.p), o.x, o.y, o.p.face | 0, !!o.p.mv, { dance: o.p.dn, pose: POSES.includes(o.p.po) ? { k: o.p.po, h: Math.max(-0.5, Math.min(1, Number(o.p.pz) || 0)) } : null, name: (o.p.away ? "💤 " : "") + peerName(o) + relTag(o) + clsTag(o.p.cls), real: true, md: o.p.md, bubble: o.until > now ? o.bubble : "" }); } // real players in here
     personAt("me", myLook(), s.x, s.y, s.face, meMoving, { me: true, dance: dancing, pose: curPose(), name: myClass() ? CLASSES[myClass()].icon + " " + CLASSES[myClass()].name : "", bubble: myBubble.until > now ? myBubble.text : curPose() && curPose().k === "sleep" ? (wooLie && wooLie.until > Date.now() ? "💞" : "💤 z z z") : "" }); // you
     for (const id of ["fb", "bb"]) R[id === "fb" ? "fball" : "bball"].visible = false; for (const m of R.carM || []) m.visible = false; if (R.rideM) R.rideM.visible = false; for (const m of R.dogM || []) m.visible = false; // hide outdoor things
-    trafficDraw3d(); homeDraw3d(now); shipsDraw3d(now); pets3d(); hideUnused(); R.renderer.render(R.scene, R.camera); return; // draw the room
+    trafficDraw3d(); homeDraw3d(now); if (window.WKX) WKX.draw(now); shipsDraw3d(now); pets3d(); hideUnused(); R.renderer.render(R.scene, R.camera); return; // draw the room (and the people who work there)
   } // end inside
   syncEstate(); syncJets(); siteTick(now); scaleLabels(); fadeBuildings(); navBeaconTick(now); richStatueTick(now); // estate houses, and the beam over where you are heading
   for (const mk of R.marks) { // markers on usable things
@@ -10164,11 +10172,12 @@ $("tamTitle").onclick = tamEnd; // tap to skip
 $("buildChip").onclick = () => openPhone("house"); // the construction countdown opens the Home app
 
 // ================= acting things out: poses while you do something =================
-const POSES = ["sleep", "sit", "eat", "drink", "shower", "cook", "work", "read", "lift", "jog", "sing", "crouch", "soak", "watch"]; // every pose a character can do
+const POSES = ["sleep", "sit", "eat", "drink", "shower", "cook", "work", "read", "lift", "jog", "sing", "crouch", "soak", "watch", "stand", "wash", "chop", "knead", "pour", "stack", "call", "carry", "serve", "scan", "wipe"]; // every pose a character can do
 function poseFor(a) { // work out how to act out an action, and where to stand, sit or lie
   const L = a.label + " " + (a.doing || ""), o = near && near.x !== undefined && Math.hypot(near.x - s.x, near.y - s.y) < 2.2 ? near : null, k = o ? o.kind || "" : "", nm = o ? o.name || "" : ""; // the action and the thing you are using
   const at = (p, x, y, h, face) => ({ k: p, x, y, h: h || 0, face: face == null ? s.face : face }); // a pose at a spot
   const here = (p, h) => at(p, s.x, s.y, h); // a pose where you stand
+  if ((a.job !== undefined || /Part-time|Stack shelves|Help on/.test(a.label || "")) && window.WKX) { const sp = WKX.spot(a); if (sp) return sp; } // a workplace has its own desk, till, stove or sink for you
   if (/Sleep|Nap|Passed out/i.test(L)) { if (k === "bed") return at("sleep", o.x, o.y - 0.75, 0.6, 0); if (nm === "Sunbed") return at("sleep", o.x, o.y, 0.32, 0); return here("sleep", 0.06); } // lie down
   if (/Wait in the cell/.test(L) && k === "cell") return at("sit", o.x, o.y - 1.95, 0.42, 0); // on the cell bench
   if (k === "toilet" || /toilet/i.test(L)) return k === "toilet" ? at("sit", o.x, o.y - 0.82, 0.42, 0) : here("sit", 0.42); // on the loo
@@ -10190,12 +10199,30 @@ function poseFor(a) { // work out how to act out an action, and where to stand, 
   if (/shift|Part-time|Stack|Sell|Work|Hand out|Help|Crew|Tutor|freelance|Practise|Stream/i.test(L)) return here("work"); // working
   return null; // no special pose
 } // end poseFor
+function propSet(p, k) { // what a person carries in their hands: a tray, a crate, bread, a basket...
+  if ((p.propK || "") === k) return; p.propK = k; if (p.prop) { p.g.remove(p.prop); p.prop = null; } if (!k) return;
+  const g = new THREE.Group(), P = (w, h, d, c, x, y, z) => box(w, h, d, c, x, y, z, g);
+  if (k === "tray") { P(0.5, 0.03, 0.34, "#c9ced3", 0, 0.98, 0.36); for (const dx of [-0.14, 0, 0.14]) cyl(0.045, 0.04, 0.13, ["#bfe3f2", "#f2b544", "#e4572e"][Math.round((dx + 0.14) / 0.14)], dx, 1.06, 0.36, g, 8); }
+  else if (k === "plate") { cyl(0.16, 0.16, 0.02, "#f4f1e8", 0.08, 0.98, 0.34, g, 14); sph(0.09, "#d9a441", 0.08, 1.04, 0.34, g, 8); cyl(0.05, 0.05, 0.04, "#3d8c4a", 0.15, 1.02, 0.4, g, 8); }
+  else if (k === "crate") { P(0.46, 0.3, 0.34, "#b98a4b", 0, 0.9, 0.32); for (let i = 0; i < 4; i++) sph(0.09, ["#e4572e", "#f2b544", "#3d8c4a", "#c0392b"][i], -0.15 + (i % 2) * 0.3, 1.1, 0.26 + (i > 1 ? 0.12 : 0), g, 8); }
+  else if (k === "box") { P(0.42, 0.34, 0.36, "#c49a6c", 0, 0.92, 0.34); P(0.44, 0.04, 0.12, "#a67c4e", 0, 1.1, 0.34); }
+  else if (k === "bread") { P(0.52, 0.04, 0.3, "#8a5a34", 0, 0.95, 0.34); for (let i = 0; i < 3; i++) { const l = cyl(0.06, 0.06, 0.46, "#d9a441", 0, 1.02 + (i % 2) * 0.02, 0.26 + i * 0.07, g, 8); l.rotation.z = Math.PI / 2; } }
+  else if (k === "basket") { P(0.34, 0.18, 0.24, "#d9a441", 0.12, 0.62, 0.12); P(0.34, 0.03, 0.04, "#8a5a34", 0.12, 0.79, 0.12); for (let i = 0; i < 3; i++) sph(0.07, ["#e4572e", "#3d8c4a", "#f2b544"][i], 0.04 + i * 0.09, 0.74, 0.12, g, 8); }
+  else if (k === "suitcase") { P(0.34, 0.5, 0.16, "#3a5a9a", 0.3, 0.3, 0.06); P(0.2, 0.03, 0.04, "#1d2a36", 0.3, 0.58, 0.06); }
+  else if (k === "ticket") { P(0.2, 0.13, 0.14, "#2a2e35", 0.04, 0.9, 0.28); P(0.1, 0.12, 0.01, "#f4f1e8", 0.04, 0.82, 0.33); P(0.12, 0.05, 0.02, "#7fd6ff", 0.04, 0.95, 0.36); }
+  else if (k === "glass") { cyl(0.04, 0.035, 0.12, "#bfe3f2", 0.14, 1.0, 0.3, g, 8); }
+  else if (k === "bottle") { cyl(0.035, 0.04, 0.2, "#2f7d4a", 0.12, 1.02, 0.3, g, 8); cyl(0.015, 0.035, 0.08, "#2f7d4a", 0.12, 1.16, 0.3, g, 8); }
+  else if (k === "papers") { P(0.28, 0.03, 0.2, "#f4f1e8", 0.04, 0.98, 0.32); P(0.26, 0.02, 0.18, "#cfe3f2", 0.05, 1.0, 0.33); }
+  else if (k === "sack") { sph(0.2, "#d9c7a0", 0, 1.32, -0.1, g, 10); P(0.1, 0.06, 0.1, "#8a6a44", 0, 1.5, -0.1); }
+  else if (k === "cart") { P(0.5, 0.05, 0.4, "#6b7782", 0, 0.5, 0.5); P(0.5, 0.35, 0.04, "#6b7782", 0, 0.7, 0.7); for (let i = 0; i < 4; i++) P(0.18, 0.18, 0.18, "#c49a6c", -0.15 + (i % 2) * 0.3, 0.64 + Math.floor(i / 2) * 0.18, 0.5); }
+  p.g.add(g); p.prop = g;
+}
 function applyPose(p, po) { // move one person's body into a pose (3D)
   const P = p.parts, t = performance.now() / 1000, sn = Math.sin(t * 5); // limbs and a clock
   const sitLegs = () => { P.legL.rotation.x = -1.5; P.legR.rotation.x = -1.5; }; // legs forward as if seated
   if (po.k === "sleep") { p.g.rotation.set(-Math.PI / 2, 0, 0); p.g.position.y = po.h + 0.12; for (const k of ["legL", "legR", "armL", "armR"]) P[k].rotation.x = 0; p.g.scale.y = 1 + Math.sin(t * 1.6) * 0.02; return; } // flat on your back, breathing
   p.g.scale.y = 1; // normal height
-  if (po.k === "sit" || po.k === "watch" || po.k === "eat" && po.h > 0.2 || po.k === "work" && po.h > 0.2) { sitLegs(); p.g.position.y = po.h > 0.2 ? po.h - 0.47 : -0.4; P.armL.rotation.x = -0.35; P.armR.rotation.x = -0.35; } // seated
+  if (po.k === "sit" || po.k === "watch" || po.k === "eat" && po.h > 0.2 || po.k === "work" && po.h > 0.2 || po.k === "drink" && po.h > 0.2) { sitLegs(); p.g.position.y = po.h > 0.2 ? po.h - 0.47 : -0.4; P.armL.rotation.x = -0.35; P.armR.rotation.x = -0.35; } // seated
   if (po.k === "eat") { P.armR.rotation.x = -2.1 - Math.abs(Math.sin(t * 2.2)) * 0.5; P.armL.rotation.x = -0.6; } // spoon to mouth
   if (po.k === "drink") { P.armR.rotation.x = -2.5 - Math.max(0, Math.sin(t * 1.5)) * 0.4; P.armL.rotation.x = -0.2; } // glass up
   if (po.k === "shower") { P.armL.rotation.z = -2.6 - sn * 0.25; P.armR.rotation.z = 2.6 + sn * 0.25; P.armL.rotation.x = 0; P.armR.rotation.x = 0; } // scrubbing your hair
@@ -10207,6 +10234,17 @@ function applyPose(p, po) { // move one person's body into a pose (3D)
   if (po.k === "sing") { P.armR.rotation.x = -2.6; P.armL.rotation.z = -1.1 - Math.sin(t * 3) * 0.3; p.g.rotation.z = Math.sin(t * 2.5) * 0.08; } // mic up, other arm out
   if (po.k === "crouch") { P.legL.rotation.x = -1.2; P.legR.rotation.x = -1.2; p.g.position.y = -0.22; P.armL.rotation.x = -1.4 + sn * 0.3; P.armR.rotation.x = -1.4 - sn * 0.3; } // down at pet level
   if (po.k === "soak") { p.g.position.y = po.h; P.armL.rotation.z = -0.8; P.armR.rotation.z = 0.8; } // relaxing in the water
+  if (po.k === "stand") { p.g.rotation.z = Math.sin(t * 1.1) * 0.012; P.armL.rotation.x = 0.04; P.armR.rotation.x = 0.04; } // waiting, hands at your sides
+  if (po.k === "wash") { p.g.rotation.x = 0.14; P.armL.rotation.x = -1.0 + Math.sin(t * 7) * 0.18; P.armR.rotation.x = -1.0 - Math.sin(t * 7) * 0.18; P.armL.rotation.z = 0.12; P.armR.rotation.z = -0.12; } // scrubbing dishes at the sink
+  if (po.k === "chop") { P.armR.rotation.x = -1.15 - Math.abs(Math.sin(t * 8)) * 0.55; P.armL.rotation.x = -0.95; p.g.rotation.x = 0.1; } // chopping on a board
+  if (po.k === "knead") { const u = Math.sin(t * 3); p.g.rotation.x = 0.2 + u * 0.05; P.armL.rotation.x = -1.2 + u * 0.4; P.armR.rotation.x = -1.2 - u * 0.4; } // kneading dough
+  if (po.k === "pour") { P.armR.rotation.x = -1.75; P.armR.rotation.z = 0.25 + Math.sin(t * 1.4) * 0.05; P.armL.rotation.x = -0.9; p.g.rotation.x = -0.05; } // pouring a drink
+  if (po.k === "stack") { const u = (Math.sin(t * 2.4) + 1) / 2; p.g.rotation.x = 0.16 * (1 - u); P.armL.rotation.x = -1.3 - u * 0.9; P.armR.rotation.x = -1.3 - u * 0.9; } // lifting and stacking boxes
+  if (po.k === "call") { P.armR.rotation.x = -2.9 + Math.sin(t * 6) * 0.2; P.armR.rotation.z = -0.15; P.armL.rotation.x = -0.75; p.g.rotation.z = Math.sin(t * 2.2) * 0.03; } // calling out, one arm up
+  if (po.k === "carry") { P.armL.rotation.x = -1.25; P.armR.rotation.x = -1.25; p.g.rotation.x = -0.08; } // carrying a load in front
+  if (po.k === "serve") { P.armR.rotation.x = -1.45; P.armR.rotation.z = -0.2; P.armL.rotation.x = 0.1; } // a tray on one hand
+  if (po.k === "scan") { P.armR.rotation.x = -1.1; P.armR.rotation.z = Math.sin(t * 2.6) * 0.5; P.armL.rotation.x = -0.6; } // sliding goods across the scanner
+  if (po.k === "wipe") { P.armR.rotation.x = -1.2; P.armR.rotation.z = Math.sin(t * 5) * 0.6; P.armL.rotation.x = -0.3; p.g.rotation.x = 0.1; } // wiping a surface
 } // end applyPose
 
 // ================= a life ambition for every kind of player =================
@@ -11264,6 +11302,11 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.24", "6 Nov 2026", "Real workplaces", [
+    ["🏦", "Jobs happen in real-looking workplaces", "A bank with a vault and teller windows, a restaurant kitchen and dining room, a bakery with a brick oven, a bar with a stage, a street-food shop, a supermarket, the Central Market and the bus terminal. Each has its own staff and customers.", null],
+    ["🚶", "You walk to your post", "Start a shift and your character walks to their desk, sink, stove or bus door, and does the work in front of everyone. When the shift ends they walk back out.", null],
+    ["👥", "Busy rooms", "Co-workers cook, serve, count money and call out. Customers queue, order, sit down, eat and pay. A new shift puts you in the job a colleague was doing.", null]
+  ]],
   ["2027.03.23", "6 Nov 2026", "Ships that come and go", [
     ["🚢", "Ships sail in from the open ocean", "Cruise ships, ferries, fishing boats and yachts now sail in from far out at sea, dock at the shore, and sail away until they disappear over the horizon. Some come back later.", null],
     ["🧑‍🤝‍🧑", "People get on and off", "Watch a docked ship: passengers walk down the gangway when it arrives, and new ones walk on before it sails.", null],
@@ -13477,6 +13520,7 @@ function actIcon(a) { // pick an emoji for the action in progress
 function cancelBusy() { // stop the action in progress (nothing is applied)
   if (!busy) return; // a trip or nothing: ignore
   if (busy.from) { s.x = busy.from[0]; s.y = busy.from[1]; } // stand back up where you were
+  if (busy.org && s.inside) { const back = findPath(s.x, s.y, busy.org.x, busy.org.y); if (back && back.length) { path = back; pending = null; } }
   busy = null; stopDance(); save(); toast("Stopped."); // clear it and save
 } // end cancelBusy
 
@@ -13855,6 +13899,17 @@ window.claude?.hot?.snapshot?.(() => ({ s })); // keep progress across page upda
 if (window.claude?.hot?.ready) window.claude.hot.ready(start); // boot through the viewer hook when present
 else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 </script>
+<script src="workplaces.js?v=1"></script>
+<script src="wk-resto.js?v=1"></script>
+<script src="wk-bank.js?v=1"></script>
+<script src="wk-bakery.js?v=1"></script>
+<script src="wk-dholl.js?v=1"></script>
+<script src="wk-bar.js?v=1"></script>
+<script src="wk-mall.js?v=1"></script>
+<script src="wk-bazar.js?v=1"></script>
+<script src="wk-terminal.js?v=1"></script>
+<!--WKFILES-->
+<script src="wk-init.js?v=1"></script>
 
 </body>
 </html>
