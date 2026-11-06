@@ -51,6 +51,15 @@ async function travelToPortLouis(p) { const gb = REG.STOPS.grandbaie, pl = REG.S
     await wait(150); r = await X.ask("casino.exclude", { days: 1 }); ok(r.ok && r.excluded > Date.now() + 6 * 86400000, "exclusion can never be made shorter");
     r = await X.ask("casino.exclude", { days: 30 }); ok(r.ok && r.excluded > Date.now() + 29 * 86400000, "but it can be made longer");
 
+    // discovery: the checklist and the pulse
+    const Z = await player("Visitor", 5000); await travelToPortLouis(Z); let zs = await Z.ask("zone.state"); ok(zs.ok && zs.town === "portlouis" && zs.landmarks.length === 3 && zs.landmarks.every((l) => !l.done), "the checklist for Port Louis has 3 places, none visited: " + zs.landmarks.map((l) => l.name).join(", "));
+    const pulse0 = await Z.ask("zone.pulse"); ok(pulse0.ok && pulse0.towns.find((q) => q.id === "portlouis").players >= 1 && pulse0.towns.find((q) => q.id === "portlouis").areas.length >= 4, "the pulse counts the players in Port Louis and its areas");
+    for (const lm of zs.landmarks) { Z.pres({ x: lm.x, y: lm.y }); await wait(1100); }
+    await wait(300); zs = await Z.ask("zone.state"); ok(zs.landmarks.every((l) => l.done) && zs.bonusPaid, "walking to all three places ticks them off and pays the bonus");
+    ok(Z.got.filter((m) => m.t === "zone" && m.ev === "landmark").length === 3 && Z.got.some((m) => m.t === "zone" && m.ev === "complete"), "the server tells the phone about each place and the bonus");
+    ok(Z.got.filter((m) => JSON.stringify(m).includes("New in town")).length >= 4, "four payments by mail: three places and the bonus (Rs 500 in all)");
+    const before = Z.got.filter((m) => m.t === "zone").length; for (const lm of zs.landmarks) { Z.pres({ x: lm.x, y: lm.y }); await wait(900); } ok(Z.got.filter((m) => m.t === "zone").length === before, "a second visit pays nothing");
+
     // the job challenges
     const B = await player("Bank", 5000); await travelToPortLouis(B);
     let c = await B.ask("job.start", { game: "banker" }); ok(c.ok && c.qs.length === 5 && !JSON.stringify(c).includes("ans"), "the banker challenge has 5 sums and no answers");

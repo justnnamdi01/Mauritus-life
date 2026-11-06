@@ -63,3 +63,6 @@ Two new shifts use the standard shift formula (4 hours, level every 4 shifts): *
 - **Casino (money sink):** slots return 93.3%, roulette 97.3% (the zero), blackjack about 94% with simple play. Bets Rs 20 to 2,000. After Rs 30,000 of net losses in an hour the server refuses bets. The server's totals are in `db.casino.stat` (staked, paid out, rounds); check them when you measure the economy.
 - **Job challenge bonuses (faucet):** teller up to Rs 450 and conductor up to Rs 450 per challenge, courier Rs 250 to 400, each with an 8-minute cooldown and a **Rs 4,000 a day** cap per player (`JOB_DAY_CAP` in `capital.js`).
 - **Market:** the wholesaler's price is about half the fair price, so a seller who sells at the fair price makes about 90 to 100 per sale after the 6% market fee (a sink). A licensed pitch costs Rs 150 per two hours (a sink). A raid destroys the stock (a sink).
+
+## New in town (session 19)
+Each player is paid once per town, by the server, Rs 100 for each of three landmarks and Rs 200 for finishing: Rs 500 per town, Rs 1,500 in all, a one-off faucet for newcomers (`LM_PAY`, `LM_BONUS` in `capital.js`).

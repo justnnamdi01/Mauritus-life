@@ -2039,7 +2039,7 @@ wss.on("connection", (ws, req) => {
     if (typeof m.t === "string" && m.t.startsWith("gov.")) { govWs(ws, me, m); return; } // the government
     if (typeof m.t === "string" && m.t.startsWith("heist.")) { heistWs(ws, me, m); return; } // two-player heists
     if (typeof m.t === "string" && m.t.startsWith("road.")) { roadWs(ws, me, m); return; } // trips between towns along the real roads
-    if (typeof m.t === "string" && /^(casino|job|market)\./.test(m.t)) { CAP.handle(ws, me, m); return; } // Port Louis: the casino, the job challenges, the street market
+    if (typeof m.t === "string" && /^(casino|job|market|zone)\./.test(m.t)) { CAP.handle(ws, me, m); return; } // Port Louis: the casino, the job challenges, the street market
     if (typeof m.t === "string" && m.t.startsWith("wealth.")) { wealthWs(ws, me, m); return; } // the wealth ladder and the Patron shop
     if (typeof m.t === "string" && m.t.startsWith("party.")) { partyWs(ws, me, m); return; } // political parties
     if (typeof m.t === "string" && m.t.startsWith("parl.")) { parlWs(ws, me, m); return; } // parliament, bills, the cabinet and no-confidence
