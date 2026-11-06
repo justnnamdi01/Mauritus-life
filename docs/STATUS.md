@@ -28,6 +28,15 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Rule added (6 Nov 2026): every action must be visible
+Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
+**Not yet visual (to fix, in this order):**
+1. Work shifts: the character does a generic "work" pose where they stand (`poseFor`, `/shift|Work|.../`), not at a desk, till or counter, and there are no colleagues or customers in the room. Needs per-job stations (bank desk, terminal ticket window, market stall, kitchen) and NPC co-workers and customers.
+2. Sitting is only on benches; chairs, café tables, the Ferris wheel gondola, buses and trains are not seats yet.
+3. Casino, arcade, courier dash, market selling, barber, shop buying: menu or card only, no character animation at a machine, table or counter.
+4. Ferris wheel, stage and games room: the action is a menu line; the player should walk on, sit in a gondola, stand in the crowd or at a machine.
+5. Eating and drinking have poses, but food is not shown on the table and other diners are not there.
+
 ## Done, session 21d (6 Nov 2026): ships that dock, load and sail off
 - Ships now live a cycle: sail in from the open ocean, dock at a berth of their own in the lagoon beside the shore, stop (cruise 46 s, ferry 34 s, cargo and tanker 40 s, small boats 26 s), sail out and vanish over the horizon, stay away 35 to 145 s, return. Every lane has one ship. Docked ships put out a gangway; cruise ships, ferries, fishing boats, pirogues and yachts unload and load passengers (`PAX`, using the same looks as the street crowd). Ships wait for any ship in front of them, pass head-on traffic starboard to starboard (small sideways offset), and wait for ships that are docked or stopped; a real deadlock is broken after 20 s. Code: the ships block in `game/public/index.html` (`shipPath`, `shipsStep`, `shipBlocked`, `paxAdd`).
 - Graphics: hulls have a sheer and a raised rim; windows on every deck, funnels with bands, lifeboats, pool, container cranes, tanker pipes and crane, tug fenders, curved yacht sails, a flag on the fishing boat, red/green/white navigation lights that come on at night (`R.night`).

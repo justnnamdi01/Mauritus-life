@@ -14,6 +14,9 @@ When you add a phone app, also add it to `NEWAPPS` (app id and a short line). Re
 ## Track every ad
 Whenever you add an ad, poster, promo, announcement, billboard, poll or marketing video, add a row to `game/ADS.md` (what, where players see it, how often, admin control, status). Update the status when it goes live or is retired.
 
+## Show it, do not just say it (the owner says this is very important)
+Every action a player takes must be **seen in the world**: the character walks to the place, goes in, takes the pose and does it, with other people around doing their own things. Work happens at a desk, till, counter or kitchen with colleagues and customers in the room; sitting is a character on a chair or bench; eating is at a table; sleeping is in a bed. A menu item that only shows a toast and skips time is **not finished**. Before building or changing any feature, ask: what will the player *see* the character doing, where, and who is around? Add the pose, the props, the extra people and the camera if needed, and list what is shown in `docs/STATUS.md`. Where an action is still only a menu line, write it down in `docs/STATUS.md` under "not yet visual" so it gets fixed.
+
 ## Lessons from Flic en Flac Life (do not repeat these)
 - **The server decides money, prizes and winners.** Never trust the phone for rewards.
 - **Before putting content in a region, check that region is open to everyone** (no test-account locks).
