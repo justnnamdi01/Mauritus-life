@@ -73,7 +73,7 @@ async function travelToPortLouis(p) { const gb = REG.STOPS.grandbaie, pl = REG.S
     const D = await player("Courier", 5000); await travelToPortLouis(D); const pl = REG.STOPS.portlouis; D.pres({ x: 5, y: pl.y - 2, rg: "portlouis" }); await wait(300); c = await D.ask("job.courier.start"); ok(!c.ok, "the parcel is collected at the terminal, not from across town");
     D.pres({ x: pl.x, y: pl.y }); await wait(300); c = await D.ask("job.courier.start"); ok(c.ok && c.dest && c.limit === 150, "the courier is given a parcel for " + (c.dest || {}).name);
     w = await D.ask("job.courier.done", { id: c.id }); ok(!w.ok, "claiming a delivery you have not made is refused");
-    D.pres({ x: c.dest.x, y: c.dest.y }); await wait(4500); w = await D.ask("job.courier.done", { id: c.id }); ok(w.ok && w.fee >= 250, "arriving at the address pays the fee (Rs " + w.fee + ")");
+    D.pres({ x: c.dest.x, y: c.dest.y }); await wait(Math.ceil(Math.hypot(c.dest.x - pl.x, c.dest.y - pl.y) / 14 * 1000) + 1200); // the server will not believe a faster trip than 14 tiles a second w = await D.ask("job.courier.done", { id: c.id }); ok(w.ok && w.fee >= 250, "arriving at the address pays the fee (Rs " + w.fee + ")");
 
     // the street market
     const S = await player("Seller", 9000), Bq = await player("Buyer", 9000); await travelToPortLouis(S); await travelToPortLouis(Bq);
