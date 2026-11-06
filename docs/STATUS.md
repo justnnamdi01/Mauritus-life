@@ -28,6 +28,27 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Tested, session 4
 - Headless browser: every open place can be entered and left, food and groceries can be bought, all 36 apps open, the Guide and Goals open, no page errors. The Guide text has no old place names. Lock tests pass.
 
+## Done, session 21 (6 Nov 2026): everyone starts in Port Louis, the Island Pass, a fun hub
+- **Phase:** launch build, Port Louis polish. New players start in Port Louis (`DEFAULT_RG` and `spawn()` in `regions.js`, the first-presence rule in `server.js`), living in a flat at **Victoria Heights Flats** (a building in the Port Louis map; flats are addresses after the Grand Baie plots, `FLAT_BASE`). The Players' Estate in Grand Baie is a place to move to.
+- **Island Pass** (`capital.js`, `pass.state` / `pass.buy`, Rs 5,000, sold only in Port Louis, safe to repeat). The server refuses leaving Port Louis on foot (`region.locked` with `why: "pass"`) and refuses `road.start` without it. Everybody who already had a character when this shipped is given the pass once (`db.capital.cutover`), so nobody loses the island. Client: `passOffer` from the terminal menu, the Rides button, and the travel menu; a starter goal "Buy the Island Pass" sits before "Save up Rs 10,000".
+- **Fun hub:** a Ferris wheel (turns, lit at night, Rs 120 or Rs 200 with a friend), a Waterfront stage with a band that dances from 17:00 (watch, dance, tip), a Games Room (racing, claw machine, dance mat, juice), and warm string lights on Port Louis lamps after dark. Map rebuilt with `tools/build-region.mjs` (flats, Games Room, wheel and stage placed on free paved ground) and both highways rebuilt.
+- UPDATES `2027.03.22`, Guide answers (where to start, what to do in Port Louis).
+
+## Tested, session 21
+- `game/test/regions.test.js` (all pass): new player starts in Port Louis; leaving without the pass is refused on foot and by trip; a player with Rs 2,000 cannot buy it; it costs Rs 5,000 and buying twice charges nothing; with it a taxi to Grand Baie works; the old road, speed and closing rules still hold.
+- `game/test/capital.test.js` (all pass), now starting in Port Louis.
+- Existing players are given the pass: checked against a data file with one old player.
+- Headless browser: a new player appears at the flat door in Port Louis with no page errors; Ferris wheel and stage drawn; the server refuses a trip without the pass and sells it for Rs 5,000.
+
+## Not tested / not done, session 21
+- Not on a real phone. The pass offer menu was opened in the browser but the screenshot caught it mid-fade, so its look is unchecked.
+- The wheel and stage are drawn and offer actions, but the band is three simple dancers (no singing sound), and the wheel ride is a menu action (you do not sit in a gondola).
+- Money for the pass, rides and games is applied on the phone like other purchases (the server only checks the saved balance for the pass).
+- No test that a returning mid-game player's quest list shifts correctly (one new goal was inserted at position 6).
+
+## Next step (session 22)
+Real-phone check of the new start (flat door, Ferris wheel, stage at 17:00), then retune the first hour: Rs 2,500 start, shift pay and the Rs 5,000 pass price (see docs/ECONOMY.md).
+
 ## Done, session 20 (6 Nov 2026): simpler discovery, rides you can watch, a better sea with ships
 - **Simplified (you asked for less):** removed the arrival card, the new-in-town checklist (and its server payments, `zone.state`) and the extra name tags I had added. Kept: the coloured rings and icons on the ground, the 🧭 City Pulse, the arrow trail and the town guides. The original name labels are untouched.
 - **Rides you can watch (`startWorldTrip`, `tripRoute`):** a bus, taxi or your own car trip to another town now drives the vehicle through the town, along the real highway and into the next town (the server still sells the ticket and times the arrival; trips last 32 to 55 s, `journeySecs` in `roads.js`). The camera follows; you can reload mid-ride. Tested from Grand Baie to Port Louis with the server watching: no refusals, arrives at the stop.

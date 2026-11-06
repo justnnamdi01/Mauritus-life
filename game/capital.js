@@ -109,14 +109,25 @@ module.exports = function (X) {
       return reply({ ok: true, online: all, onRoad: road, towns, stalls: stalls.size }); }
     return reply({ ok: false, error: "Unknown request." });
   }
+
+  // ---------------- the Island Pass: everyone starts in Port Louis; this opens the highways and the other towns
+  const PASS_PRICE = 5000; db.capital.pass = db.capital.pass && typeof db.capital.pass === "object" ? db.capital.pass : {};
+  if (!db.capital.cutover) { db.capital.cutover = Date.now(); for (const u of Object.keys(db.players || {})) db.capital.pass[u] = 1; persist(); } // players who already existed keep the whole island
+  const hasPass = (uid) => !!db.capital.pass[uid];
+  function passWs(me, m, reply) {
+    if (m.t === "pass.state") return reply({ ok: true, has: hasPass(me.uid), price: PASS_PRICE });
+    if (m.t === "pass.buy") { if (hasPass(me.uid)) return reply({ ok: true, has: true, paid: 0 }); if (regionOf(me) !== "portlouis") return reply({ ok: false, error: "Buy the Island Pass at Victoria Urban Terminal in Port Louis." }); if (money(me) < PASS_PRICE) return reply({ ok: false, error: "The Island Pass costs Rs " + PASS_PRICE.toLocaleString("en") + "." });
+      db.capital.pass[me.uid] = Date.now(); persist(); return reply({ ok: true, has: true, paid: PASS_PRICE }); }
+    return reply({ ok: false, error: "Unknown request." });
+  }
   function handle(ws, me, m) {
     const ns = m.t.split(".")[0], reply = (o) => send(ws, Object.assign({ t: ns, rid: m.rid }, o));
-    try { if (ns === "zone") { if (!me.uid || !db.players[me.uid]) return reply({ ok: false, error: "Play a little first." }); if (!allow(me)) return reply({ ok: false, error: "Slow down a little." }); return zoneWs(me, m, reply); } if (!ok(me, reply)) return; if (ns === "casino") return casinoWs(me, m, reply); if (ns === "job") return jobWs(me, m, reply); if (ns === "market") return marketWs(me, m, reply); } catch (e) { reply({ ok: false, error: "Something went wrong." }); }
+    try { if (ns === "pass") { if (!me.uid || !db.players[me.uid]) return reply({ ok: false, error: "Play a little first." }); if (!allow(me)) return reply({ ok: false, error: "Slow down a little." }); return passWs(me, m, reply); } if (ns === "zone") { if (!me.uid || !db.players[me.uid]) return reply({ ok: false, error: "Play a little first." }); if (!allow(me)) return reply({ ok: false, error: "Slow down a little." }); return zoneWs(me, m, reply); } if (!ok(me, reply)) return; if (ns === "casino") return casinoWs(me, m, reply); if (ns === "job") return jobWs(me, m, reply); if (ns === "market") return marketWs(me, m, reply); } catch (e) { reply({ ok: false, error: "Something went wrong." }); }
   }
   function tick() { // every 20 s: close stalls whose owner left or whose time is up, and send the Police Municipale to the wild ones
     const now = Date.now(); for (const [uid, st] of [...stalls]) { const p = peerOf(uid), pos = p && p.presence && !p.presence.in ? { x: Number(p.presence.x), y: Number(p.presence.y) } : null, away = !p || !pos || Math.hypot(pos.x - st.x, pos.y - st.y) > 9 || (p.curRg || (db.where || {})[uid]) !== "portlouis";
       if (away || now - st.openedAt > STALL_LIFE) { stalls.delete(uid); if (p) send(p.ws, { t: "market", ev: "closed", why: away ? "You walked away from your blanket." : "Your pitch time is up." }); continue; }
       if (!st.licensed && now - st.openedAt > RAID_AFTER_T && Math.random() < RAID_CHANCE_T) { stalls.delete(uid); for (const [, q] of peers) send(q.ws, { t: "market", ev: "raid", x: st.x, y: st.y, name: st.name }); if (p) send(p.ws, { t: "market", ev: "raided", why: "The Police Municipale took your blanket and everything on it. A licensed pitch at the terminal or Immigration Square is safe." }); } }
   }
-  return { handle, tick, GOODS, hands, stalls, TEST };
+  return { handle, tick, GOODS, hands, stalls, TEST, hasPass };
 };

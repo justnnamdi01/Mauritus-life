@@ -44,10 +44,24 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     // The walkable maps and the roads between them. You only change town by travelling; the server times the trip and refuses jumps.
     const ask = (t, extra) => new Promise((res) => { const rid = "r" + Math.random().toString(36).slice(2, 8), h = (d) => { try { const m = JSON.parse(d); if (m.rid === rid) { ws.off("message", h); res(m); } } catch (e) {} }; ws.on("message", h); ws.send(JSON.stringify(Object.assign({ t, rid }, extra))); });
     { const uidOf = got.find((m) => m.t === "welcome").uid; ws.send(JSON.stringify({ t: "doc.set", path: "players/" + uidOf, data: { name: "Tester", money: 5000, savedAt: Date.now() }, rid: "d1" })); await wait(400); } // a saved player, so the server knows what they can pay
+    let ar0;
     const mapOf = (id) => { const t = fs.readFileSync(path.join(__dirname, "..", "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); }, stopOf = (id, row) => { const m = mapOf(id); return { x: m.stop.x, y: row + 4 + m.stop.y }; }; // the bus stations come from the real maps
     const REGM = require("../regions"), LAY = (id) => REGM.LAYOUT.find((r) => r.id === id), stop = REGM.STOPS.grandbaie, plStop = REGM.STOPS.portlouis, flStop = REGM.STOPS.west;
-    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel", "a new player cannot start in Port Louis");
-    pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "a new player starts at the Grand Baie bus station");
+    const uidOf2 = got.find((m) => m.t === "welcome").uid, setMoney = async (n) => { ws.send(JSON.stringify({ t: "doc.set", path: "players/" + uidOf2, data: { name: "Tester", money: n, savedAt: Date.now() }, rid: "m" + n })); await wait(300); };
+    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(!l, "a new player starts in Port Louis");
+    pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(l && l.why === "pass" && l.back.y >= LAY("portlouis").y0, "without the Island Pass a player cannot leave Port Louis, not even by jumping");
+    let ps = await ask("pass.state"); ok(ps.ok && ps.has === false && ps.price === 5000, "a new player does not hold the Island Pass (Rs " + ps.price + ")");
+    let st0 = await ask("road.start", { to: "grandbaie", mode: "taxi" }); ok(!st0.ok && /Island Pass/.test(st0.error || ""), "a trip needs the Island Pass");
+    { const w2 = new WebSocket(`ws://127.0.0.1:${PORT}`), got2 = []; w2.on("message", (d) => { try { got2.push(JSON.parse(d)); } catch (e) {} }); await new Promise((r) => w2.on("open", r)); w2.send(JSON.stringify({ t: "hello", uid: "u_" + Math.random().toString(36).slice(2, 12) })); await wait(400);
+      const u2 = got2.find((m) => m.t === "welcome").uid; w2.send(JSON.stringify({ t: "doc.set", path: "players/" + u2, data: { name: "Poor", money: 2000, savedAt: Date.now() }, rid: "p1" })); await wait(400);
+      w2.send(JSON.stringify({ t: "presence", patch: { x: plStop.x, y: plStop.y, rg: "portlouis" } })); await wait(300);
+      const r2 = await new Promise((res) => { w2.on("message", (d) => { try { const m = JSON.parse(d); if (m.rid === "b1") res(m); } catch (e) {} }); w2.send(JSON.stringify({ t: "pass.buy", rid: "b1" })); });
+      ok(!r2.ok && /5,000/.test(r2.error || ""), "the pass cannot be bought without Rs 5,000"); w2.close(); }
+    ps = await ask("pass.buy"); ok(ps.ok && ps.has && ps.paid === 5000, "the pass costs Rs 5,000");
+    ps = await ask("pass.buy"); ok(ps.ok && ps.paid === 0, "buying it twice charges nothing (safe to repeat)");
+    ps = await ask("pass.state"); ok(ps.ok && ps.has === true, "the server remembers the pass");
+    st0 = await ask("road.start", { to: "grandbaie", mode: "taxi" }); ok(st0.ok, "with the pass a taxi to Grand Baie starts");
+    await wait(2300); ar0 = await ask("road.arrive"); pres({ x: ar0.x, y: ar0.y, rg: "grandbaie" }); l = await locked(); ok(ar0.ok && !l, "and the player arrives in Grand Baie");
     pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(l && l.why === "travel" && l.back.y < LAY("portlouis").y0, "jumping to Port Louis without a trip is refused and put back");
     pres({ x: flStop.x, y: flStop.y, rg: "west" }); l = await locked(); ok(l && l.why === "travel", "jumping to Flic en Flac without a trip is refused");
     let pl = await ask("road.plan", { to: "portlouis" }); ok(pl.ok && pl.km > 15 && pl.km < 30 && pl.modes.length === 3 && pl.via.includes("Pamplemousses and the north"), "the plan for Grand Baie to Port Louis follows the real road (" + pl.km + " km via " + (pl.via || []).join(", ") + ")");
@@ -74,11 +88,11 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     pres({ x: flX, y: fl.y0 - 3 }); l = await locked(); pres({ x: flX, y: fl.y0 + 2, rg: "west" }); l = await locked(); ok(!l, "walking back along the road puts you in Flic en Flac again");
     pres({ x: 60, y: rb.y0 + 5, rg: "road" }); l = await locked(); ok(l, "and the highway's far end cannot be reached from Flic en Flac");
     pres({ x: 20, y: 30, rg: "grandbaie" }); l = await locked(); ok(l && l.back.y > 232, "a phone that stands in the first game's old rows is put back");
-    a = await admin("POST", { id: "west", open: false }); l = await locked(); ok(a.ok && l && l.id === "west", "closing Flic en Flac sends the player standing there home to Grand Baie");
-    pres({ x: stop.x, y: stop.y, rg: "grandbaie" }); l = await locked(); ok(!l, "and the server then agrees they are in Grand Baie");
+    a = await admin("POST", { id: "west", open: false }); l = await locked(); ok(a.ok && l && l.id === "west", "closing Flic en Flac sends the player standing there back to Port Louis");
+    pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(!l, "and the server then agrees they are in Port Louis");
     a = await admin("POST", { id: "portlouis", open: false }); a = await admin("POST", { id: "grandbaie", open: false }); ok(!a.ok, "the last region with a walkable map cannot be closed");
     a = await admin("POST", { id: "portlouis", open: true }); a = await admin("POST", { id: "west", open: true }); ok(a.ok, "the regions open again");
-    pres({ x: 3, y: 4, in: "home", rg: "grandbaie" }); l = await locked(); ok(!l, "indoors, room positions are not mistaken for regions");
+    while (await locked()) {} /* the lock notices from closing Port Louis, where the server sent the player to the next open town */ pres({ x: 3, y: 4, in: "home", rg: "grandbaie" }); l = await locked(); ok(!l, "indoors, room positions are not mistaken for regions");
     pres({ in: "" });
     ws.close();
   } finally { srv.kill(); await new Promise((r) => srv.on("exit", r)); try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {} }

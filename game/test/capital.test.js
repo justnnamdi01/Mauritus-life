@@ -13,7 +13,7 @@ function player(name, money) {
     const pres = (patch) => ws.send(JSON.stringify({ t: "presence", patch }));
     ws.on("open", async () => { ws.send(JSON.stringify({ t: "hello", uid })); await wait(400); const w0 = got.find((m) => m.t === "welcome"); if (w0 && w0.uid) uid = w0.uid; ws.send(JSON.stringify({ t: "doc.set", path: "players/" + uid, data: { name, money, savedAt: Date.now() }, rid: "d1" })); await wait(300); ws.send(JSON.stringify({ t: "sub", id: "m1", col: "mail" })); await wait(200); resolve({ ws, got, get uid() { return uid; }, ask, pres }); }); });
 }
-async function travelToPortLouis(p) { const gb = REG.STOPS.grandbaie, pl = REG.STOPS.portlouis; p.pres({ x: gb.x, y: gb.y, rg: "grandbaie" }); await wait(300); const st = await p.ask("road.start", { to: "portlouis", mode: "taxi" }); await wait(2300); const ar = await p.ask("road.arrive"); p.pres({ x: ar.x || pl.x, y: ar.y || pl.y, rg: "portlouis" }); await wait(400); return st.ok && ar.ok; }
+async function travelToPortLouis(p) { const pl = REG.STOPS.portlouis; p.pres({ x: pl.x, y: pl.y, rg: "portlouis" }); await wait(300); return true; } // every new player starts in Port Louis
 
 (async () => {
   const srv = spawn(process.execPath, ["server.js"], { cwd: path.join(__dirname, ".."), env: Object.assign({}, process.env, { TRIP_TIME_SCALE: "20", PORT, MARKET_TEST: "1", DATA_FILE: path.join(dir, "data.json") }), stdio: "ignore" });
@@ -28,7 +28,7 @@ async function travelToPortLouis(p) { const gb = REG.STOPS.grandbaie, pl = REG.S
 
     const A = await player("Aria", 50000);
     let r = await A.ask("casino.roulette", { bet: { type: "red" }, stake: 100 }); ok(!r.ok, "the casino is in Port Louis: a player in Grand Baie is refused (" + r.error + ")");
-    ok(await travelToPortLouis(A), "Aria takes a taxi to Port Louis");
+    ok(await travelToPortLouis(A), "Aria starts in Port Louis");
     r = await A.ask("casino.roulette", { bet: { type: "red" }, stake: 5 }); ok(!r.ok, "a bet under Rs 20 is refused");
     r = await A.ask("casino.roulette", { bet: { type: "red" }, stake: 99999 }); ok(!r.ok, "a bet over Rs 2,000 is refused");
     r = await A.ask("casino.roulette", { bet: { type: "purple" }, stake: 100 }); ok(!r.ok, "a made-up bet is refused");

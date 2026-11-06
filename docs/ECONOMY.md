@@ -66,3 +66,6 @@ Two new shifts use the standard shift formula (4 hours, level every 4 shifts): *
 
 ## New in town (session 19)
 Each player is paid once per town, by the server, Rs 100 for each of three landmarks and Rs 200 for finishing: Rs 500 per town, Rs 1,500 in all, a one-off faucet for newcomers (`LM_PAY`, `LM_BONUS` in `capital.js`).
+
+## The Island Pass (session 21)
+Everybody starts in Port Louis with Rs 2,500. The Island Pass costs Rs 5,000, one time (`PASS_PRICE` in `capital.js`): a sink that also paces the opening hours, because a new player needs jobs (terminal, market, bank, casino bonus) before they can leave the capital. Players who existed before the pass were given it. Hub sinks: Ferris wheel Rs 120 / 200, Games Room Rs 40 to 80 per game, tip the band Rs 100. Retune the Rs 5,000 after the closed test: aim for about 2 to 3 hours of work for a new player.

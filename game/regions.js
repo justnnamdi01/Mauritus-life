@@ -15,7 +15,7 @@ const W = ISL.w, H = ISL.h;
 const unrle = (a, n) => { const out = new Uint8Array(n); let i = 0; for (let k = 0; k < a.length; k += 2) { out.fill(a[k], i, i + a[k + 1]); i += a[k + 1]; } return out; };
 const REGION_AT = unrle(ISL.region, W * H);
 const BY_ID = Object.fromEntries(DEF.map((r) => [r.id, r]));
-const DEFAULT_RG = "grandbaie"; // the map every player starts on
+const DEFAULT_RG = "portlouis"; // the map every new player starts on: the capital, where the jobs are
 const GB_ROW = 232; // the walkable map: rows from here down are Grand Baie (HO in public/index.html); its first tile row is GBY = 236
 const loadMap = (id) => { try { const t = fs.readFileSync(path.join(__dirname, "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } }; // a walkable map built from OpenStreetMap
 // The island is one continuous strip of map, north to south, and the server lays it out exactly as the client does (see WREG in public/index.html): Grand Baie, the road, Port Louis, the road, Flic en Flac. Each map starts on the row where the one above ends.
@@ -48,7 +48,7 @@ function list() { // what every phone may know
   return DEF.map((r) => ({ id: r.id, name: r.name, color: r.color, map: r.map || "", open: isOpen(r.id), opensAt: db.regions[r.id].opensAt || 0 }));
 }
 function spawn() { // somewhere safe: the first seed of the first open region
-  const r = DEF.find((q) => isOpen(q.id) && STOPS[q.id]) || BY_ID[DEFAULT_RG], [lo, la] = r.seeds[0]; // an open region that has a walkable map
+  const r = (isOpen(DEFAULT_RG) && STOPS[DEFAULT_RG] ? BY_ID[DEFAULT_RG] : null) || DEF.find((q) => isOpen(q.id) && STOPS[q.id]) || BY_ID[DEFAULT_RG], [lo, la] = r.seeds[0]; // an open region that has a walkable map
   const rg = STOPS[r.id] ? r.id : "grandbaie"; return { rg, x: STOPS[rg].x, y: STOPS[rg].y, ix: (lo - ISL.lon0) * ISL.kx / ISL.tileM, iy: (ISL.lat0 - la) * ISL.ky / ISL.tileM };
 }
 function roadOpen(id) { const r = ROADMAPS.find((q) => q.id === id); return !!r && isOpen(r.M.a) && isOpen(r.M.b); }
