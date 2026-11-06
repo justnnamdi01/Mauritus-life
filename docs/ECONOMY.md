@@ -58,3 +58,8 @@ Money at 30 minutes, 1 hour, 3 hours and 1 day of play, split by Resident/Studen
 
 ## Port Louis jobs (session 16)
 Two new shifts use the standard shift formula (4 hours, level every 4 shifts): **Bank clerk** (Rs 700, 1,100, 1,700) at the two towers, 9 to 16, and **Bus conductor** (Rs 550, 800, 1,100) at Victoria Urban Terminal, 6 to 19. The **Metro Express** ride costs Rs 20, the **Oceanarium** ticket Rs 250 and the terminal's supermarket shop Rs 500 (8 meals), all with 15% VAT. Retune with the rest of the economy when it is measured.
+
+## The casino, job bonuses and the market (session 17)
+- **Casino (money sink):** slots return 93.3%, roulette 97.3% (the zero), blackjack about 94% with simple play. Bets Rs 20 to 2,000. After Rs 30,000 of net losses in an hour the server refuses bets. The server's totals are in `db.casino.stat` (staked, paid out, rounds); check them when you measure the economy.
+- **Job challenge bonuses (faucet):** teller up to Rs 450 and conductor up to Rs 450 per challenge, courier Rs 250 to 400, each with an 8-minute cooldown and a **Rs 4,000 a day** cap per player (`JOB_DAY_CAP` in `capital.js`).
+- **Market:** the wholesaler's price is about half the fair price, so a seller who sells at the fair price makes about 90 to 100 per sale after the 6% market fee (a sink). A licensed pitch costs Rs 150 per two hours (a sink). A raid destroys the stock (a sink).
