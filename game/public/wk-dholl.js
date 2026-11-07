@@ -7,7 +7,7 @@
   X.WK.dholl = {
     w: 12, h: 9, accent: "#d98a2b", mood: "warm", floor: ["#ead9b0", "#e0cc9a"],
     floorAt: (x, y) => (y < 4 ? ["#d7cfb6", "#cdc5aa"] : ["#ead9b0", "#e0cc9a"]),
-    st: [["🫓", "Kitchen (staff only)", "none", 6.0, 3.2, IS_WORK], ["🛎️", "Serving counter", "none", 5.4, 5.2, NOT_WORK]],
+    st: [["🫓", "Kitchen (staff only)", "none", 6.0, 3.2, IS_WORK], ["🛎️", "Serving counter", "none", 5.4, 5.6, NOT_WORK]],
     block(set) { blk(set, 2.2, 4, 9.8, 4.99); blk(set, 3.2, 1, 7.4, 1.99); blk(set, 8.0, 1, 8.9, 2.4); blk(set, 9.4, 1, 10.9, 1.99); for (const [x, y] of HI) set.add(Math.floor(x) + "," + Math.floor(y)); },
     spots: [{ lv: [0], x: 10.1, y: 2.75, face: 1, pose: "wash" }, { lv: [1, 2], x: 5.0, y: 2.8, face: 1, pose: "cook" }, { pt: true, x: 10.1, y: 2.75, face: 1, pose: "wash" }],
     build(gr, w, h) {

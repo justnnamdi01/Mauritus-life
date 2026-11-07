@@ -4,6 +4,7 @@
 // the staff and customers (each one walks a loop through the room) and the walls and props in 3D.
 // Loaded after the game page, so it can use the page's helpers (box, cyl, sph, personAt, ROOMDEF, ...).
 (function () {
+  (() => { const st = document.createElement("style"); st.textContent = "#csn.sheet{inset:auto 0 0 0;height:52%;border-radius:20px 20px 0 0;background:linear-gradient(#2a0a12f0,#14070cf8);box-shadow:0 -10px 30px #000a;padding-top:12px}"; document.head.append(st); })();
   const WK = {}; // by building kind (the gbKind of the shop)
   const FACE_V = [[0, 1], [0, -1], [-1, 0], [1, 0]]; // facing 0 looks down the screen (+z), 1 up (-z), 2 left (-x), 3 right (+x)
 
@@ -59,21 +60,30 @@
     const def = { w: cfg.w, h: cfg.h, floor: cfg.floor, floorAt: cfg.floorAt, accent: cfg.accent, mood: cfg.mood || "warm", st: cfg.st.map((q) => q.slice()), block, wk: kind, build3d: (gr, w, h) => cfg.build(gr, w, h, b) };
     if (R && R.rooms && R.rooms[b.id]) { R.scene.remove(R.rooms[b.id]); delete R.rooms[b.id]; } // a room built before this loaded is rebuilt
     const looks = []; for (let i = 0; i < 8; i++) looks.push(ambLook(i * 3 + (b.x | 0) % 7, town));
-    def.actors = (cfg.actors ? cfg.actors(looks, b) : []).map(mkActor); def.spots = cfg.spots; ROOMDEF[b.id] = def;
+    def.actors = (cfg.actors ? cfg.actors(looks, b) : []).map(mkActor); def.spots = cfg.spots; def.actSpots = cfg.actSpots; def.games = cfg.games; ROOMDEF[b.id] = def;
     ROOM[b.id] = def.st.map((q, k) => ({ k, icon: q[0], name: q[1], kind: q[2], x: q[3], y: q[4], use: !!q[5], acts: () => stationActs(b.id, k) }));
     ROOM[b.id].push({ icon: "🚪", name: "Exit", kind: "", x: def.w / 2, y: def.h - 1.5, use: true, exit: true });
   }
   const NOT_WORK = /^(?!.*(?:shift|Part-time|Stack shelves|Help on)).*$/i, IS_WORK = /shift|Part-time|Stack shelves|Help on/i; // which actions belong to the staff area and which to the customer counter
 
-  window.WKX = {
+  const X = window.WKX = {
     WK, B, C, S, glass, glowAt, signAt, counter, tableRound, chair, stool, plant, crockery, sink, stove, fridge, deskSet, bench, clock, rope, shelfUnit, blk, tableBlock, staffLook, NOT_WORK, IS_WORK, FACE_V,
     applyAll() { for (const b of GBSHOPS) if (WK[b.gbKind]) applyKind(b, b.gbKind); },
     spot(a) { // where you stand and how you work, for this action in this room
-      const def = s.inside && ROOMDEF[s.inside]; if (!def || !def.spots) return null; const lv = a.job ? level(a.job) : 0, pt = !a.job && /Part-time|Stack|Help on/i.test(a.label || "");
+      const def = s.inside && ROOMDEF[s.inside]; if (def && def.actSpots && !a.job) { const i = def.actSpots.findIndex((q) => q.re.test(a.label || "")); if (i >= 0) { const q = def.actSpots[i]; return { k: q.pose, x: q.x, y: q.y, h: q.h || 0, face: q.face == null ? 0 : q.face, prop: q.prop || "", spotI: 100 + i }; } } if (!def || !def.spots) return null; const lv = a.job ? level(a.job) : 0, pt = !a.job && /Part-time|Stack|Help on/i.test(a.label || "");
       let i = def.spots.findIndex((q) => (pt ? q.pt : q.lv && q.lv.includes(lv))); if (i < 0) i = 0; const q = def.spots[i]; return { k: q.pose, x: q.x, y: q.y, h: q.h || 0, face: q.face == null ? 0 : q.face, prop: q.prop || "", spotI: i }; },
     state: workState,
+    at: null, // the pose you hold while you play a game at a table or machine
+    inCasino() { const d = s.inside && ROOMDEF[s.inside]; return !!(d && d.games); },
+    seat(game, then) { // walk to the table or machine for this game, take your place, then open the game
+      const d = ROOMDEF[s.inside], g = d && d.games && d.games[game]; if (!g) { then(); return; } closeMenu(); const route = Math.hypot(s.x - g.x, s.y - g.y) > 0.5 ? findPath(s.x, s.y, g.x, g.y) : [];
+      const steps = route ? route.length : 0; if (steps) { path = route; pending = null; toast("🚶 Taking your place…"); } const t0 = performance.now(), iv = setInterval(() => { if (!s.inside || performance.now() - t0 > 8000 + steps * 1500) { clearInterval(iv); return; } if (!path.length || Math.hypot(s.x - g.x, s.y - g.y) < 0.6) { clearInterval(iv); path = []; s.x = g.x; s.y = g.y; s.face = g.face; X.at = { k: g.pose, x: g.x, y: g.y, h: g.h || 0, face: g.face, prop: g.prop || "" }; X.game = game; then(); } }, 200); },
+    unseat() { X.at = null; X.game = ""; },
+    ticks: [],
     draw(now) { // the co-workers and customers of the room you are in
-      const def = ROOMDEF[s.inside]; if (!def || !def.actors) return; const ws = workState(), sec = now / 1000;
+      const def = ROOMDEF[s.inside]; if (!def) return; for (const f of X.ticks) f(now, def); if (!def.actors) return; const ws = workState(), sec = now / 1000;
       for (const a of def.actors) { if (a.yield !== undefined && ws && ws.spot === a.yield) continue; const q = actorAt(a, sec); if (q.hide) continue; personAt("wk_" + s.inside + "_" + a.id, q.look, q.x, q.y, q.face, q.moving, { name: "", bubble: q.say, pose: q.pose ? { k: q.pose, x: q.x, y: q.y, h: q.h, face: q.face, prop: q.prop } : null, prop: q.prop }); } }
   };
+  // the game you are playing is dropped when you walk away or leave the room
+  setInterval(() => { try { if (X.at && (!s.inside || path.length || Math.hypot(s.x - X.at.x, s.y - X.at.y) > 0.8)) { X.at = null; X.game = ""; const b = document.getElementById("csn"); if (b) b.remove(); } } catch (e) {} }, 400);
 })();

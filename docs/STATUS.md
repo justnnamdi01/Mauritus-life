@@ -31,6 +31,21 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 23 (7 Nov 2026): the casino and the Games Room played in the room
+- **Casino** (`wk-casino.js`): a red-carpet room with chandeliers, a roulette table with a real wheel and ball (spins while the server decides, settles on the number it drew), a blackjack table that shows the real cards, eight slot machines whose reels roll and stop on the symbols the server drew, a cashier's cage, a bar, dealers, gamblers and a waitress. Tapping a table walks your character there (stand and push chips, sit at the table, sit at the machine) and opens the game as a bottom sheet so the room stays visible above. Walking away or closing the sheet ends the game. The server still decides every result; the room only reads what the panel already received.
+- **Games Room** (`wk-arcade.js`): cabinets, racing seats, a claw machine with a moving claw, a dance mat with flashing tiles, a prize and juice counter, teens playing. **Bug found and fixed:** the Games Room's actions had never been attached to the building (the table of shop actions was built before they were defined), so it offered nothing. It does now.
+- Engine: `actSpots` (a post for ordinary actions, not only jobs), `games` (seats for the casino), `ticks` (per-frame animations); the camera zooms in while you play or work.
+
+## Tested, session 23
+- Headless browser: roulette, slots and blackjack each walk to their place and open the sheet; the wheel spins while a spin is pending, the ball settles on the number, the cards appear on the table, the reels show the drawn symbols (these three states were forced on the page, because the test server does not let a teleported test player bet); racing, claw, dance mat and juice each walk to their place and play with the right pose; no page errors.
+- A script checks that every post, seat and station can be reached (the 0.28-tile body does not touch furniture); one tile was moved.
+- `game/test/regions.test.js` passes.
+
+## Not tested / not done, session 23
+- A real bet through the room (the casino server tests still pass, but the full walk, bet, win and walk-away flow was not played end to end by a real player).
+- Not on a real phone. The Games Room games are timed menu actions (Rs 40 to 80); there is no skill in them yet.
+- The prize counter gives nothing yet.
+
 ## Done, session 22 (6 Nov 2026): every job in its own real workplace
 - **Phase:** launch build, Port Louis polish; this is the owner's visual rule applied to jobs. Eight workplaces, one for each kind of building where your three open towns have a job: restaurant (kitchen, pass with heat lamps, dining room, host stand), bank (vault, teller windows, queue lane, loans desks, manager's glass office, ATMs), bakery (brick oven, kneading table, display counter), bar (back bar, taps, stools, sega stage), street-food shop (tawa, rolling table, high tables), supermarket (fridges, three aisles, two checkouts, clothes corner), Central Market (striped stalls, lorry and crates, bunting) and Victoria Urban Terminal (ticket booths, departures board, two real buses, food court, benches).
 - How it works: `game/public/workplaces.js` is the engine (3D building blocks, a timeline for every co-worker and customer, a spot for you by job level); one file per workplace (`wk-resto.js`, `wk-bank.js`, `wk-bakery.js`, `wk-bar.js`, `wk-dholl.js`, `wk-mall.js`, `wk-bazar.js`, `wk-terminal.js`); `wk-init.js` applies them to every matching building (`ROOMDEF`, `ROOM`). Hooks in `index.html`: `poseFor` (your post), `startAction` (you walk to your post first; a shift now plays for 18 s so it can be watched, and you walk back out after), the room draw (`WKX.draw`), the indoor camera (fits big rooms on a phone; closer while you work), `isSolid` (furniture blocks tiles) and new poses (wash, chop, knead, pour, stack, call, carry, serve, scan, wipe, stand) with things people hold (tray, plate, crate, box, bread, basket, suitcase, ticket, bottle, papers) in `applyPose` / `propSet`.
@@ -48,9 +63,9 @@ Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the 
 - The shift is a stationary pose; no one is handed anything and the dishes, bread or cash do not change while you work.
 
 **Still not visual (next, in this order):**
-1. Casino, arcade, courier dash, market selling, barber chair, shop buying: menu or card only, no character at a machine, table or counter.
+1. Courier dash, market selling, barber chair, shop buying: menu or card only, no character at a machine, table or counter. (The casino and the Games Room are done.)
 2. Sitting is only on benches; chairs, café tables and seats in buses and trains are not seats yet.
-3. Ferris wheel, stage and games room: the action is a menu line; the player should sit in a gondola, stand in the crowd or play at a machine.
+3. Ferris wheel and stage: the action is a menu line; the player should sit in a gondola or stand in the crowd.
 4. Eating and drinking have poses, but food is not shown on the table.
 
 ## Done, session 21d (6 Nov 2026): ships that dock, load and sail off

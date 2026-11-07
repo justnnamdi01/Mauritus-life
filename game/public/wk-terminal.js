@@ -3,7 +3,7 @@
 // two bus bays with real buses, conductors calling the stops, a hawker with a tray, and passengers who buy tickets, board, and get off.
 (function () {
   const X = window.WKX; if (!X) return; const { B, C, S, glass, glowAt, signAt, counter, chair, plant, bench, rope, clock, blk, staffLook, NOT_WORK, IS_WORK } = X;
-  const BUS1 = { x: 19.0, y: 5.8 }, BUS2 = { x: 19.0, y: 10.4 }, DOOR1 = { x: 17.6, y: 7.2 }, DOOR2 = { x: 17.6, y: 11.8 };
+  const BUS1 = { x: 19.0, y: 5.8 }, BUS2 = { x: 19.0, y: 10.4 }, DOOR1 = { x: 17.6, y: 7.5 }, DOOR2 = { x: 17.6, y: 11.8 };
   const bus = (gr, x, z, col) => { try { const bm = makeCar({ len: 2.6, col, bus: true }); R.dyn.remove(bm); bm.position.set(x, 0, z); bm.rotation.y = 0; bm.scale.set(1.75, 1.75, 1.75); gr.add(bm); return bm; } catch (e) { B(gr, 4.4, 1.7, 1.5, col, x, 1.0, z); return null; } };
   X.WK.terminal = {
     w: 24, h: 14, accent: "#3b4f63", mood: "cool", floor: ["#d8d9d6", "#c6c8c5"],

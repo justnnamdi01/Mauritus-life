@@ -8,8 +8,8 @@
     w: 18, h: 12, accent: "#2a3f63", mood: "cool", floor: ["#ebe7df", "#e0dbd0"],
     floorAt: (x, y) => (y < 5 ? ["#cfd6dc", "#c3cbd2"] : ["#ebe7df", "#e0dbd0"]),
     st: [["🏦", "Staff door", "none", 6.2, 4.4, IS_WORK], ["🛎️", "Customer service", "none", 10.8, 7.4, NOT_WORK]],
-    block(set) { blk(set, 7.2, 4, 15.7, 4.99); blk(set, 1, 4, 1.99, 4.99); blk(set, 4, 4, 4.99, 4.99); blk(set, 2.8, 6, 3.7, 7.9); blk(set, 2.8, 8.6, 3.7, 10.4); blk(set, 16.0, 5.8, 16.8, 7.7); blk(set, 5.2, 9.5, 7.2, 10.0); blk(set, 11.0, 9.5, 13.0, 10.0); blk(set, 2.7, 2, 3.8, 2.9); },
-    spots: [{ lv: [0], x: WIN[1], y: TY, face: 0, pose: "work", h: 0.45 }, { lv: [1], x: 4.1, y: 7.0, face: 2, pose: "work", h: 0.45 }, { lv: [2], x: 3.2, y: 1.55, face: 0, pose: "work", h: 0.45 }, { pt: true, x: WIN[0], y: TY, face: 0, pose: "work", h: 0.45 }],
+    block(set) { blk(set, 7.2, 4, 15.7, 4.99); blk(set, 1, 4, 1.99, 4.99); blk(set, 4, 4, 4.99, 4.99); blk(set, 3.2, 6, 3.8, 7.9); blk(set, 3.2, 9.0, 3.8, 9.9); blk(set, 16.0, 5.8, 16.8, 7.7); blk(set, 5.2, 9.5, 7.2, 10.0); blk(set, 11.0, 9.5, 13.0, 10.0); blk(set, 2.7, 2, 3.8, 2.9); },
+    spots: [{ lv: [0], x: WIN[1], y: 3.65, face: 0, pose: "work", h: 0.45 }, { lv: [1], x: 4.35, y: 7.0, face: 2, pose: "work", h: 0.45 }, { lv: [2], x: 3.2, y: 1.55, face: 0, pose: "work", h: 0.45 }, { pt: true, x: WIN[0], y: 3.65, face: 0, pose: "work", h: 0.45 }],
     build(gr, w, h) {
       // back wall: vault, sign, clock
       C(gr, 0.95, 0.95, 0.35, "#9aa4ab", 8.0, 1.25, 1.2, 28).rotation.x = Math.PI / 2; C(gr, 0.78, 0.78, 0.4, "#6e7881", 8.0, 1.25, 1.2, 28).rotation.x = Math.PI / 2; C(gr, 0.18, 0.18, 0.5, "#c9a227", 8.0, 1.25, 1.2, 12).rotation.x = Math.PI / 2; for (let i = 0; i < 6; i++) { const sp = B(gr, 0.7, 0.05, 0.05, "#c9a227", 8.0, 1.25, 1.45); sp.rotation.z = i * Math.PI / 6; } B(gr, 2.3, 2.3, 0.2, "#4a525a", 8.0, 1.15, 1.05);
@@ -27,7 +27,7 @@
       // queue lane to window 2
       rope(gr, 10.3, 6.5, 10.3, 8.8); rope(gr, 11.9, 6.5, 11.9, 8.8); rope(gr, 7.0, 6.5, 9.2, 6.5); rope(gr, 13.6, 6.5, 15.2, 6.5); signAt(gr, "QUEUE HERE · FILE ICI", 11.1, 1.6, 8.9, 0.22, "#1f3d6b", "#ffffff");
       // loans desks with client chairs
-      deskSet(gr, 3.2, 7.0, 2, "#5a3a24", true, "#2a2e35"); chair(gr, 2.3, 7.0, 3, "#8f5f3a"); deskSet(gr, 3.2, 9.4, 2, "#5a3a24", true, "#2a2e35"); chair(gr, 2.3, 9.4, 3, "#8f5f3a"); signAt(gr, "LOANS · PRÊTS", 1.5, 1.9, 6.0, 0.25, "#1f3d6b", "#ffffff", Math.PI / 2);
+      deskSet(gr, 3.5, 7.0, 2, "#5a3a24", true, "#2a2e35"); chair(gr, 2.65, 7.0, 3, "#8f5f3a"); deskSet(gr, 3.5, 9.5, 2, "#5a3a24", true, "#2a2e35"); chair(gr, 2.65, 9.5, 3, "#8f5f3a"); signAt(gr, "LOANS · PRÊTS", 1.5, 1.9, 6.0, 0.25, "#1f3d6b", "#ffffff", Math.PI / 2);
       // ATMs on the right
       for (const z of [6.2, 7.4]) { B(gr, 0.7, 1.8, 0.8, "#2a4f8a", 16.4, 0.9, z); B(gr, 0.04, 0.4, 0.5, "#8fd0ff", 16.04, 1.35, z); B(gr, 0.04, 0.1, 0.4, "#111", 16.04, 1.0, z); glowAt(gr, 0x3dff7a, 0.05, 16.0, 1.1, z + 0.3); } signAt(gr, "ATM", 16.6, 2.2, 6.8, 0.3, "#2a4f8a", "#fff", -Math.PI / 2);
       // waiting benches and a coffee table
@@ -43,8 +43,8 @@
       return [
         seat("t1", L(0), WIN[0], TY, 0, { yield: 3 }), seat("t2", L(1), WIN[1], TY, 0, { yield: 0 }), seat("t3", L(2), WIN[2], TY, 0),
         seat("mgr", L(3, "bank"), 3.2, 1.55, 0, { yield: 2 }),
-        seat("ln1", L(4), 4.1, 7.0, 2, { yield: 1 }), { id: "cl1", look: looks[0], nodes: [[2.35, 7.0, 60, 3, "sit", "papers", "", 0, 0.45]] },
-        seat("ln2", L(5), 4.1, 9.4, 2), { id: "cl2", look: looks[1], nodes: [[2.35, 9.4, 60, 3, "sit", "papers", "", 0, 0.45]] },
+        seat("ln1", L(4), 4.35, 7.0, 2, { yield: 1 }), { id: "cl1", look: looks[0], nodes: [[2.65, 7.0, 60, 3, "sit", "papers", "", 0, 0.45]] },
+        seat("ln2", L(5), 4.35, 9.5, 2), { id: "cl2", look: looks[1], nodes: [[2.65, 9.5, 60, 3, "sit", "papers", "", 0, 0.45]] },
         { id: "guard", look: staffLook(6, "guard", { cap: "#1d2630" }), spd: 0.9, nodes: [[7.4, 10.8, 5, 0, "stand"], [10.8, 10.8, 5, 0, "stand"], [13.6, 10.5, 5, 0, "stand", "", "Good morning."], [10.8, 10.8, 3, 0, "stand"]] },
         cust("c2", 0, WIN[1], 1, "papers"), cust("c1", 17, WIN[0], 3, ""), cust("c3", 31, WIN[2], 5, "papers"),
         { id: "atm", looks, seed: 2, off: 9, nodes: [[9, 11.6, 14, 1, "hide"], [9, 10.4, 0], [14.0, 10.7, 0], [14.0, 6.4, 0], [15.3, 6.4, 5.5, 3, "stand"], [14.0, 6.4, 0], [14.0, 10.7, 0], [9, 10.4, 0], [9, 11.6, 0]] },

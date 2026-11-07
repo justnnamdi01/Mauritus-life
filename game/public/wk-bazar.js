@@ -20,7 +20,7 @@
     floorAt: (x, y) => (Math.abs(y - 6.0) < 1.6 || y > 10.2 ? ["#cdbd97", "#c2b18a"] : ["#d9c7a0", "#cdb98c"]),
     st: [["📦", "Delivery bay (staff only)", "none", 4.6, 4.9, IS_WORK], ["🧺", "The market", "none", 11.0, 12.3, NOT_WORK]],
     block(set) { for (const x of SX) { blk(set, x - 1.3, RA - 0.5, x + 1.3, RA + 0.5); blk(set, x - 1.3, RB - 0.5, x + 1.3, RB + 0.5); } blk(set, 1, 1, 4.2, 3.5); },
-    spots: [{ lv: [0], x: 4.9, y: 4.0, face: 2, pose: "stack", prop: "crate" }, { lv: [1, 2], x: SX[1], y: RA - 0.95, face: 0, pose: "call" }, { pt: true, x: SX[2], y: RB - 0.95, face: 0, pose: "serve" }],
+    spots: [{ lv: [0], x: 4.6, y: 4.0, face: 2, pose: "stack", prop: "crate" }, { lv: [1, 2], x: SX[1], y: RA - 0.95, face: 0, pose: "call" }, { pt: true, x: SX[2], y: RB - 0.95, face: 0, pose: "serve" }],
     build(gr, w, h) {
       // the lorry at the back, with crates on the ramp
       B(gr, 3.2, 1.7, 1.6, "#e8e2d2", 2.6, 0.95, 2.4); B(gr, 1.0, 1.3, 1.5, "#2a6fb0", 4.4, 0.75, 2.4); B(gr, 0.04, 0.5, 1.1, "#8fd0ff", 4.92, 0.95, 2.4); for (const dz of [-0.6, 0.6]) C(gr, 0.32, 0.32, 0.3, "#222", 4.0, 0.3, 2.4 + dz * 1.2, 12).rotation.x = Math.PI / 2; B(gr, 0.7, 0.05, 1.6, "#6b4a2a", 4.95, 0.55, 2.4).rotation.z = 0.15;
@@ -38,7 +38,7 @@
       return [
         vendor("va1", SX[0], RA - 0.95, 0, "Mangues, mangues!"), vendor("va2", SX[1], RA - 0.95, 1, "Brèdes fraîches!", 1), vendor("va3", SX[2], RA - 0.95, 2, "Safran, cumin, piment!"), vendor("va4", SX[3], RA - 0.95, 3, "Poisson du jour!"),
         vendor("vb1", SX[0], RB - 0.95, 4, "Ananas Victoria!"), vendor("vb2", SX[1], RB - 0.95, 5, "Des fleurs!"), vendor("vb3", SX[2], RB - 0.95, 6, "Tissus, tissus!", 2), vendor("vb4", SX[3], RB - 0.95, 7, "Litchis, litchis!"),
-        { id: "p1", look: staffLook(8, "market"), yield: 0, nodes: [[4.9, 4.0, 5, 2, "stack", "crate"], [4.9, 4.0, 1.5, 2, "carry", "crate", "", 1], [SX[0] - 0.4, 3.3, 3, 0, "stand", "crate"], [4.9, 4.0, 0]] },
+        { id: "p1", look: staffLook(8, "market"), yield: 0, nodes: [[4.6, 4.0, 5, 2, "stack", "crate"], [4.6, 4.0, 1.5, 2, "carry", "crate", "", 1], [SX[0] - 0.4, 3.3, 3, 0, "stand", "crate"], [4.6, 4.0, 0]] },
         { id: "p2", look: staffLook(9, "market"), off: 13, nodes: [[4.9, 4.6, 4, 2, "stack", "crate"], [4.9, 4.6, 1.5, 2, "carry", "crate", "", 1], [4.9, 5.7, 0, 2, "carry", "crate", "", 1], [8.5, 5.7, 0, 2, "carry", "crate", "", 1], [SX[1] - 0.2, 5.7, 3, 1, "stand", "crate"], [8.5, 5.7, 0], [4.9, 5.7, 0], [4.9, 4.6, 0]] },
         shop("s1", 0, 1, 6.5, 6.5), shop("s2", 15, 3, 14.5, 18.5), shop("s3", 29, 5, 10.5, 14.5), shop("s4", 40, 7, 18.5, 10.5)
       ];

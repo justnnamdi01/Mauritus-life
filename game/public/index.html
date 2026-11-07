@@ -2333,6 +2333,7 @@ function arsonMenu(T) { // the Palace gate: only the President gets in. Everyone
 // ---- Port Louis as a fun hub: a Ferris wheel on the waterfront, a stage with a live sega show in the evening, and a games room
 GBFLOOR.arcade = ["#1b1230", "#241741"];
 GBACTS.arcade = () => [A("Racing game", "Rs 60 · 20 min · fun", 20, 60, { fun: 22, energy: -2 }, { why: openAt(10, 24), msg: "You take the last corner on two wheels and beat the kid at the next machine." }), A("Claw machine", "Rs 40 · 10 min · fun", 10, 40, { fun: 12 }, { why: openAt(10, 24), msg: "The claw lifts a plush dodo, thinks about it, and drops it. Next time." }), A("Dance mat battle", "Rs 80 · 20 min · fun and fitness", 20, 80, { fun: 24, energy: -8, hunger: -5 }, { why: openAt(10, 24), run() { s.fit = Math.min(100, (s.fit || 0) + 0.2); return "Your feet find the arrows. The whole room cheers a little."; } }), A("Fresh juice at the counter", "Rs 70 · 10 min", 10, 70, { hunger: 8, fun: 6, social: 4 }, { why: openAt(10, 24), msg: "Cold lime and mint. The attendant has heard every joke about the claw." })];
+for (const b of GBSHOPS) if (b.gbKind === "arcade") PLACE[b.id] = GBACTS.arcade; // the Games Room offers its games (this had been defined after the shops were given their actions)
 for (const q of PLM.props || []) if (q.k === "ferris" || q.k === "stage") {
   const x = q.x, y = PLY + q.y;
   if (q.k === "ferris") OBJ.push({ x, y: y + 3.2, icon: "🎡", name: "Ferris wheel", acts: () => [A("Ride the Ferris wheel", "Rs 120 · 15 min · fun", 15, 120, { fun: 30, social: 6 }, { why: openAt(10, 23), msg: "At the top the whole bay opens up: the harbour, the mountains, the lights of the Caudan. You wave at a ship." }), A("Ride with a friend", "Rs 200 · 15 min · fun and people", 15, 200, { fun: 36, social: 18 }, { why: openAt(10, 23), msg: "Two seats, one view, no phone signal for a minute." })] });
@@ -3820,6 +3821,7 @@ function feedbackSend() {
 // ================= the Guide: how to play, how to do things, and every update =================
 const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (add to this whenever the game changes; the Updates section fills itself from UPDATES)
   ["🚀", "Getting started", [
+    ["How do I play a casino game?", "Walk into the casino and tap the roulette table, the blackjack table or the slot machines. Your character walks to the table or sits at the machine and the game opens as a sheet at the bottom, so you can watch the wheel, the cards and the reels in the room above. The house takes a small edge, you can lose at most Rs 30,000 an hour, and you can exclude yourself from the Rules page."],
     ["What does a job look like?", "Open the staff door, stove, sink, bus bay or delivery bay in a bank, restaurant, bakery, bar, food shop, supermarket, market or the bus terminal and choose Work a shift. Your character walks to their post and works there (teller at the window, cook at the stove, baker at the table, conductor at the bus door) while co-workers and customers go about their day. Part-time student jobs work the same way."],
     ["Why do ships stop at the shore?", "Ferries, cruise ships, fishing boats and yachts dock by the shore for a while. People walk down the gangway, others walk on, and then the ship sails out to sea. Big cargo ships and tankers dock too. Ships far out at sea sail away and come back later."],
     ["Can I sit down?", "Yes. Walk to any bench (there are seats at every bus station, and in Port Louis by the stage and the Ferris wheel), tap it and choose Sit and watch the world. The camera drifts behind you and slowly swings round while you rest and your energy and mood creep up. Tap Stand up or just walk away."],
@@ -5325,12 +5327,13 @@ function capCss() { if (document.getElementById("capCss")) return; const st = do
 const csnRs = (n) => "Rs " + Math.round(n).toLocaleString("en");
 const CSN = { st: 20, bet: "red", game: "", busy: false, lossHour: 0, view: null };
 function casinoWhy() { if ((s.casinoExcl || 0) > Date.now()) return "You excluded yourself until " + new Date(s.casinoExcl).toLocaleDateString(undefined, { day: "numeric", month: "long" }); if (!(openAt(11, 4) === "")) return openAt(11, 4); if (s.money < 20) return "You need at least Rs 20"; return ""; }
-function casinoOpen(game) { const a = capApi("casino"); if (!a) { toast("The casino is offline."); return; } capCss(); closeMenu(); CSN.game = game; CSN.busy = false; CSN.view = null; CSN.st = Math.min(CSN.st, Math.max(20, s.money)); csnDraw(); if (!CSN.since) CSN.since = Date.now(); a.state().then((r) => { if (r && r.ok) { s.casinoExcl = r.excluded || 0; CSN.lossHour = r.lossHour; CSN.cap = r.cap; if (r.excluded > Date.now()) { CSN.msg = "You excluded yourself from the casino until " + new Date(r.excluded).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "."; } if (r.open && game === "bj") CSN.view = r.open; csnDraw(); } }).catch(() => {}); }
+function casinoOpen(game) { if (window.WKX && WKX.inCasino() && !(WKX.at && WKX.game === game)) { WKX.seat(game, () => casinoOpen0(game)); return; } casinoOpen0(game); }
+function casinoOpen0(game) { const a = capApi("casino"); if (!a) { toast("The casino is offline."); return; } capCss(); closeMenu(); CSN.game = game; CSN.busy = false; CSN.view = null; CSN.st = Math.min(CSN.st, Math.max(20, s.money)); csnDraw(); if (!CSN.since) CSN.since = Date.now(); a.state().then((r) => { if (r && r.ok) { s.casinoExcl = r.excluded || 0; CSN.lossHour = r.lossHour; CSN.cap = r.cap; if (r.excluded > Date.now()) { CSN.msg = "You excluded yourself from the casino until " + new Date(r.excluded).toLocaleDateString(undefined, { day: "numeric", month: "long" }) + "."; } if (r.open && game === "bj") CSN.view = r.open; csnDraw(); } }).catch(() => {}); }
 function csnApply(r, label) { if (Date.now() - (CSN.since || Date.now()) > 30 * 60000 && Date.now() - (CSN.checked || 0) > 30 * 60000) { CSN.checked = Date.now(); toast("⏰ Reality check: you have been at the casino for " + Math.round((Date.now() - CSN.since) / 60000) + " minutes. It might be time for a break."); } const net = (r.payout || 0) - (r.paid || 0); if (net) { s.money += net; txn("Casino " + label, net); save(); } if (r.lossHour !== undefined) CSN.lossHour = r.lossHour; }
 function csnChips(box) { const chips = el("div", "chips"); for (const v of [20, 100, 500, 2000]) { const b = el("button", "chip" + (CSN.st === v ? " on" : ""), csnRs(v)); b.type = "button"; b.disabled = CSN.busy || s.money < v || (CSN.game === "bj" && CSN.view && !CSN.view.done); b.onclick = () => { CSN.st = v; csnDraw(); }; chips.append(b); } box.append(chips); }
 function csnDraw() {
   let box = document.getElementById("csn"); if (!box) { box = document.createElement("div"); box.id = "csn"; document.body.append(box); } box.innerHTML = ""; const g = CSN.game, a = capApi("casino");
-  const head = el("div", "ch"); head.append(el("h2", "", g === "roulette" ? "🎡 Roulette" : g === "slots" ? "🎰 Slots" : "🃏 Blackjack")); const bal = el("span", "", csnRs(s.money)); bal.id = "csnBal"; const x = el("button", "", "✕"); x.type = "button"; x.onclick = () => { box.remove(); }; head.append(bal, x); box.append(head);
+  const head = el("div", "ch"); head.append(el("h2", "", g === "roulette" ? "🎡 Roulette" : g === "slots" ? "🎰 Slots" : "🃏 Blackjack")); const bal = el("span", "", csnRs(s.money)); bal.id = "csnBal"; const x = el("button", "", "✕"); x.type = "button"; x.onclick = () => { box.remove(); if (window.WKX) WKX.unseat(); }; head.append(bal, x); box.append(head); box.className = window.WKX && WKX.at ? "sheet" : "";
   const msg = el("div", "cmsg", CSN.msg || "Place your bet."); msg.id = "csnMsg"; CSN.msg = "";
   if (g === "roulette") {
     const big = el("div", "big", CSN.n === undefined ? "🎡" : String(CSN.n)); big.id = "csnBig"; if (CSN.color) big.style.color = CSN.color === "red" ? "#ff5a6a" : CSN.color === "green" ? "#5be08a" : "#ffffff"; box.append(big, msg); csnChips(box);
@@ -9802,10 +9805,10 @@ function render3d(dt) { // draw one 3D frame
   { const sel = decorMode && s.inside === "home" && decorSel !== -1 ? (decorDrag && decorDrag.moved ? decorDrag : decorItems().find((o) => o.di === decorSel)) : null; // the piece you hold in Buy mode
     if (sel && !R.selRing) { R.selRing = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.78, 40), new THREE.MeshBasicMaterial({ color: 0x5fd38a, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false })); R.selRing.rotation.x = -Math.PI / 2; R.selRing.renderOrder = 5; R.scene.add(R.selRing); } // a green ring under it
     if (R.selRing) { R.selRing.visible = !!sel; if (sel) { R.selRing.position.set(sel.x, 0.05, sel.y - 0.9); const k = 1 + Math.sin(now / 220) * 0.06; R.selRing.scale.set(k, k, k); } } }
-  const snap = R.wasInside !== inside; R.wasInside = inside; if (snap || introOn) { R.pan.x = 0; R.pan.z = 0; } if (meMoving || (ride && ride.on)) { const f = Math.max(0, 1 - dt * 4); R.pan.x *= f; R.pan.z *= f; } const wkc = inside && busy && busy.a && (busy.a.job !== undefined) && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk, zin = inside && s.zoom > 1.05, tx = (inside && !zin ? (wkc ? rw() * 0.55 + s.x * 0.45 : rw() / 2) : s.x) + R.pan.x, tz = (inside && !zin ? (wkc ? rh() * 0.55 + s.y * 0.45 : rh() / 2 + 0.6 + (decorMode ? rh() * 0.3 : 0)) : s.y) + R.pan.z; /* zoomed in indoors: follow you */ $("centerBtn").hidden = Math.hypot(R.pan.x, R.pan.z) < 1.5; // where the camera looks (you, plus any dragging), and glide back when you walk // where the camera looks
+  const snap = R.wasInside !== inside; R.wasInside = inside; if (snap || introOn) { R.pan.x = 0; R.pan.z = 0; } if (meMoving || (ride && ride.on)) { const f = Math.max(0, 1 - dt * 4); R.pan.x *= f; R.pan.z *= f; } const wkc = inside && ((busy && busy.a && (busy.a.job !== undefined || (busy.pose && busy.pose.spotI !== undefined)) && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk) || (window.WKX && WKX.at)), zin = inside && s.zoom > 1.05, tx = (inside && !zin ? (wkc ? rw() * 0.55 + s.x * 0.45 : rw() / 2) : s.x) + R.pan.x + (inside && window.WKX && WKX.at ? 0.4 : 0), tz = (inside && !zin ? (wkc ? rh() * 0.55 + s.y * 0.45 : rh() / 2 + 0.6 + (decorMode ? rh() * 0.3 : 0)) : s.y) + R.pan.z + (inside && window.WKX && WKX.at ? 1.4 : 0); /* zoomed in indoors: follow you */ $("centerBtn").hidden = Math.hypot(R.pan.x, R.pan.z) < 1.5; // where the camera looks (you, plus any dragging), and glide back when you walk // where the camera looks
   const dyE = inside ? 0 : elevAt(s.x, s.y); R.dyn.position.y = snap ? dyE : R.dyn.position.y + (dyE - R.dyn.position.y) * Math.min(1, dt * 8); R.plane.constant = -R.dyn.position.y; // people and cars rise with the ground you stand on, and taps hit that height
   if (s.jf || s.hf) R.tgt.set(tx, 0.6 + R.dyn.position.y + JFH * 0.9, tz); else if (snap) R.tgt.set(tx, 0.6 + dyE, tz); else R.tgt.lerp(new THREE.Vector3(tx, 0.6 + R.dyn.position.y + (s.jf ? JFH * 0.9 : 0), tz), Math.min(1, dt * 6)); // follow smoothly (up with your jet when you fly), jump when going through a door
-  const dist = inside ? (inside && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk ? (rw() + rh() * 0.6) * (wkc ? 0.8 : 1.0) * (innerWidth / innerHeight < 0.8 ? 1.28 : 0.9) : Math.max(rw(), rh()) * 1.15) / Math.max(0.6, s.zoom) : 17 / s.zoom + (s.jf || s.hf ? JFH * 1.2 + 5 : 0); R.scene.fog.near = Math.max(70, dist * 1.3); R.scene.fog.far = Math.max(160, dist * 3); /* less haze when far out */ R.camera.position.set(R.tgt.x + dist * 0.36, R.tgt.y + dist * 0.98, R.tgt.z + dist * 0.56); R.camera.lookAt(R.tgt); // camera above and to the south-east
+  const dist = inside ? (inside && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk ? (rw() + rh() * 0.6) * (window.WKX && WKX.at ? 0.5 : wkc ? 0.8 : 1.0) * (innerWidth / innerHeight < 0.8 ? 1.28 : 0.9) : Math.max(rw(), rh()) * 1.15) / Math.max(0.6, s.zoom) : 17 / s.zoom + (s.jf || s.hf ? JFH * 1.2 + 5 : 0); R.scene.fog.near = Math.max(70, dist * 1.3); R.scene.fog.far = Math.max(160, dist * 3); /* less haze when far out */ R.camera.position.set(R.tgt.x + dist * 0.36, R.tgt.y + dist * 0.98, R.tgt.z + dist * 0.56); R.camera.lookAt(R.tgt); // camera above and to the south-east
   try { vfxTick(dt, now, dayK, glow, inside, wet, sd); } catch (e) { if (!R.vfxErr) { R.vfxErr = 1; console.error(e); } } try { hwFrame(dt, now, dayK, inside, wet); } catch (e) { if (!R.hwErr) { R.hwErr = 1; console.error(e); } } // glow, flare, particles and colour
   R.sun.target.position.copy(R.tgt); R.sun.position.copy(R.tgt).addScaledVector(R.sunL, 40); // the light follows you so shadows stay sharp, from wherever the sun is in the sky
   if (introOn) introCam(now); else if (TAMC.on) tamCam(now); else if (STORY.cam) storyCam(now); else if (SIT.on || SIT.k > 0) sitCam(now); // the intro and the Tamarin arrival fly the camera instead
@@ -10172,12 +10175,12 @@ $("tamTitle").onclick = tamEnd; // tap to skip
 $("buildChip").onclick = () => openPhone("house"); // the construction countdown opens the Home app
 
 // ================= acting things out: poses while you do something =================
-const POSES = ["sleep", "sit", "eat", "drink", "shower", "cook", "work", "read", "lift", "jog", "sing", "crouch", "soak", "watch", "stand", "wash", "chop", "knead", "pour", "stack", "call", "carry", "serve", "scan", "wipe"]; // every pose a character can do
+const POSES = ["sleep", "sit", "eat", "drink", "shower", "cook", "work", "read", "lift", "jog", "sing", "crouch", "soak", "watch", "stand", "wash", "chop", "knead", "pour", "stack", "call", "carry", "serve", "scan", "wipe", "bet"]; // every pose a character can do
 function poseFor(a) { // work out how to act out an action, and where to stand, sit or lie
   const L = a.label + " " + (a.doing || ""), o = near && near.x !== undefined && Math.hypot(near.x - s.x, near.y - s.y) < 2.2 ? near : null, k = o ? o.kind || "" : "", nm = o ? o.name || "" : ""; // the action and the thing you are using
   const at = (p, x, y, h, face) => ({ k: p, x, y, h: h || 0, face: face == null ? s.face : face }); // a pose at a spot
   const here = (p, h) => at(p, s.x, s.y, h); // a pose where you stand
-  if ((a.job !== undefined || /Part-time|Stack shelves|Help on/.test(a.label || "")) && window.WKX) { const sp = WKX.spot(a); if (sp) return sp; } // a workplace has its own desk, till, stove or sink for you
+  if ((a.job !== undefined || /Part-time|Stack shelves|Help on/.test(a.label || "") || (s.inside && ROOMDEF[s.inside] && ROOMDEF[s.inside].actSpots)) && window.WKX) { const sp = WKX.spot(a); if (sp) return sp; } // a workplace has its own desk, till, stove or sink for you
   if (/Sleep|Nap|Passed out/i.test(L)) { if (k === "bed") return at("sleep", o.x, o.y - 0.75, 0.6, 0); if (nm === "Sunbed") return at("sleep", o.x, o.y, 0.32, 0); return here("sleep", 0.06); } // lie down
   if (/Wait in the cell/.test(L) && k === "cell") return at("sit", o.x, o.y - 1.95, 0.42, 0); // on the cell bench
   if (k === "toilet" || /toilet/i.test(L)) return k === "toilet" ? at("sit", o.x, o.y - 0.82, 0.42, 0) : here("sit", 0.42); // on the loo
@@ -10244,6 +10247,7 @@ function applyPose(p, po) { // move one person's body into a pose (3D)
   if (po.k === "carry") { P.armL.rotation.x = -1.25; P.armR.rotation.x = -1.25; p.g.rotation.x = -0.08; } // carrying a load in front
   if (po.k === "serve") { P.armR.rotation.x = -1.45; P.armR.rotation.z = -0.2; P.armL.rotation.x = 0.1; } // a tray on one hand
   if (po.k === "scan") { P.armR.rotation.x = -1.1; P.armR.rotation.z = Math.sin(t * 2.6) * 0.5; P.armL.rotation.x = -0.6; } // sliding goods across the scanner
+  if (po.k === "bet") { const u = Math.max(0, Math.sin(t * 1.3)); P.armR.rotation.x = -1.2 - u * 0.5; P.armR.rotation.z = -0.1; P.armL.rotation.x = -0.4; p.g.rotation.x = 0.08; } // leaning on the table, pushing chips
   if (po.k === "wipe") { P.armR.rotation.x = -1.2; P.armR.rotation.z = Math.sin(t * 5) * 0.6; P.armL.rotation.x = -0.3; p.g.rotation.x = 0.1; } // wiping a surface
 } // end applyPose
 
@@ -10757,7 +10761,7 @@ function wooWhy(rel, peerId) { // why you can't, or "" if you can
   return "";
 } // end wooWhy
 var wooLie = null; // while it lasts you lie on the bed: { until, pose, from }
-function curPose() { return (SIT.on ? SIT.pose : null) || (busy && busy.pose) || (wooLie && wooLie.until > Date.now() ? wooLie.pose : null); } // how you are posed: by what you are doing, or lying on the bed
+function curPose() { return (window.WKX && WKX.at) || (SIT.on ? SIT.pose : null) || (busy && busy.pose) || (wooLie && wooLie.until > Date.now() ? wooLie.pose : null); } // how you are posed: by what you are doing, or lying on the bed
 function wooBed(peerUid) { // walk to the bed and lie down (two people take the two sides)
   const bed = ROOM[s.inside] && ROOM[s.inside].find((q) => q.kind === "bed"); if (!bed) return; const side = peerUid ? ((uid || "me") < peerUid ? -0.34 : 0.34) : -0.34; // who lies on which side
   wooLie = { until: Date.now() + 9000, pose: { k: "sleep", x: bed.x + side, y: bed.y - 0.75, h: 0.6, face: 0 }, from: [s.x, s.y] }; path = []; pending = null; s.x = wooLie.pose.x; s.y = wooLie.pose.y; s.face = 0; // on the bed
@@ -11302,6 +11306,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.25", "7 Nov 2026", "Play it in the room", [
+    ["🎰", "The casino is a real room", "Walk into the casino and play roulette, blackjack or slots at the table or machine. Your character takes the seat; the wheel spins, the reels roll and the cards land on the table above the betting panel.", null],
+    ["🕹️", "The Games Room works", "Racing seats, a claw machine, a dance mat with flashing arrows, and a juice counter. Each game puts your character at the right machine with other players around.", null]
+  ]],
   ["2027.03.24", "6 Nov 2026", "Real workplaces", [
     ["🏦", "Jobs happen in real-looking workplaces", "A bank with a vault and teller windows, a restaurant kitchen and dining room, a bakery with a brick oven, a bar with a stage, a street-food shop, a supermarket, the Central Market and the bus terminal. Each has its own staff and customers.", null],
     ["🚶", "You walk to your post", "Start a shift and your character walks to their desk, sink, stove or bus door, and does the work in front of everyone. When the shift ends they walk back out.", null],
@@ -13908,6 +13916,8 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <script src="wk-mall.js?v=1"></script>
 <script src="wk-bazar.js?v=1"></script>
 <script src="wk-terminal.js?v=1"></script>
+<script src="wk-casino.js?v=1"></script>
+<script src="wk-arcade.js?v=1"></script>
 <!--WKFILES-->
 <script src="wk-init.js?v=1"></script>
 
