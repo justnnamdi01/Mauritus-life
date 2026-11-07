@@ -3824,6 +3824,7 @@ function feedbackSend() {
 // ================= the Guide: how to play, how to do things, and every update =================
 const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (add to this whenever the game changes; the Updates section fills itself from UPDATES)
   ["🚀", "Getting started", [
+    ["How do I make or change my character?", "When you start, the Character Studio opens: turn your character with your finger, pick tabs (Hair, Tops, Bottoms, Shoes, Colours, You), tap a card to try it on, and tap Start living. Later, open Phone → Wardrobe → Open the Character Studio to try on and buy more. Cards show a price and a rarity gem; a green tick means you have it. Cancel puts your look back."],
     ["How does the Ferris wheel work?", "Walk to the wheel and choose Ride (Rs 120, or Rs 200 for two). Your character climbs into an open gondola and sits down, the camera settles beside you, and the wheel carries you once round, slowly (about a minute). Drag the screen to turn your view and look at the bay, the harbour and the town. Tap Get off to stop early, with no charge."],
     ["What is a side hustle?", "A small job you do for extra money, on top of your main job: sell gato piment on a round of Port Louis (stake Rs 120), fish off the quay (bait Rs 60), or busk at the stage from 17:00 (free). Open the Hustles app or tap the basket at the terminal, the fishing spot on the quay or the stage. A few rounds a day, about Rs 4,500 a day at most from all hustles."],
     ["Why do I only get half pay at some workplaces?", "You have one main job: your career, with full pay and promotions. Every other workplace gives an odd job at about half pay, three a day, with no promotion. Change career after 3 days from the Hustles app."],
@@ -6958,6 +6959,7 @@ function phoneRender0() { // draw the current phone screen
     for (const x of s.txns) prow(box, x.l, (x.a > 0 ? "+" : "") + rs(x.a), (x.t ? new Date(x.t).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + " · " : "") + "Day " + x.d); if (!s.txns.length) box.append(el("p", "pnote", "No transactions yet.")); } // bank history
   if (pv.app === "people") peopleApp(box); // everyone you know
   if (pv.app === "wardrobe") { // change into anything you own, any time
+    link("✨ Open the Character Studio", "Try on hair, tops, bottoms and shoes in 3D, then buy what you like", () => { closePhone(); if (!(window.openStudio && window.openStudio("wardrobe"))) toast("The studio needs 3D."); }); // the big try-on screen
     const g = s.g === "f" ? "f" : "m", P = pieceSet(myLook()), pvw = el("div", "pvwrap"), cv3 = charPreview(myLook()); if (cv3) { pvw.append(cv3); box.append(pvw); } // a turning preview of you
     const tabs = [["head", "Hair & hats"], ["body", "Tops"], ["legs", "Bottoms"], ["feet", "Shoes"]], tabs2 = [["acc", "Shades & caps"], ["bag", "Bags"], ["jewel", "Jewellery"], ["outfit", "Outfits"], ["studio", "Studio"]], cur = pv.arg || "body"; // one tab per slot, then the extras
     for (const list of [tabs, tabs2]) { const bar = el("div", "tbar tabs"); bar.style.borderRadius = "12px"; for (const [k, n] of list) { const b = el("button", k === cur ? "on" : "", n); b.type = "button"; b.onclick = () => openPhone("wardrobe", k); bar.append(b); } box.append(bar); }
@@ -11319,6 +11321,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, where to try it (optional)]]]
+  ["2027.03.27", "7 Nov 2026", "The Character Studio", [
+    ["✨", "A new way to make your character", "A big 3D preview you can turn with your finger, tabs for hair, tops, bottoms, shoes and colours, rarity filters, and cards with a little picture and price for every piece. Pick, look, and start living.", () => openPhone("wardrobe")],
+    ["🛍️", "Try before you buy", "Open the Character Studio from the Wardrobe: try anything on, see it on your character, and buy everything you like in one tap.", () => openPhone("wardrobe")]
+  ]],
   ["2027.03.26", "7 Nov 2026", "One career, side hustles and alerts", [
     ["📝", "Pick one main job", "The first shift you work asks if it is your career. A career pays full wages and promotes you every 4 good shifts. Other workplaces give odd jobs at about half pay.", () => openPhone("hustle")],
     ["🧺", "Side hustles", "Sell gato piment round Port Louis, fish off the quay, or busk on the stage in the evening. Small stake, small profit, a few a day.", () => openPhone("hustle")],
@@ -13940,6 +13946,7 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <!--WKFILES-->
 <script src="wk-init.js?v=1"></script>
 <script src="hustles.js?v=1"></script>
+<script src="studio.js?v=1"></script>
 
 </body>
 </html>
