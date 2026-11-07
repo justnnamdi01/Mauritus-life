@@ -173,6 +173,13 @@ The phone's **Hustles app** shows these as "Today in Port Louis", with live stat
 - The level-up is a scene in the world (fireworks over your flat, neighbours cheering), never just a toast.
 - "Next level" bar always visible on the profile, with the two or three quickest ways to fill it.
 
+**Compare and strive (the Clash part: your base first, then the world).** The main loop is you and your own place. On top of that, a player who wants to can see where they stand:
+- **Your Standing card** (level, flat level, job rank, Album %, days played) that other players can open from your name tag.
+- **Visit and admire:** walk into a friend's or a stranger's flat (existing home visits) and see their level, their flat and their title. A "Like" on a flat gives the owner a little XP and a notification.
+- **Leaderboards** (weekly reset so newcomers can win): Best Flat, Highest Level this week, Most Helpful, Top Earner of the week, plus a friends-only board. Weekly winners get a badge and a cosmetic.
+- **Showcase:** pick your three proudest things (flat level, a badge, a rare clothing piece) to show on your card.
+- Never forced: leaderboards are in the phone, not in the way, and a player can hide their card.
+
 **Why people come back.** A visible next reward each session, a daily list that fills in minutes, and the flat finishing while away. The bar never drains when you are away.
 
 **How it ties to what exists.** Shifts and hustles already call `FLX.nudge()`: add `XP.gain(kind)` beside it. The server owns XP and level (`db.players[uid].xp`) in a new `levels.js`, same server-decides pattern, `paid` for gifts. Flat level cap follows player level.
