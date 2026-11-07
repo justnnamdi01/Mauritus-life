@@ -75,6 +75,7 @@
   HUX.app = async function (box, link) {
     appHero(box, "🧺", "Work and hustles", s.main ? "Career: " + (JOBS[s.main.id] || {}).name : "Choose your career", "One main job. Side hustles for extra.");
     // the career
+    if (window.FLX) { try { await FLX.card(box); } catch (e) {} }
     box.append(el("p", "psec", "Your career"));
     if (s.main && JOBS[s.main.id]) { const j = JOBS[s.main.id], lv = level(s.main.id), card = el("div", "jobcard"); card.append(el("small", "jlabel", "MAIN JOB ⭐")); const top = el("div", "jtop"); top.append(el("b", "", j.titles[lv])); card.append(top, el("span", "jsub", j.name + " · about " + rs(j.pay[lv]) + " a shift"));
       const prog = (s.jobs[s.main.id] || 0) % 4, bar = el("div", "jbar"), fill = el("i"); fill.style.width = (lv >= 2 ? 100 : prog * 25) + "%"; bar.append(fill); card.append(bar, el("span", "jnote", lv >= 2 ? "Top of the ladder." : prog + "/4 good shifts to " + j.titles[lv + 1]));
@@ -88,7 +89,7 @@
         r.onclick = () => { closePhone(); if (here() !== "portlouis") { toast("🧺 This one is in Port Louis."); return; } if (Math.hypot(s.x - where.x, s.y - where.y) < 12 && d.open) start(id); else guideTo(where.x, where.y, where.label); }; slot.append(r); } }
     // the places in the tour
     box.append(el("p", "psec", "Today in Port Louis"));
-    const h = mutHour(), tour = [["🏠", "Your flat", "Daily reward and your home", () => { closePhone(); const d = myDoor(); if (d) guideTo(d.x, d.y, "your flat"); }], ["🚌", "Victoria Urban Terminal", "Jobs, buses, the courier dash, gato piment rounds", () => { closePhone(); guideTo(54.5, PLR().y0 + 69.5, "the terminal"); }], ["🎡", "Ferris wheel", h >= 10 && h < 23 ? "Open now · Rs 120 · the best view of the bay" : "Opens 10:00", () => { closePhone(); const o = OBJ.find((q) => /Ferris/.test(q.name || "")); if (o) guideTo(o.x, o.y, "the Ferris wheel"); }], ["🎤", "Waterfront stage", h >= 17 && h < 23 ? "LIVE NOW · watch, dance or busk for tips" : "Sega every evening at 17:00 (in " + (h < 17 ? 17 - h : 24 - h + 17) + " h)", () => { closePhone(); const o = SITE.busk(); guideTo(o.x, o.y, "the stage"); }], ["🎣", "The Caudan quay", "Cast a line from the quay at the water's edge", () => { closePhone(); const o = SITE.fish(); guideTo(o.x, o.y, "the quay"); }]];
+    const h = mutHour(), tour = [["🏠", "Your flat", (window.FLX && FLX.st ? (FLX.st.run ? "Building: " + FLX.st.run.name + " · " + FLX.fmt(FLX.left()) : FLX.st.next ? "Level " + FLX.st.level + " · next upgrade ready to start" : "A penthouse") : "Daily reward and your home"), () => { closePhone(); const d = myDoor(); if (d) guideTo(d.x, d.y, "your flat"); }], ["🚌", "Victoria Urban Terminal", "Jobs, buses, the courier dash, gato piment rounds", () => { closePhone(); guideTo(54.5, PLR().y0 + 69.5, "the terminal"); }], ["🎡", "Ferris wheel", h >= 10 && h < 23 ? "Open now · Rs 120 · the best view of the bay" : "Opens 10:00", () => { closePhone(); const o = OBJ.find((q) => /Ferris/.test(q.name || "")); if (o) guideTo(o.x, o.y, "the Ferris wheel"); }], ["🎤", "Waterfront stage", h >= 17 && h < 23 ? "LIVE NOW · watch, dance or busk for tips" : "Sega every evening at 17:00 (in " + (h < 17 ? 17 - h : 24 - h + 17) + " h)", () => { closePhone(); const o = SITE.busk(); guideTo(o.x, o.y, "the stage"); }], ["🎣", "The Caudan quay", "Cast a line from the quay at the water's edge", () => { closePhone(); const o = SITE.fish(); guideTo(o.x, o.y, "the quay"); }]];
     for (const [icon, name, sub, fn] of tour) { const r = el("button", "prow"), l = el("span", "", icon + " " + name); l.append(el("small", "", sub)); r.type = "button"; r.append(l, el("b", "", "›")); r.onclick = fn; box.append(r); }
   };
 
@@ -142,7 +143,7 @@
     if (R0.sc.done) R0.sc.done(); HUX.run = null; HUX.pose = null; HUX.scene = null; panelOff();
     if (!r || !r.ok) { toast("🧺 " + ((r && r.error) || "The round was not counted.")); return; }
     const msg = id === "fish" ? (r.icon || "🐟") + " You caught " + (/^an /.test(r.fish) ? r.fish : "a " + r.fish) + "! Sold for " + rs(r.payout) + "." : id === "busk" ? "🎤 The crowd tipped " + rs(r.payout) + "." : "🧺 Sold out! You made " + rs(r.payout) + " (about " + rs(Math.max(0, r.profit)) + " profit).";
-    toast(msg); s.fun = clamp(s.fun + 8); save(); if (id === "fish" && r.icon) floatIcon(r.icon);
+    toast(msg); s.fun = clamp(s.fun + 8); save(); if (window.FLX) { FLX.nudge(); FLX.offerFirst(); } if (id === "fish" && r.icon) floatIcon(r.icon);
     if (!s.pushAsked && !(typeof Notification !== "undefined" && Notification.permission === "denied")) setTimeout(() => HUX.askPush("Good round."), 1800);
   }
   function floatIcon(ch) { try { const sp = sprite(emojiTex(ch), 1.1); sp.position.set(s.x, 2.4, s.y); R.world.add(sp); const t0 = performance.now(); const iv = setInterval(() => { const k = (performance.now() - t0) / 3000; sp.position.y = 2.4 + k * 1.2; if (k >= 1) { clearInterval(iv); R.world.remove(sp); } }, 40); } catch (e) {} }

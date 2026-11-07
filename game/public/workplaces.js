@@ -67,7 +67,7 @@
   const NOT_WORK = /^(?!.*(?:shift|Part-time|Stack shelves|Help on)).*$/i, IS_WORK = /shift|Part-time|Stack shelves|Help on/i; // which actions belong to the staff area and which to the customer counter
 
   const X = window.WKX = {
-    WK, B, C, S, glass, glowAt, signAt, counter, tableRound, chair, stool, plant, crockery, sink, stove, fridge, deskSet, bench, clock, rope, shelfUnit, blk, tableBlock, staffLook, NOT_WORK, IS_WORK, FACE_V,
+    WK, mkActor, actorAt, B, C, S, glass, glowAt, signAt, counter, tableRound, chair, stool, plant, crockery, sink, stove, fridge, deskSet, bench, clock, rope, shelfUnit, blk, tableBlock, staffLook, NOT_WORK, IS_WORK, FACE_V,
     applyAll() { for (const b of GBSHOPS) if (WK[b.gbKind]) applyKind(b, b.gbKind); },
     spot(a) { // where you stand and how you work, for this action in this room
       const def = s.inside && ROOMDEF[s.inside]; if (def && def.actSpots && !a.job) { const i = def.actSpots.findIndex((q) => q.re.test(a.label || "")); if (i >= 0) { const q = def.actSpots[i]; return { k: q.pose, x: q.x, y: q.y, h: q.h || 0, face: q.face == null ? 0 : q.face, prop: q.prop || "", spotI: 100 + i }; } } if (!def || !def.spots) return null; const lv = a.job ? level(a.job) : 0, pt = !a.job && /Part-time|Stack|Help on/i.test(a.label || "");

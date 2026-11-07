@@ -31,6 +31,22 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 28 (7 Nov 2026): M1, timed flat upgrades (docs/CORE.md milestone 1)
+- **Phase:** CORE milestone M1. Server `game/upgrades.js` owns every timer and price (ten levels, Fresh paint Rs300/2 min up to Penthouse Rs250,000/7 days; placeholders until the pacing script). Start is idempotent and charged by the server (`paid`); finishing is settled lazily so it is true even when the player was offline; a "your flat is ready" push is scheduled for the finish time.
+- **Speed-ups:** a finished shift or hustle shaves 2 min (max 6 per upgrade, one per 45 s); visiting friends can Help (5% off each, max 5; helper gets Rs 40, 5 a day; owner is notified).
+- **Seen in the world:** builders in hard hats work in your flat while an upgrade runs (dust sheet, paint cans, ladder, WORK IN PROGRESS sign); a progress sprite over your door; the flat visibly changes at each level (wood panelling, lamps, window flowers, gallery, cove lighting, hanging plants and shelves, chandelier, mirror and slats, smart-home glow, gold penthouse with your name). A "Flat upgrades" station in your home and a "Help build" station in friends' homes. Ready moment: card and "Show me" camera sweep. Hustles app has a flat card. Comfort bonus +3% per level to rest at home.
+- Guide answers and What's new entry 2027.03.28 added.
+
+## Tested, session 28
+- `game/test/flat.test.js` all pass; regions, capital and hustle tests still pass.
+- Headless browser: station appears, start charges Rs 300, builders and levels 1, 3, 6, 10 render, ready card appears, no page errors.
+
+## Not tested / not done, session 28
+- Not tested on a real phone; real push delivery not tested (needs PUSH_CONTACT on the live site).
+- Not browser-tested: friend Help station in a visited home, speed-up after a shift, the door sprite from outside, camera sweep.
+- Prices and times are placeholders. M2 materials, M3 missions, M4 business, M5 crew not built.
+- **Next step:** M2 (materials and the pacing script), or real-phone test of M1 first.
+
 ## Done, session 27 (7 Nov 2026): the Character Studio (the owner's reference screen)
 - A new full-screen **Character Studio** (`game/public/studio.js`) in the style of the reference image: a big 3D preview of your character in a room (blinds, wall, floor) that you **turn with your finger** and that zooms to the part you are choosing (head, top, legs, shoes); a dark panel below with **tabs** (Hair, Tops, Bottoms, Shoes, Colours, You), a **rarity** filter, a sort menu and a man/woman switch, a **grid of cards** each with a little 3D picture of the piece on your character, a price tag, a rarity gem and a green tick when selected; a banner with the name and price of what you just tried; **Cancel** and a yellow **Start living / Buy for Rs X** button. A **Surprise me** button picks a random look.
 - **At the start** it replaces the old "Who are you in Mauritius?" screen (the old one stays as a fallback when 3D is not available). Pieces up to Rs 700 are free starter picks; dearer ones show a lock and a price (unlock in the Wardrobe). Name, status and course are in the "You" tab; "Already playing? Log in" is there too. Finishing runs exactly the old start-up steps (money, rent, owned starting clothes, traits, account, tour).
