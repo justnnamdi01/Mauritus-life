@@ -20,7 +20,7 @@ const player = (PORT, name, money) => new Promise((resolve) => { const ws = new 
     r = await A.ask("lvl.gain", { kind: "place", key: "bank" }); ok(r.ok && r.gained === 0 && r.seen, "the same place never pays twice");
     r = await A.ask("lvl.gain", { kind: "place" }); ok(!r.ok, "a place needs a name");
     r = await A.ask("lvl.state"); ok(r.xp === 77 && r.level === 1, "XP adds up (77)");
-    await wait(10200); r = await A.ask("lvl.gain", { kind: "hustle" }); ok(r.ok && r.gained === 65 && r.level === 2 && r.up && r.up.length === 1 && r.up[0].gift === 200, "enough XP is level 2 and a gift of Rs 200 (" + r.xp + " XP)");
+    await wait(10200); r = await A.ask("lvl.gain", { kind: "hustle" }); ok(r.ok && r.gained >= 65 && r.level === 2 && r.up && r.up.length === 1 && r.up[0].gift === 200, "enough XP is level 2 and a gift of Rs 200 (" + r.xp + " XP)");
     ok(r.title === "Newcomer", "level 2 is still a Newcomer; Local comes at 3");
     // the flat: levels 1-4 are open, the fifth needs player level 5
     let f = null; for (let n = 1; n <= 4; n++) { f = await A.ask("flat.start"); if (!f.ok) { console.log("start", n, f.error); break; } await wait(n === 4 ? 15000 : n === 3 ? 4500 : 1800); const fs2 = await A.ask("flat.state"); await A.ask("flat.ack"); }
@@ -32,7 +32,16 @@ const player = (PORT, name, money) => new Promise((resolve) => { const ws = new 
     const b0 = (await B.ask("lvl.state")).xp; const h = await B.ask("flat.help", { owner: A.uid }); const b1 = await B.ask("lvl.state");
     ok(!h.ok || b1.xp - b0 === 19, "a helper earns 19 XP (15 plus a quarter) and the owner gets a little too" + (h.ok ? "" : " (nothing running to help: " + h.error + ")"));
     r = await B.ask("lvl.gain", { kind: "shift" }); ok(r.ok, "a second player has their own separate XP");
-    r = await A.ask("lvl.state"); ok(r.perks.length === 6 && r.ways.length === 4, "the state lists what unlocks and the ways to earn");
+    r = await A.ask("lvl.state"); ok(r.perks.length === 6 && r.ways.length === 5, "the state lists what unlocks and the ways to earn");
+    // Your day: three goals a day, decided by the server
+    const C = await player(PORT, "Daily", 100); let d = await C.ask("lvl.state");
+    ok(d.goals.length === 3 && d.goals[0].k === undefined && d.goals.every((g) => g.have === 0 && !g.done) && d.goals[0].text, "every day has three goals, none done at first (" + d.goals.map((g) => g.text).join(", ") + ")");
+    const d2 = await C.ask("lvl.state"); ok(JSON.stringify(d2.goals.map((g) => g.id)) === JSON.stringify(d.goals.map((g) => g.id)), "the same goals all day");
+    const need0 = d.goals[0].n; let last = null; for (let i = 0; i < need0; i++) { if (i) await wait(8300); last = await C.ask("lvl.gain", { kind: "shift" }); }
+    ok(last.goalsDone && last.goalsDone.length === 1 && last.goalsDone[0].cash === 150, "finishing the goal's shifts completes it and pays Rs 150");
+    d = await C.ask("lvl.state"); ok(d.goals[0].done && d.goals[0].have === need0, "the goal shows as done");
+    r = await C.ask("lvl.gain", { kind: "promo" }); ok(r.ok && r.gained === 60, "a promotion at work gives 60 XP");
+    r = await C.ask("lvl.gain", { kind: "visit" }); ok(r.ok && r.gained === 0, "visiting a place counts for the day but gives no XP itself");
   } finally { srv.kill(); await new Promise((r) => srv.on("exit", r)); try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {} }
   console.log(fails ? fails + " FAILED" : "all passed"); process.exit(fails ? 1 : 0);
 })();

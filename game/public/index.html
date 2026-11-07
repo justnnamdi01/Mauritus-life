@@ -3825,6 +3825,7 @@ function feedbackSend() {
 const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (add to this whenever the game changes; the Updates section fills itself from UPDATES)
   ["🚀", "Getting started", [
     ["How do I upgrade my flat?", "Go home and tap the 🛠️ Flat upgrades board. Pick the next level, pay, and the builders start work in your room. The first one takes 2 minutes; later ones take hours or days, and you do not need to stay in the game: the flat is finished when the time is up and we can send you a notification. Finished shifts take about 2 minutes off, and a friend who visits your home can tap Help build to take 5% off."],
+    ["What is \"Your day\"?", "Three small goals that change every morning: for example finish 2 shifts, do a side hustle, visit 3 places. Each one gives 30 XP and Rs 150 in your mail, and finishing all three gives a bonus of 60 XP and Rs 400. Open the Standing app to see them. Missing a day never takes anything away.", "standing"],
     ["How do I level up?", "Just play. Finishing shifts, side hustles, flat upgrades and visiting a new place all give XP, and the level chip under your cash fills up. Every new level gives a gift of cash (it arrives in your mail) and sometimes a new title. You can reach every level on your own; helping friends gives a quarter more XP. Open the Standing app to see what to do today.", "standing"],
     ["Why can't I start a later flat upgrade?", "The first four flat upgrades are open to everyone. Later ones open at a higher player level, up to the penthouse at level 20. Open the Standing app to see which level opens which upgrade.", "standing"],
     ["Can I help a friend build their flat?", "Visit their home (Phone → Contacts → Visit). If their builders are working you will see a 🔨 Help build board. Tap it and lend a hand: you take a few minutes off and they thank you with Rs 40. One help each per upgrade, up to five per upgrade."],
@@ -11326,6 +11327,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.03.30", "7 Nov 2026", "Your day: three goals every morning", [
+    ["🎯", "Your day", "Every morning you get three small goals, like finishing shifts, a side hustle or visiting places. Each one pays XP and cash, and doing all three pays a bonus. The 🎯 next to your level shows how many are done.", () => openPhone("standing")],
+    ["⭐", "Promotions count", "Getting promoted at your main job now gives XP too.", null]
+  ]],
   ["2027.03.29", "7 Nov 2026", "Levels: build your standing", [
     ["🏅", "Your level", "Every shift, hustle, new place and flat upgrade gives XP. A level chip under your cash fills as you play, and each new level gives a gift of cash and sometimes a new title.", () => openPhone("standing")],
     ["🏠", "Your flat opens up as you grow", "The first four flat upgrades are open to everyone. The later ones, up to the penthouse, open at higher levels. You can reach every level on your own.", () => openPhone("standing")],

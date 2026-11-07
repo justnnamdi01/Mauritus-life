@@ -31,6 +31,13 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 30 (7 Nov 2026): "Your day" goals and promotion XP (level system step 2)
+- Server `game/levels.js`: three goals a day (one shift goal, one hustle or Ferris goal, one visits goal), chosen from the player id and the date, counted only from events the server accepted. Each goal pays 30 XP and Rs 150 by mail; all three pay 60 XP and Rs 400 and add to a days-in-a-row count (one missed day is forgiven). A promotion at the main job gives 60 XP. Walking into a place counts as a visit (no XP by itself; the first time ever still pays 25 XP).
+- On screen: a 🎯 count on the level chip, "Goal done" float and card, confetti when all three are done, a "Your day" section at the top of the Standing app. What's new 2027.03.30, a Guide answer.
+- Tested: `levels.test.js` (goals, same all day, completion pays Rs 150, promotion, visit), flat and hustle tests; browser: a real shift raised the goal and XP once, no page errors.
+- Not done: a real phone test; the list does not yet have eat/sleep/wash goals; the job-rank ladder is still the old three titles (4 good shifts each); Standing card and leaderboards (step 3); upkeep and more unlocks (step 4).
+- **Next step:** step 3: the Standing card and never-reset leaderboards (Friends, Island, My region).
+
 ## Done, session 29 (7 Nov 2026): player level "Island Standing" (docs/CORE.md section 3.8, step 1)
 - **Phase:** CORE milestone, level system step 1. Server `game/levels.js` owns XP and levels (Level 1-50, placeholders for the curve). Phone only reports "a shift ended"; the server decides if it counts (kinds are a fixed list, per-day caps, gaps between, first-time bonus, one-off places, soft cap of 500 XP a day then half). Server also grants XP itself for starting/finishing flat upgrades and for helping friends (a quarter extra).
 - Level-up pays a cash gift by mail (Rs 100 x level, Rs 500 x level every 5th) and sets a title (Newcomer to Legend). Flat upgrades 5 to 10 now need player level 5, 8, 10, 13, 16, 20 (the first four are open to everyone).
