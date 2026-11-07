@@ -31,6 +31,12 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 34 (7 Nov 2026): business ads and the Fashion Show switched off
+- **Business ads:** the partner switch `PARTNERS_ON` was already off (Belle's Kitchen, A* Cutz, DevCon and Clawed by Taps buildings, posters, rewards and chats). One leak was left: the server still posted the DevCon 2026 announcement (Rs 150,000) into town chat the first time it ran. It is now gated by `PARTNERS_ON` too. Row added to `game/ADS.md`.
+- **Fashion Show removed for now:** new switch `FASHION_ON = false` in `server.js` (no weekly announcements, entries, votes or prizes; requests are refused politely) and in `index.html` (no Events card, countdown chip, offer, runway or lineup). The "Saturday Fashion Show" What's new line, the landing-page sentence and the About page bullet were removed. The clothes shops, wardrobe and Character Studio are untouched. To bring it back, set both switches to true.
+- Tested: server tests and a browser smoke test (Events app opens, no page errors).
+- Not done: the admin page still has the old business panels (private, harmless); if the live data file has the WhatsApp community promo turned on in the admin Promo card, that is separate and still on.
+
 ## Done, session 33 (7 Nov 2026): the rest of Port Louis, built but under clouds
 - **What:** `tools/build-surround.mjs` reads the local OpenStreetMap file and writes `game/public/portlouis-surround.js`: the real city and land east of the Port Louis map (a strip 300 x 220 tiles, 14 m each, same tile frame as Port Louis): built-up ground, real roads, farmland, forest, parks. `game/public/surround.js` draws it as far scenery: a hilly ground (forest rises towards the Moka range), about 7,000 small houses in one batch, three drifting cloud layers that are clear at the walkable edge and full cover beyond it, and "Plaine Verte / Cité Martial / The Moka range - Opens soon" signs above the clouds.
 - **Not accessible:** nothing changed in the walkable map. Tiles past x=119 are still solid on the phone, and a hacked position is pulled back. Take the clouds away by setting `SRX.on = false` (or later by building a real region from this data).

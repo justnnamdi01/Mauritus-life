@@ -108,7 +108,7 @@ body.wmOn .hud, body.wmOn .dock { display: none !important; }
 <section class="seo-about" aria-label="About Mauritius Life">
 <h2>Mauritius Life: a free multiplayer life game set in Mauritius</h2>
 <p>Mauritius Life is a free life simulation you play in your web browser, with real players, in a 3D world built from the real map of Mauritius, starting in the bay town of Grand Baie. Choose your look, find a job, climb the career ladder, eat dholl puri at the bazaar, throw house parties, decorate your own home and make friends. More regions of the island open over time.</p>
-<p>Every Saturday the whole town gathers for the Fashion Show, and the anonymous Heart Garden lets you say what is on your mind without a name. There is nothing to download. <a href="about.html">Learn more about Mauritius Life</a>.</p>
+<p>The whole town gathers at the market and the beach, and the anonymous Heart Garden lets you say what is on your mind without a name. There is nothing to download. <a href="about.html">Learn more about Mauritius Life</a>.</p>
 </section>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
@@ -11098,6 +11098,7 @@ function hwFresh(items) { // a new note from someone else lands while you play: 
 }
 
 // ================= the Saturday Fashion Show =================
+const FASHION_ON = false; // the weekly Fashion Show is switched off for now (the clothes shops are not affected)
 const FASHION_LOOKS = [ // eight designer looks, each worn by a different model (every piece is real wardrobe clothing)
   { name: "Midnight Gold", designer: "Amélie R.", look: { g: "f", skin: "#a8703f", hcol: "#17100c", hs: "", nails: "#d4af37", shirt: "#15171a", pants: "#15171a", cap: "", shades: true, role: "resident", hd: "suit", tp: "suit", lg: "suit", ft: "suit" } },
   { name: "Beach Chic", designer: "Kévin R.", look: { g: "m", skin: "#d9a273", hcol: "#6b4a2f", hs: "", nails: "", shirt: "#35c4bb", pants: "#f4f1e8", cap: "", shades: true, role: "tourist", hd: "beach", tp: "beach", lg: "beach", ft: "beach" } },
@@ -11134,12 +11135,12 @@ function fashionVoteCard() { // the lineup: everyone on the runway, with a vote 
   const ok = el("button", "evbtn"); ok.type = "button"; ok.append(el("b", "", "Close")); ok.onclick = closeMenu; card.append(ok); $("sheet").hidden = false;
 }
 function fashionResultsCard() { const L = FS && FS.last; if (!L) { toast("No show has finished yet. The first one is this Saturday!"); return; } evCard({ icon: "🏆", tag: "Last Fashion Show", title: L.top[0] ? L.top[0].name + " won!" : "Results", text: (L.top.length ? "Top looks: " + L.top.map((x, i) => (i + 1) + ". " + x.name + " (" + x.votes + ")").join(" · ") + ". " : "") + (L.winners.length ? "Player prizes: " + L.winners.map((w) => w.name + " " + rs(w.prize)).join(", ") + "." : "No player placed this time."), opts: [{ label: "Nice!", pri: 1 }] }); }
-function fashionActs() { const ph = fsPhase(), live = ph && ph.k === "live", before = !ph || ph.k === "before", mine = FS && FS.mine, acts = [];
+function fashionActs() { if (!FASHION_ON) return []; const ph = fsPhase(), live = ph && ph.k === "live", before = !ph || ph.k === "before", mine = FS && FS.mine, acts = [];
   acts.push({ label: live ? "🗳️ Vote for your favourite look" : "👀 Meet the lineup", info: live ? "The show is LIVE · " + fmtCount(ph.ms) + " left" : ph ? "Starts in " + fmtCount(ph.ms) : "Saturdays at 19:00", go: () => { closeMenu(); fashionLoad(true).then(() => fashionVoteCard()); } });
   if (before) acts.push({ label: mine ? "🔄 Update my look" : "✨ Enter the show with my look", info: mine ? "You're in! Change into something new, then tap here" : "Free · win up to Rs 20,000", go: () => { closeMenu(); fashionEnter(); } });
   acts.push({ label: "🏆 Last show's winners", info: FS && FS.last ? FS.last.top[0].name + " won" : "No show yet", go: () => { closeMenu(); fashionLoad(true).then(fashionResultsCard); } }); return acts; }
 OBJ.push({ id: "runway", x: 26.5, y: 44.5, tap: { x: 26.5, y: 41, r: 9 }, icon: "👗", name: "Fashion Runway", acts: () => fashionActs() }); // the catwalk by the beach road: tap anywhere on it
-function fashionSection(box) { // the Fashion Show card at the top of the Events app
+function fashionSection(box) { if (!FASHION_ON) return; // the Fashion Show card at the top of the Events app
   const wrap = el("div", "fsec"); box.append(wrap); const draw = () => { wrap.innerHTML = ""; const ph = fsPhase(), live = ph && ph.k === "live", before = !ph || ph.k === "before";
     const h = appHero(wrap, "👗", "Fashion Show · Saturday 19:00", live ? "LIVE NOW" : ph ? "Starts soon" : "Saturdays", "…"); const sp = h.querySelector(".ahtx span"); sp.id = "fsCount"; sp.textContent = live ? "Voting closes in " + fmtCount(ph.ms) : ph ? fmtCount(ph.ms) : "Loading…";
     const row = (ic, title, sub, fn) => { const r = el("button", "prow"), l = el("span", "", ic + " " + title); if (sub) l.append(el("small", "", sub)); r.type = "button"; r.append(l, el("b", "", "›")); r.onclick = fn; wrap.append(r); };
@@ -11150,22 +11151,22 @@ function fashionSection(box) { // the Fashion Show card at the top of the Events
     if (FS && FS.last) row("🥇", "Last show", FS.last.top[0] ? FS.last.top[0].name + " won" : "See results", () => { closePhone(); fashionResultsCard(); }); fancyRows(wrap); };
   draw(); fashionLoad(true).then(() => { if (wrap.isConnected) draw(); });
 }
-function fashionChip() { // a countdown chip when the show is near, or live
+function fashionChip() { if (!FASHION_ON) return; // a countdown chip when the show is near, or live
   let c = $("showChip"); if (!c) { const anchor = $("needs"); if (!anchor) return; c = document.createElement("button"); c.id = "showChip"; c.type = "button"; c.className = "probchip showchip"; c.onclick = () => { const p0 = fsPhase(); if (p0 && p0.k === "live") fashionLoad(true).then(() => fashionVoteCard()); else openPhone("events"); }; anchor.parentNode.insertBefore(c, anchor); }
   const ph = fsPhase(), show = ph && ph.k !== "after" && (ph.k === "live" || ph.ms < 48 * 3600000) && s.made && !introOn; c.hidden = !show; if (show) { const txt = ph.k === "live" ? "👗 LIVE · tap to vote" : "👗 Fashion Show in " + (ph.ms >= 86400000 ? Math.floor(ph.ms / 86400000) + "d " + Math.floor(ph.ms % 86400000 / 3600000) + "h" : fmtCount(ph.ms)); if (c.textContent !== txt) c.textContent = txt; c.classList.toggle("live", ph.k === "live"); }
 }
-function fashionEvent(m) { // the server says the show went live, or the results are in
+function fashionEvent(m) { if (!FASHION_ON) return; // the server says the show went live, or the results are in
   if (m.t === "fashion.live") { fashionLoad(true); banner("👗 FASHION SHOW IS LIVE!", "Head to the runway and vote"); toast("👗 The Fashion Show is LIVE! Tap the 👗 chip to vote for your favourite look."); }
   if (m.t === "fashion.results") { fashionLoad(true); const L = m.last; if (L && L.top && L.top[0]) toast("🏆 Fashion Show results: " + L.top[0].name + " won with " + L.top[0].votes + " votes. Check the Events app!"); }
 }
-function fashionOffer() { // a nudge once a week while the show is coming and you haven't entered
+function fashionOffer() { if (!FASHION_ON) return; // a nudge once a week while the show is coming and you haven't entered
   if (!s.made || introOn || !welcomeShown || !$("sheet").hidden || !$("phone").hidden || fdOn() || !(s.fdAsked || s.fd < 0 || s.tutDone) || !FS) return; const ph = fsPhase(); if (!ph || ph.k !== "before" || FS.mine || s.fsNudge === FS.start || ph.ms > 3 * 86400000) return; s.fsNudge = FS.start; save();
   evCard({ icon: "👗", tag: "Fashion Show · Saturday 19:00", title: "The runway is waiting for YOU", text: "Starts in " + fmtCount(ph.ms) + ". Enter your look for free and the whole town votes. Top looks win up to Rs 20,000, and you'll be seen by everyone online. Don't let someone else steal the spotlight.", opts: [{ label: "✨ Enter with my current look", sub: "Free · takes 2 seconds", pri: 1, go: () => fashionEnter() }, { label: "👀 See the lineup first", go: () => fashionVoteCard() }, { label: "Maybe later" }] });
 }
 setTimeout(() => { const api = fashionApi(); if (api) { api.on(fashionEvent); fashionLoad(true); } }, 0);
 setInterval(() => { if (!s || !s.made) return; if (fashionApi() && Date.now() - fsAt > 60000) fashionLoad(true); fashionChip(); const c = $("fsCount"), ph = fsPhase(); if (c && ph) c.textContent = ph.k === "live" ? "Voting closes in " + fmtCount(ph.ms) : ph.k === "before" ? fmtCount(ph.ms) : "Next show next Saturday"; }, 1000);
 // the 3D runway: a catwalk, a screen with the countdown, benches for the crowd, and the models
-function buildRunway() {
+function buildRunway() { if (!FASHION_ON) return;
   const g = new THREE.Group(); R.world.add(g); R.runway = g; const PINK = "#ff4fa0";
   box(13.2, 0.3, 1.5, "#1d1626", 25.6, 0.15, 40, g); box(13.2, 0.03, 1.5, "#f4f0ea", 25.6, 0.315, 40, g); box(3.0, 0.3, 2.8, "#1d1626", 33.5, 0.15, 40, g); box(3.0, 0.03, 2.8, "#f4f0ea", 33.5, 0.315, 40, g); // the platform and the T-stage
   R.rwLeds = []; const led = (w, h2, d, x, y, z) => { const m = new THREE.MeshBasicMaterial({ color: 0xff4fa0 }); R.rwLeds.push(m); box(w, h2, d, m, x, y, z, g); }; led(13.2, 0.05, 0.05, 25.6, 0.33, 39.27); led(13.2, 0.05, 0.05, 25.6, 0.33, 40.73); led(0.05, 0.05, 2.8, 35.0, 0.33, 40); led(3.0, 0.05, 0.05, 33.5, 0.33, 38.63); led(3.0, 0.05, 0.05, 33.5, 0.33, 41.37); // glowing edges
@@ -11176,7 +11177,7 @@ function buildRunway() {
   const lab = sprite(textTex("👗 FASHION RUNWAY", "#ff4fa0", "#ffffff", 56), 0.8); lab.position.set(26.5, 3.4, 44.2); g.add(lab);
 } // end buildRunway
 const RW_CYCLE = 21; // seconds for a model to walk out, pose and come back
-function runwayTick(now) { // each frame: the screen, the lights and the models (only when you are nearby)
+function runwayTick(now) { if (!FASHION_ON) return; // each frame: the screen, the lights and the models (only when you are nearby)
   if (!R.runway || s.inside) return; const near = Math.hypot(s.x - 26.5, s.y - 41) < 42; R.runway.visible = true; if (!near) return; const t = now / 1000, ph = fsPhase(), live = ph && ph.k === "live";
   if (R.rwLeds) { const hue = live ? (t * 0.25) % 1 : 0.92; R.rwLeds.forEach((m, i) => m.color.setHSL((hue + (live ? i * 0.07 : 0)) % 1, 1, 0.58)); } if (R.rwBeams) R.rwBeams.forEach((b, i) => { b.rotation.z = (i % 2 ? -1 : 1) * (live ? 0.5 + Math.sin(t * 1.3 + i) * 0.45 : 0.25); b.rotation.x = live ? Math.cos(t * 0.9 + i) * 0.3 : 0; b.visible = live || hour() >= 18.5 || hour() < 6; });
   const line1 = live ? "● LIVE NOW" : ph && ph.k === "before" ? "Starts in " + fmtCount(ph.ms) : "Next show: Saturday 19:00", txt = line1 + "|" + (FS ? FS.players.length : 0); if (txt !== R.rwTxt) { R.rwTxt = txt; const c = R.rwCv.getContext("2d"), grd = c.createLinearGradient(0, 0, 1024, 640); grd.addColorStop(0, "#2a0f3d"); grd.addColorStop(1, "#8a1f5f"); c.fillStyle = grd; c.fillRect(0, 0, 1024, 640); c.strokeStyle = "#d4af37"; c.lineWidth = 10; c.strokeRect(14, 14, 996, 612); c.textAlign = "center"; c.fillStyle = "#ffd1e6"; c.font = "800 64px Figtree, sans-serif"; c.fillText("👗 FLIC EN FLAC", 512, 120); c.fillStyle = "#ffffff"; c.font = "800 92px Figtree, sans-serif"; c.fillText("FASHION SHOW", 512, 225); c.fillStyle = "#ffd23c"; c.font = "700 46px Figtree, sans-serif"; c.fillText("Every Saturday · 19:00", 512, 305); c.fillStyle = live ? "#ff5a6e" : "#ffffff"; c.font = "800 78px Figtree, sans-serif"; c.fillText(line1, 512, 430); c.fillStyle = "#ffb3d1"; c.font = "600 36px Figtree, sans-serif"; c.fillText(FS && FS.players.length ? FS.players.length + " player looks · vote when it's live" : "Enter your look in the Events app", 512, 520); c.fillStyle = "#d4af37"; c.font = "700 32px Figtree, sans-serif"; c.fillText("Win up to Rs 20,000", 512, 580); R.rwTex.needsUpdate = true; }
@@ -11883,7 +11884,6 @@ const UPDATES = [ // [version, date, headline, [[icon, title, what it is, option
     ["🌸", "Little flowers everywhere", "Small cute flowers now grow all over the grass: singles, little clusters and meadow patches.", null],
     ["🏡", "Roomier estates", "Houses now have lots more space between them, so the estates feel open. Everyone keeps their house number.", null],
     ["🛴", "Free electric scooters", "Grab a free e-scooter at the stands around town and by every estate. More than twice as fast as walking, and everyone sees you riding it.", () => goFar(SCOOT_STANDS[1][0], SCOOT_STANDS[1][1])],
-    ["👗", "Saturday Fashion Show", "Every Saturday at 19:00 the runway by the beach road goes live. Eight designer looks plus every player who enters walk the catwalk, the whole town votes, and the top looks win up to Rs 20,000. There's a live countdown in the Events app.", () => openPhone("events")],
     ["💖", "Tap the Heart Garden", "No more hunting for the tiny circle: tap anywhere on the Heart Garden, or its glowing heart, and the menu opens.", () => { const o = OBJ.find((q) => q.id === "heartwall"); if (o) walkTo(o.x, o.y); }]]],
   ["2026.10.23", "23 Oct 2026", "Free coins every day", [
     ["🎁", "Daily login reward", "Log in every day to build a streak: Rs 500 on day 1 up to Rs 5,000 on day 7, then it starts again a little bigger. Miss a day and the streak starts over!", () => rewardOpen()],

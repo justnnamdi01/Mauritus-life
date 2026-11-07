@@ -915,7 +915,8 @@ function fashionTick() { // announcements: a day before, half an hour before, an
   else if (now >= cur.start - 30 * 60000 && now < cur.start) say("soon", "The Fashion Show starts in 30 minutes! Last chance to enter your look in the Events app.");
   else if (now >= cur.start - 24 * 3600000 && now < cur.start - 23 * 3600000) say("day", "Tomorrow at 19:00: the Fashion Show! Enter your look in the Events app and win up to Rs 20,000.");
 }
-setInterval(fashionTick, 15000);
+const FASHION_ON = false; // the weekly Fashion Show is off for now: no announcements, entries, votes or prizes
+if (FASHION_ON) setInterval(fashionTick, 15000);
 
 // ---------- the richest player: a statue in town, and everyone is told when the crown changes hands ----------
 let richCand = ""; // someone who looks richer than the king: they must stay ahead for a moment before the crown moves
@@ -1347,7 +1348,7 @@ function adReward(me, m, reply) { if (!PARTNERS_ON) return reply({ ok: false, er
 function devconAnnounce() { townSys("💻 DevCon 2026", "Sat 7 Nov in Flic en Flac! Click Get your pass: Rs 150,000. Visit the DevCon building and join in: Rs 20,000. [[go:devcon]]"); const a = db.ads.devcon || (db.ads.devcon = { days: {} }); a.announced = Date.now(); persist(); }
 function bambousAnnounce() { townSys("🏚️ Bambous Town", "Bambous Town is OPEN! Rough, local and risky: dealers, police, filth and big shady money. You need Rs 500,000 net worth. [[go:bambous]]"); db.bz = { announced: Date.now() }; persist(); }
 setTimeout(() => { try { if (!(db.bz && db.bz.announced)) bambousAnnounce(); } catch (e) {} }, 12000);
-setTimeout(() => { try { if (!(db.ads.devcon && db.ads.devcon.announced)) devconAnnounce(); } catch (e) {} }, 8000); // the first time the server runs with this ad, announce it in town chat
+setTimeout(() => { try { if (PARTNERS_ON && !(db.ads.devcon && db.ads.devcon.announced)) devconAnnounce(); } catch (e) {} }, 8000); // the first time the server runs with this ad, announce it in town chat
 const AD_PROMO = { devcon: { max: 5, off: 100, prefix: "FLIC100" } }; // the first 5 players to claim get a code worth Rs 100 off the client's ticket
 function adClaim(me, m, reply) { if (!PARTNERS_ON) return reply({ ok: false, error: "That offer is over." }); const id = String(m.id || ""), pr = AD_PROMO[id]; if (!pr || !AD_IDS.includes(id)) return reply({ ok: false, error: "No offer." }); const a = db.ads[id] || (db.ads[id] = { days: {} }), codes = a.codes || (a.codes = {}), mine = codes[me.uid], used = Object.keys(codes).length;
   if (mine) return reply({ ok: true, code: mine.code, mine: true, left: Math.max(0, pr.max - used), max: pr.max, off: pr.off });
@@ -1923,6 +1924,7 @@ function fashionStatus(uid) { // what a player sees
   return { ok: true, now, start: cur.start, end: cur.end, live: now >= cur.start && now < cur.end, players, npcVotes: FASHION_NPC.map((_, i) => counts["n" + i] || 0), myVote: F.votes[uid] || "", mine: players.some((x) => x.mine), last: F.last, prizes: SHOW_PRIZES, favourite: SHOW_FAVOURITE, voter: SHOW_VOTER, full: players.length >= SHOW_MAX };
 }
 function fashion(ws, me, m) { // enter a look, or vote
+  if (!FASHION_ON) return send(ws, { t: "fashion", rid: m.rid, ok: false, error: "The Fashion Show is not running right now." });
   const reply = (o) => send(ws, Object.assign({ t: "fashion", rid: m.rid }, o)); if (!me.uid) return reply({ ok: false, error: "Not signed in yet. Try again in a moment." }); const now = Date.now(), cur = fashionRoll(now), F = db.fashion;
   if (m.t === "fashion.status") return reply(fashionStatus(me.uid));
   if (m.t === "fashion.enter") { if (now >= cur.start) return reply(Object.assign(fashionStatus(me.uid), { ok: false, error: "Entries closed when the show started. Enter early next week!" })); const id = "p_" + me.uid; if (!F.entries[id] && Object.keys(F.entries).length >= SHOW_MAX) return reply(Object.assign(fashionStatus(me.uid), { ok: false, error: "The runway is full this week. Be early next Saturday!" }));
