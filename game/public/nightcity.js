@@ -42,4 +42,5 @@
     NCX.pool.material.opacity = night * (lv > 0 ? 0.75 : 0); if (R.hemi) R.hemi.intensity *= 1 - 0.3 * night; if (R.sun) R.sun.intensity *= 1 - 0.25 * night; NCX.halo.material.opacity = night * (lv > 0 ? 0.85 * flick : 0.4); NCX.door.material.opacity = night * (lv > 0 ? 0.7 : 0); for (const p of NCX.neon) p.material.opacity = night * (lv > 0 ? 0.55 + 0.1 * Math.sin(now / 700) : 0); NCX.win.material.opacity = Math.min(0.95, night * 1.4);
     const f = onFrac(hour()), bucket = Math.round(f * 40); if (bucket !== NCX.bucket) { NCX.bucket = bucket; const q0 = new THREE.Quaternion(), sc = new THREE.Vector3(1, 1, 1), z0 = new THREE.Vector3(0, 0, 0), p3 = new THREE.Vector3(), m4 = new THREE.Matrix4(), E = new THREE.Euler(); NCX.wins.forEach((w, i) => { if (w.on < f) { q0.setFromEuler(E.set(0, w.ry, 0)); m4.compose(p3.set(w.x, w.y, w.z), q0, sc); } else m4.compose(p3.set(0, -50, 0), q0, z0); NCX.win.setMatrixAt(i, m4); }); NCX.win.instanceMatrix.needsUpdate = true; }
   };
+  setInterval(() => { try { if (NCX.g && s.inside) NCX.g.visible = false; } catch (e) {} }, 250); // the draw hook only runs outdoors, so hide everything while you are inside
 })();

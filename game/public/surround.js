@@ -38,4 +38,5 @@
     if (SRX.lights) SRX.lights.material.opacity = Math.max(0, Math.min(0.85, (0.7 - (typeof R.dayKnow === "number" ? R.dayKnow : 1)) / 0.6));
     const fog = R.scene.fog ? R.scene.fog.color : null; for (const c of SRX.clouds) { c.m.uniforms.off.value.x = (now * c.spd) % 1; c.m.uniforms.off.value.y = (now * c.spd * 0.45) % 1; if (fog) c.m.uniforms.tint.value.copy(fog).lerp(new THREE.Color(0xffffff), 0.82); }
   };
+  setInterval(() => { try { if (SRX.g && s.inside) SRX.g.visible = false; } catch (e) {} }, 250);
 })();
