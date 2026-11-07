@@ -9815,7 +9815,7 @@ function render3d(dt) { // draw one 3D frame
   const sky = new THREE.Color(0x0b1530).lerp(new THREE.Color(glow ? 0xf3a06a : 0xb8e2f4), dayK), zen = new THREE.Color(0x02050f).lerp(new THREE.Color(glow ? 0x4a6aa8 : 0x3d8fd6), dayK); // horizon and overhead colours
   if (inside) sky.set(0x081016); if (R.sea) R.sea.visible = !inside; if (R.sky) R.sky.visible = !inside; R.scene.background = sky; R.scene.fog.color.copy(sky); R.lk = inside ? 1 : Math.min(1.5, Math.max(1, 0.6 / s.zoom)); // indoors you only see the room; labels grow when zoomed out // sky colour through the day
   for (const m of R.night || []) m.visible = dayK < 0.45; R.sun.intensity = 0.12 + 0.85 * dayK; R.sun.color.set(dayK < 0.3 ? 0x9fb4ff : glow ? 0xffb37a : 0xfff1d6); R.hemi.intensity = 0.28 + 0.45 * dayK; // sunlight (cool moonlight at night) and sky light
-  R.scene.userData.skyCol = sky; if (inside) roomLightTick(now, dayK); R.winMat.emissiveIntensity = dayK < 0.5 ? 0.9 : 0; R.lampMat.emissiveIntensity = dayK < 0.5 ? 1 : 0; // windows and street lamps glow at night
+  R.scene.userData.skyCol = sky; if (inside) roomLightTick(now, dayK); R.dayKnow = dayK; R.winMat.emissiveIntensity = dayK < 0.5 ? 0.9 : 0; R.lampMat.emissiveIntensity = dayK < 0.5 ? 1 : 0; // windows and street lamps glow at night
   const wx = weather(), wet = !inside && (wx.k === "rain" || wx.k === "storm") ? wx.wet : 0; if (wet) { sky.lerp(new THREE.Color(0x6b7884), 0.55 * wet); zen.lerp(new THREE.Color(0x56616c), 0.65 * wet); R.scene.background = sky; R.scene.fog.color.copy(sky); R.sun.intensity *= (1 - 0.55 * wet); R.hemi.intensity *= (1 - 0.3 * wet); } // grey, dim skies when it rains
   const sd = sunDir(h); R.sunL = new THREE.Vector3(sd.x, Math.max(0.3, sd.y), sd.z).normalize(); // the light comes from the sun (kept high enough for sensible shadows)
   SKYU.uTime.value = now / 1000; SKYU.uSunDir.value.copy(sd); SKYU.uHorizon.value.copy(sky).convertSRGBToLinear(); SKYU.uZenith.value.copy(zen).convertSRGBToLinear(); SKYU.uNight.value = 1 - dayK; SKYU.uCloud.value = 0.22 + 0.7 * wet; SKYU.uWet.value = wet; // feed the sky and water
@@ -9864,7 +9864,7 @@ function render3d(dt) { // draw one 3D frame
   setSpriteText(R.fbScore, "WEST " + BALL.fb.a + " : " + BALL.fb.b + " EAST", "rgba(6,28,40,0.85)", "#ffffff", 0.45); setSpriteText(R.bbScore, "YOU " + s.hoops + " PTS", "rgba(6,28,40,0.85)", "#ffffff", 0.4); // scoreboards
   R.fball.visible = R.bball.visible = true; R.fball.position.set(BALL.fb.x, 0.14, BALL.fb.y); const c = BALL.bb, held = c.h && (c.h === meId() ? meMoving : others[c.h] && others[c.h].p.mv); R.bball.position.set(c.x, fly ? 0.7 + fly.z * 1.6 : c.h ? 0.62 + (held ? Math.abs(Math.sin(now / 110)) * 0.35 : 0) : 0.17, c.y); // balls, with dribble bounce and shot arc
   for (const i of [0, 1]) personAt("keeper" + i, { g: "m", skin: SKINS[i ? 3 : 1], hair: "#17100c", shirt: i ? "#ffd23c" : "#35c4bb", pants: "#15171a", role: "resident" }, i ? FB.x1 - 0.6 : FB.x0 + 0.6, keeper[i], i ? 2 : 3, true); // goalkeepers
-  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); ambDraw3d(now); if (window.HUX) HUX.drawOut(now); if (window.FLX) FLX.drawOut(now); if (window.SRX) SRX.draw(now); marketDraw3d(); shipsDraw3d(now); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
+  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); ambDraw3d(now); if (window.HUX) HUX.drawOut(now); if (window.FLX) FLX.drawOut(now); if (window.SRX) SRX.draw(now); if (window.NCX) NCX.draw(now); marketDraw3d(); shipsDraw3d(now); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
   if (ride) { if (!R.rideM || R.rideKind !== ride.kind) { if (R.rideM) R.dyn.remove(R.rideM); R.rideM = makeCar(ride.v); R.rideKind = ride.kind; } R.rideM.visible = true; if (ride.ang !== undefined) { R.rideM.position.set(ride.x, 0, ride.y); R.rideM.rotation.y = -ride.ang; } else placeCar(R.rideM, ride.x, ride.y, ride.vert, ride.rev); } else if (R.rideM) R.rideM.visible = false; // your ride
   if (!R.dogM) R.dogM = DOGS.map((d) => makeDog(d.col)); DOGS.forEach((d, i) => { const m = R.dogM[i]; m.visible = true; m.position.set(d.x, 0, d.y); m.rotation.y = d.dir > 0 ? 0 : Math.PI; m.position.y = d.chase > 0 ? Math.abs(Math.sin(now / 60)) * 0.08 : 0; }); // street dogs (they bounce when chasing)
   govGuards3d(); // the President's bodyguards
@@ -11332,6 +11332,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.03", "7 Nov 2026", "The city lights up at night", [
+    ["🌃", "Lit streets and windows", "After dusk every road gets street lamps with pools of warm light, and the windows in the buildings come on. Late at night most go dark again, and the casino, bars and market glow in their own colours.", null],
+    ["🏙️", "Lights beyond the clouds", "The rest of Port Louis glows faintly through the clouds at night.", null]
+  ]],
   ["2027.04.02", "7 Nov 2026", "The city beyond the clouds", [
     ["☁️", "More of Port Louis is waiting", "Past the east edge of Port Louis the rest of the real city and the hills behind it are now drawn, hidden under clouds. You cannot walk there yet, but it will open in a later update.", null]
   ]],
@@ -13987,6 +13991,7 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <script src="levels.js?v=1"></script>
 <script src="portlouis-surround.js?v=1"></script>
 <script src="surround.js?v=1"></script>
+<script src="nightcity.js?v=1"></script>
 
 </body>
 </html>

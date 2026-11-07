@@ -31,6 +31,13 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 35 (7 Nov 2026): the city lights up at night
+- New `game/public/nightcity.js`, built once from the buildings and roads already in the world: street lamps (instanced poles and bulbs) along the roads of every walkable region with a warm pool of light on the ground and a halo at each bulb; about 2,700 lit windows on the buildings and houses, coming on from 17:30, thinning after midnight and mostly dark by 05:00 (each window has its own bedtime); glowing shop doors; coloured glow under the casino, games room, bars, market, bank and hotels, museum and oceanarium. At night the ambient light is lowered a little so the lights stand out. The far city beyond the clouds glows faintly too (`surround.js`).
+- It follows the player's graphics setting (Low: plain windows and lamp halos only; Medium and High: pools and neon), and is independent of the old Season 2 effects switch (those effects, the old glow system, are still switched off until Season 2).
+- Tested in the headless browser at 22:00 (clock moved by a test script): lamps, pools, lit windows, no page errors. What's new 2027.04.03.
+- Not done / not tested: real phone performance (about 1,800 lamps and 16,000 window instances at most, two draw calls for windows and poles, but untested on weak phones); window glow is flat colour (no light spilling onto the street from windows); no shop-sign neon text; the moon and stars are the old ones.
+- **Next step:** try on a real phone at night and tune brightness and counts, then the north strip of scenery or M2 materials.
+
 ## Done, session 34 (7 Nov 2026): business ads and the Fashion Show switched off
 - **Business ads:** the partner switch `PARTNERS_ON` was already off (Belle's Kitchen, A* Cutz, DevCon and Clawed by Taps buildings, posters, rewards and chats). One leak was left: the server still posted the DevCon 2026 announcement (Rs 150,000) into town chat the first time it ran. It is now gated by `PARTNERS_ON` too. Row added to `game/ADS.md`.
 - **Fashion Show removed for now:** new switch `FASHION_ON = false` in `server.js` (no weekly announcements, entries, votes or prizes; requests are refused politely) and in `index.html` (no Events card, countdown chip, offer, runway or lineup). The "Saturday Fashion Show" What's new line, the landing-page sentence and the About page bullet were removed. The clothes shops, wardrobe and Character Studio are untouched. To bring it back, set both switches to true.

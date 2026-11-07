@@ -29,11 +29,13 @@
     // "coming soon" signs floating above the clouds
     const sign = (text, x, y) => { const c = document.createElement("canvas"); c.width = 512; c.height = 128; const x2 = c.getContext("2d"); x2.fillStyle = "rgba(20,30,50,0.82)"; x2.beginPath(); x2.roundRect ? x2.roundRect(4, 4, 504, 120, 28) : x2.rect(4, 4, 504, 120); x2.fill(); x2.fillStyle = "#fff"; x2.font = "700 40px Figtree, sans-serif"; x2.textAlign = "center"; x2.fillText(text, 256, 56); x2.fillStyle = "#ffd166"; x2.font = "600 30px Figtree, sans-serif"; x2.fillText("☁️ Opens soon", 256, 98); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, fog: false })); sp.scale.set(9, 2.25, 1); sp.position.set(x, 11.5, y); sp.renderOrder = 30; g.add(sp); };
     const P = typeof PLM !== "undefined" ? PLM : null, KX = 111320 * Math.cos(-20.1605 * Math.PI / 180), KY = 110600; if (P && P.lon0) for (const [name, lo, la] of [["Plaine Verte", 57.5112, -20.1536], ["Cité Martial", 57.5185, -20.1520], ["The Moka range", 57.535, -20.1603]]) sign(name, ((lo - P.lon0) * KX) / 14, PLY + ((P.lat0 - la) * KY) / 14);
+    { const dots = []; for (const [x, y] of spots) if (hash(x + 9, y + 31) < 0.45) dots.push(D.x0 + x + 0.5, relief(x, y) * 0.6 + 1.2, PLY + D.y0 + y + 0.5); const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(dots), 3)); const m = new THREE.PointsMaterial({ size: 1.1, color: 0xffcf7a, map: R.vfx ? R.vfx.soft : null, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, fog: false }), pt = new THREE.Points(geo, m); pt.frustumCulled = false; pt.renderOrder = 25; g.add(pt); SRX.lights = pt; } // the city's lights glow through the clouds at night
     R.scene.add(g); SRX.g = g; SRX.built = 1; return true;
   }
   SRX.draw = function (now) {
     if (!SRX.built) { if (!SRX.tried || now - SRX.tried > 3000) { SRX.tried = now; try { build(); } catch (e) { SRX.built = -1; console.warn("surround", e); } } if (!SRX.g) return; }
     if (SRX.built < 0) return; const near = typeof PLY !== "undefined" && !s.inside && s.y > PLY - 90 && s.y < PLY + 170 && s.x < 200; SRX.g.visible = SRX.on && near; if (!near) return;
+    if (SRX.lights) SRX.lights.material.opacity = Math.max(0, Math.min(0.85, (0.7 - (typeof R.dayKnow === "number" ? R.dayKnow : 1)) / 0.6));
     const fog = R.scene.fog ? R.scene.fog.color : null; for (const c of SRX.clouds) { c.m.uniforms.off.value.x = (now * c.spd) % 1; c.m.uniforms.off.value.y = (now * c.spd * 0.45) % 1; if (fog) c.m.uniforms.tint.value.copy(fog).lerp(new THREE.Color(0xffffff), 0.82); }
   };
 })();
