@@ -121,6 +121,38 @@ Cost and time numbers in this document are **targets expressed in play-minutes**
 3. Check against the targets: **Day 1** ≈ 15 to 20 min of play, **Days 2 to 7** ≈ 8 to 12 min a day, **the Island Pass around Day 2**, **the first business around Day 3 to 4**, **Crew around Day 4 to 7**.
 4. Measure it with real players in the closed test and retune.
 
+### 3.6 One main job, plus side hustles (the way people really earn in Mauritius)
+
+**One career at a time.** The first time a player works a shift they are asked: *"Make this your career?"* A career gets **full pay, a promotion every 4 good shifts** (dishwasher → cook → chef, teller → loans officer → manager) and **its own path in the story**. Other workplaces still take you for **odd jobs: about half pay, three a day, no promotion**. Changing career is allowed **after 3 days**. This gives the player an identity ("I'm a teller, he's a baker") and a reason to pick, instead of doing everything at once. *(Built.)*
+
+**Side hustles** are the small jobs people really do on the island for extra money. They are **short (about 40 seconds on screen), cost a small stake, are capped per day, and are decided by the server**. Each one is acted out in the street with people around:
+
+| Hustle | Where | What you see yourself doing | Stake | Pay | Per day | Hours | Status |
+|---|---|---|---|---|---|---|---|
+| **Gato piment round** 🧺 | Victoria terminal, then Place d'Armes, the Caudan, the casino | Carry a wicker basket on a round of Port Louis; people ask for one and buy | Rs 120 | Rs 260 to 420 | 8 | 06:00-20:00 | **Built** |
+| **Fish off the quay** 🎣 | The Caudan quay by the water | Cast a line, wait with Oncle Jean beside you, a bobber dips, reel in; the server decides what bites (sardine, vieille, capitaine, thon, or an old boot) | Rs 60 | Rs 10 to 1,000 | 8 | 05:00-20:00 | **Built** |
+| **Busk at the stage** 🎤 | The waterfront stage | Climb on stage and sing a sega; a crowd gathers and dances; they tip | free | Rs 220 to 640 | 5 | 17:00-23:00 | **Built** |
+| Watch the cars (gardien) | Place d'Armes lot | Wave cars into spaces in a hi-vis vest for tips | free | Rs 180 to 320 | 6 | all day | Next |
+| Phone repair | Chinatown stall | Fix a phone in a small puzzle | parts | per repair | 6 | day | Later |
+| Tutoring (leçons) | A café | Sit with a schoolkid | free | per hour | 3 | 15:00-19:00 | Later |
+| Taxi marron / delivery | The roads | Take a fare across town | fuel | per fare | 8 | all day | Needs cars |
+| Market blanket | The market | Already in the game (server-side) | stock | profit | n/a | day | **Built earlier** |
+
+Rules: a **daily cap of Rs 4,500 from all hustles** so they never replace the career; a **cooldown** between rounds; a **stake** so they feel like a small business; and a **cancelled round loses its stake**. All of this is in `game/hustle.js` and is covered by `game/test/hustle.test.js`.
+
+### 3.7 Every place in the tour has a job (the tour is a promise)
+
+The camera tour shows four places. Each now has something to **do**, something **fun**, and a **reason to come back**:
+
+| The place | Do | Fun | Come back for |
+|---|---|---|---|
+| **Your flat** | Home menu, upgrades (M1) | Show friends, sleep, the daily reward | Timers finishing, the daily reward and streak |
+| **Victoria Urban Terminal** | Your career shifts as receveur, odd jobs, the courier dash, buses, the Island Pass | The food court, the buses, a hawker with a tray | Missions on the board (M3), gato piment rounds |
+| **The waterfront** | Fish off the quay, sit on a bench and watch the ships | **Ride the Ferris wheel in a real gondola** (built), ships docking | The sunset, the lit wheel at night |
+| **The stage** | **Busk for tips** (built), dance, watch the band | The crowd dances with you; sega every evening | **17:00 every day, with a notification** (built) |
+
+The phone's **Hustles app** shows these as "Today in Port Louis", with live status (open now, countdown to 17:00) and **Go** buttons that draw the arrows to each place.
+
 ---
 
 ## 4. Part B, the GTA side: a story to follow and an island to be free in
@@ -225,11 +257,21 @@ A collection book with pages by town: **places** (visit), **foods** (try), **peo
 ### 5.3 Rewards for leaving (the opposite of a trap)
 Clash's "rested bonus" idea: **being offline earns something** (business income up to the cap, a rested-energy bonus, a "welcome back" crate). The message is "go live your life, we kept your place". This is also the honest answer for teen well-being. We also add a **"good night" feature**: if a player's local time is past midnight, the game gently offers sleep for a bonus. It is cheap, kind, and gets noticed.
 
+### 5.3b Notifications (built, and how they are used)
+
+The Clash loop needs a reason to open the game again. We use **web push** (a message from the game to the phone, even when the game is closed). It is **opt-in, asked once at a good moment** (right after the first reward), and the rules protect the player:
+- **At most 2 a day**, **none between 23:00 and 07:00** (Mauritius time), **none while the player is already in the game**.
+- The player chooses the kinds: **daily reward waiting** (08:30, protects a streak), **tonight's sega** (16:45), **a friend joined through your link** (immediately), and later **an upgrade or business is ready** and **a new mission**.
+- Settings live in the phone's **Alerts** app: turn on or off, switch each kind, send yourself a test.
+- **iPhone needs the game added to the Home Screen first** (Apple only allows push for installed web apps); the app says so.
+- The server schedules a message for a known time (`schedule`), so when M1's timers exist, "your flat is ready" is one line of code.
+- The server needs the `web-push` package and, on the live site, an environment variable `PUSH_CONTACT` (a `mailto:` address). The keys are created and stored by the server.
+
 ### 5.4 Things we will not do
 - No gambling-based or random-purchase monetisation.
 - No timers that **punish** you (nothing rots, no mass-loss of progress).
 - No text that says someone will lose money.
-- No push spam. **At most 2 notifications a day**, and only for things the player set (a build finished, a friend invited, an event they chose).
+- No push spam. **At most 2 notifications a day**, never at night, only for things the player chose (see 5.3b).
 - No pay-to-win. Later paid items are **cosmetic** (outfits, flat themes, a name colour) and **convenience** (a second builder slot as a one-time unlock is the most we would consider, and only after a fair free path exists).
 
 ---

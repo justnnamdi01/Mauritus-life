@@ -67,7 +67,7 @@
       else if (m.t === "poll" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-poll", { detail: m })); } catch (e) {} } // a new poll, or it closed
       else if (m.t === "trips" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-trips", { detail: m })); } catch (e) {} } // a trip request or answer
       else if (m.t === "belle" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-belle", { detail: m })); } catch (e) {} } // Belle's Kitchen answered your booking
-      else if (m.t === "cutz" || m.t === "biz" || m.t === "hw" || m.t === "hunt" || m.t === "dis" || m.t === "road" || m.t === "poll" || m.t === "trips" || m.t === "belle" || m.t === "heist" || m.t === "wealth" || m.t === "casino" || m.t === "job" || m.t === "market" || m.t === "zone" || m.t === "pass" || m.t === "parl" || m.t === "party" || m.t === "account" || m.t === "homes" || m.t === "shop" || m.t === "promo" || m.t === "pay" || m.t === "chat.more" || m.t === "reward" || m.t === "fashion" || (m.t === "case" && m.rid) || (m.t === "gov" && m.rid) || (m.t === "ledger" && m.rid) || (m.t === "build" && m.rid) || (m.t === "feedback" && m.rid) || (m.t === "compete" && m.rid) || (m.t === "salon" && m.rid)) { var ar = asks[m.rid]; if (ar) { clearTimeout(ar.timer); delete asks[m.rid]; ar.resolve(m); } } // an answer to a login or home request
+      else if (m.t === "cutz" || m.t === "biz" || m.t === "hw" || m.t === "hunt" || m.t === "dis" || m.t === "road" || m.t === "poll" || m.t === "trips" || m.t === "belle" || m.t === "heist" || m.t === "wealth" || m.t === "casino" || m.t === "job" || m.t === "market" || m.t === "zone" || m.t === "pass" || m.t === "push" || m.t === "hustle" || m.t === "parl" || m.t === "party" || m.t === "account" || m.t === "homes" || m.t === "shop" || m.t === "promo" || m.t === "pay" || m.t === "chat.more" || m.t === "reward" || m.t === "fashion" || (m.t === "case" && m.rid) || (m.t === "gov" && m.rid) || (m.t === "ledger" && m.rid) || (m.t === "build" && m.rid) || (m.t === "feedback" && m.rid) || (m.t === "compete" && m.rid) || (m.t === "salon" && m.rid)) { var ar = asks[m.rid]; if (ar) { clearTimeout(ar.timer); delete asks[m.rid]; ar.resolve(m); } } // an answer to a login or home request
       if ((m.t === "welcome" && m.rich) || m.t === "rich") { richNow = m.rich || richNow; richCbs.forEach(function (cb) { try { cb(m.rich, m.prev || null, m.t === "rich"); } catch (e) {} }); } // who is the richest right now, and a change of crown
       if (m.t === "welcome" && m.flex) flexBack = m.flex;
       if (m.t === "welcome" && m.gov) { govNow = m.gov; try { window.dispatchEvent(new Event("fef-gov")); } catch (e) {} }
@@ -314,6 +314,18 @@
       answer: function (id, answers) { return ask({ t: "job.answer", id: id, answers: answers }); },
       courierStart: function () { return ask({ t: "job.courier.start" }); },
       courierDone: function (id) { return ask({ t: "job.courier.done", id: id }); }
+    },
+    push: { // notifications: register this phone and choose what to get
+      state: function () { return ask({ t: "push.state" }); },
+      sub: function (sub) { return ask({ t: "push.sub", sub: sub }); },
+      unsub: function (endpoint, all) { return ask({ t: "push.unsub", endpoint: endpoint, all: !!all }); },
+      prefs: function (o) { return ask(Object.assign({ t: "push.prefs" }, o)); },
+      test: function () { return ask({ t: "push.test" }); }
+    },
+    hustle: { // side hustles: the server times, charges and pays them
+      state: function () { return ask({ t: "hustle.state" }); },
+      start: function (id) { return ask({ t: "hustle.start", id: id }); },
+      finish: function (id) { return ask({ t: "hustle.finish", id: id }); }
     },
     pass: { // the Island Pass: opens the highways and the other towns
       state: function () { return ask({ t: "pass.state" }); },

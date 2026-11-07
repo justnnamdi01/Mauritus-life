@@ -31,6 +31,24 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 25 (7 Nov 2026): one main job, side hustles, notifications, the tour places made useful
+- **One main job** (`game/public/hustles.js`): the first shift asks "Make this your career?". A career gets full pay and promotions; every other workplace is an odd job at 55% pay, 3 a day, no promotion; change career after 3 days. Shown in the new **Hustles** phone app. (The old phone "Jobs" careers from Flic en Flac Life still exist beside it; unify later.)
+- **Side hustles** (server `game/hustle.js`, tested in `game/test/hustle.test.js`): gato piment round, fishing off the quay, busking at the stage. The server charges the stake, times the round, enforces hours, cooldown, a per-hustle daily cap and a Rs 4,500 daily cap, decides what bites, and pays by mail. Acted out in the street: a basket on a round of Port Louis with buyers, a rod and bobber with Oncle Jean fishing beside you, a stage with a dancing crowd. Places: a basket at the terminal, a fishing spot on the quay, the stage menu.
+- **Ferris wheel for real**: you climb into a gondola and the camera rises with it.
+- **Notifications** (server `game/notify.js`, `game/public/sw.js`, settings in the Alerts app): web push with VAPID keys kept in the data file; at most 2 a day, none 23:00-07:00, none while playing; kinds: daily reward (08:30), tonight's sega (16:45), friend joined (at once; wired to the invite bonus), and `schedule()` for upgrades later; the player can switch each kind off and send a test; a one-time ask after the first good moment. Adds the `web-push` dependency.
+- **Today in Port Louis** in the Hustles app: flat, terminal, wheel, stage, quay with live status and arrows. The stage roof is now an open frame so you can see the singer.
+- Core design updated: `docs/CORE.md` sections 3.6, 3.7 and 5.3b.
+
+## Tested, session 25
+- `game/test/hustle.test.js` (all pass): prices, hours, cooldown, caps, repeat-safe start and finish, no early finish, region rule, busking hours (a second server at 19:00), the server decides the catch; notifications: public key, bad subscription refused, register, test, no spam, two a day, nothing while playing, switch a kind off, switch all off, remove devices, quiet hours.
+- Headless browser: career card on the first shift; gato, fishing and busking each walk, act and are paid by the server with no page errors; the Hustles app lists everything.
+- Not tested: a real push to a real phone (the tests record instead of sending, and no browser here can receive push); the Ferris wheel gondola ride was run once but its screenshots were not reviewed; real-phone speed.
+
+## Not done / next, session 25
+- Needs on the live site: an environment variable `PUSH_CONTACT` (`mailto:you@yourdomain`). Push to iPhones works only after "Add to Home Screen".
+- Build next: the timed upgrades (M1) will use `NOTIFY.schedule()`. More hustles (watch the cars, phone repair, tutoring). Odd-job and hustle money is still client-trusted for shifts (the hustles are server-paid).
+- Still not visual: the courier dash, market selling, barber chair and shop buying.
+
 ## Written, session 24 (7 Nov 2026): the core design
 - `docs/CORE.md`: who we make it for (Mauritians 15 to 30 on phones), the four feelings it must give, the five loops (act, session, day, week, season), the Clash side (the flat, the business and skills growing on real timers with builder slots, materials from different jobs, friendly raids), the GTA side (the Zistwar campaign in three Acts, the mission shape, ten sample missions for Act 1, the cast and loyalty, the free-roam island), the stickiness patterns with their guardrails, the first 15 minutes minute by minute, the return schedule, Crew, the build order M1 to M7 with a done-test each, the data the server needs, what we already have, and five questions for the owner.
 - No code. **Next step:** the owner reads `docs/CORE.md` and answers its five questions; then M1 (timed flat upgrades on the server, the Home bar, the Today panel).
