@@ -1,0 +1,8 @@
+{
+  "name": "mauritius-life-tools",
+  "private": true,
+  "type": "module",
+  "description": "Build tools for Mauritius Life (not deployed).",
+  "scripts": { "island": "node build-island.mjs" },
+  "dependencies": { "osm-pbf-parser-node": "^1.1.4" }
+}

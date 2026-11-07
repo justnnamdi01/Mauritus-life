@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#07171f">
-<title>Flic en Flac Life · Admin</title>
+<title>Mauritius Life · Admin</title>
 <style>
 :root { --bg: #07171f; --panel: #0e2633; --line: #24485a; --ink: #eaf7f4; --muted: #9cc0c6; --mango: #ffa733; --mango-ink: #2b1700; --red: #e23b3b; --green: #35c48b; color-scheme: dark; }
 * { box-sizing: border-box; } [hidden] { display: none !important; }
@@ -46,7 +46,7 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
 </head>
 <body>
 <main>
-  <div><h1>🌴 Flic en Flac Life · Admin</h1><p class="muted">Find a player and remove them from the game.</p></div>
+  <div><h1>🌴 Mauritius Life · Admin</h1><p class="muted">Find a player and remove them from the game.</p></div>
 
   <nav id="tabs" hidden><button type="button" data-t="players">👥 Players</button><button type="button" data-t="money">💰 Money</button><button type="button" data-t="safety">🛡️ Safety &amp; recovery</button><button type="button" data-t="game">🎮 Game</button><button type="button" data-t="talk">💬 Community</button><button type="button" data-t="stats">📊 Stats</button></nav>
   <section class="card" id="keyCard">
@@ -79,8 +79,8 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
   </section>
 
   <section class="card" id="teamCard" data-tab="talk" hidden>
-    <div class="row"><h2 style="margin-right:auto">💬 Flic en Flac Team inbox</h2><button type="button" id="teamRe">Refresh</button></div>
-    <p class="muted">Messages players send to the Flic en Flac Team chat in their phone. Open one to read it and reply. Your reply appears in their Messages straight away.</p>
+    <div class="row"><h2 style="margin-right:auto">💬 Mauritius Life Team inbox</h2><button type="button" id="teamRe">Refresh</button></div>
+    <p class="muted">Messages players send to the Mauritius Life Team chat in their phone. Open one to read it and reply. Your reply appears in their Messages straight away.</p>
     <div id="teamList"></div>
   </section>
   <section class="card" id="czCard" data-tab="game" hidden>
@@ -127,6 +127,11 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
     <p class="muted">Table bookings made in the game. Confirm or decline them, and the player is told in the game. Booked guests get the discount from half an hour before their table until two hours after.</p>
     <div class="row" style="margin-top:6px"><label>Discount % <input id="blPct" type="number" min="0" max="60" style="width:70px"></label> <label>WhatsApp (digits, with country code) <input id="blWa" type="text" style="width:150px"></label> <button type="button" id="blSave">Save</button></div>
     <div id="blList"></div>
+  </section>
+  <section class="card" id="rgCard" data-tab="game" hidden>
+    <div class="row"><h2 style="margin-right:auto">🗺️ Island regions</h2><button type="button" id="rgRe">Refresh</button></div>
+    <p class="muted">Locked regions are grey on the map and the server refuses anyone who tries to go in (on foot, by car, by ride or by air). Opening one takes effect straight away, no deploy. Closing one moves everyone inside to a safe open place. Set a date and the region opens by itself at that time.</p>
+    <div id="rgList"></div>
   </section>
   <section class="card" id="disCard" data-tab="game" hidden>
     <div class="row"><h2 style="margin-right:auto">🌀 Natural disasters</h2><button type="button" id="disRe">Refresh</button></div>
@@ -360,7 +365,7 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
   async function msgTo(pl) { // a message from the game team to one player
     const box = document.createElement("dialog"); box.style.cssText = "max-width:460px;width:92%;border-radius:12px;padding:14px;"; const sel = document.createElement("select"), ta = document.createElement("textarea"), info = document.createElement("p"), go = document.createElement("button"), cl = document.createElement("button");
     for (const [k, l] of [["clock", "Clock trick"], ["edit", "Edited cash"], ["farm", "Restart farming"], ["recv", "Received tainted money"], ["free", "Write your own"]]) { const o = document.createElement("option"); o.value = k; o.textContent = l; sel.append(o); }
-    const fill = () => { ta.value = MSG_TPL[sel.value].replace("{n}", pl.name); }; sel.onchange = fill; fill(); ta.rows = 7; ta.maxLength = 400; ta.style.cssText = "width:100%;margin:8px 0;"; info.className = "muted"; info.textContent = "To " + pl.name + " · it shows up in their Messages from the Flic en Flac Team (max 400 characters).";
+    const fill = () => { ta.value = MSG_TPL[sel.value].replace("{n}", pl.name); }; sel.onchange = fill; fill(); ta.rows = 7; ta.maxLength = 400; ta.style.cssText = "width:100%;margin:8px 0;"; info.className = "muted"; info.textContent = "To " + pl.name + " · it shows up in their Messages from the Mauritius Life Team (max 400 characters).";
     go.type = "button"; go.textContent = "Send"; cl.type = "button"; cl.textContent = "Cancel"; cl.style.marginLeft = "8px"; cl.onclick = () => { box.close(); box.remove(); };
     go.onclick = async () => { go.disabled = true; try { await api("/api/admin/team", { uid: pl.uid, text: ta.value.slice(0, 400) }); alert("Sent to " + pl.name); box.close(); box.remove(); } catch (e) { alert(e.message || "Failed"); go.disabled = false; } };
     box.append(info, sel, ta, go, cl); document.body.append(box); box.showModal();
@@ -390,7 +395,7 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
         const inc = document.createElement("button"); inc.type = "button"; inc.textContent = "Money sources"; inc.onclick = () => incomeOf(pl, row);
         const acts = document.createElement("div"); acts.className = "row acts"; const asb = document.createElement("button"); asb.type = "button"; asb.textContent = "Assets"; asb.onclick = () => assetsOf(pl); const exb = document.createElement("button"); exb.type = "button"; exb.textContent = "Export data"; exb.onclick = () => dossier(pl); const pcb = document.createElement("button"); pcb.type = "button"; pcb.textContent = "Publish case"; pcb.onclick = () => publishCase(pl); const mgb = document.createElement("button"); mgb.type = "button"; mgb.textContent = "Message"; mgb.onclick = () => msgTo(pl); acts.append(inc, gv, inv, sz, pwb, his, asb, exb, pcb, mgb, del); row.append(b, acts, meta); list.append(row); }
       if (d.count > d.players.length) { const p = document.createElement("p"); p.className = "muted"; p.textContent = "Showing 200 of " + d.count + ". Search to narrow it down."; list.append(p); }
-      $("keyCard").hidden = true; $("findCard").hidden = $("banCard").hidden = $("giftCard").hidden = $("wallCard").hidden = $("statsCard").hidden = $("promoCard").hidden = $("agCard").hidden = $("teamCard").hidden = $("czCard").hidden = $("bzCard").hidden = $("hwCard").hidden = $("huCard").hidden = $("plCard").hidden = $("trCard").hidden = $("blCard").hidden = $("disCard").hidden = $("seaCard").hidden = $("adCard").hidden = $("susCard").hidden = $("ledCard").hidden = $("wtCard").hidden = $("rdCard").hidden = $("fbCard").hidden = $("slCard").hidden = $("hlCard").hidden = $("szCard").hidden = $("asCard").hidden = $("rqCard").hidden = $("lpCard").hidden = false; $("tabs").hidden = false; tabOn(); teamLoad(); szLoad(); asLoad(); rqLoad(); lpLoad(); adLoad(); seaLoad(); disLoad(); blLoad(); trLoad(); plLoad(); czLoad(); bzLoad(); hwLoad(); huLoad(); hlLoad(); slLoad(); ledLoad(); wtLoad(); rdLoad(); fbLoad(); bans(); wallNotes(); stats(); promoLoad(); agLoad();
+      $("keyCard").hidden = true; $("findCard").hidden = $("banCard").hidden = $("giftCard").hidden = $("wallCard").hidden = $("statsCard").hidden = $("promoCard").hidden = $("agCard").hidden = $("teamCard").hidden = $("czCard").hidden = $("bzCard").hidden = $("hwCard").hidden = $("huCard").hidden = $("plCard").hidden = $("trCard").hidden = $("blCard").hidden = $("rgCard").hidden = $("disCard").hidden = $("seaCard").hidden = $("adCard").hidden = $("susCard").hidden = $("ledCard").hidden = $("wtCard").hidden = $("rdCard").hidden = $("fbCard").hidden = $("slCard").hidden = $("hlCard").hidden = $("szCard").hidden = $("asCard").hidden = $("rqCard").hidden = $("lpCard").hidden = false; $("tabs").hidden = false; tabOn(); teamLoad(); szLoad(); asLoad(); rqLoad(); lpLoad(); adLoad(); seaLoad(); disLoad(); rgLoad(); blLoad(); trLoad(); plLoad(); czLoad(); bzLoad(); hwLoad(); huLoad(); hlLoad(); slLoad(); ledLoad(); wtLoad(); rdLoad(); fbLoad(); bans(); wallNotes(); stats(); promoLoad(); agLoad();
     } catch (e) { if (e.status === 401 || e.status === 404 || e.status === 429) locked(e.message); else show($("err"), e.message); }
   }
   async function wallNotes() { // every Heart Wall note, with who wrote it, and buttons to take it down or put it back
@@ -548,6 +553,20 @@ label.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem
   async function disLoad() { const I = $("disInfo"); try { const d = await api("/api/admin/disaster"); I.textContent = ""; const row = (x) => { const p = document.createElement("div"); p.textContent = x; p.style.margin = "4px 0"; I.append(p); }; $("disAuto").checked = !!d.auto;
       row(d.cur ? "Happening now: " + d.cur.kind + " " + d.cur.name + " (" + d.cur.phase + ")" : d.auto && d.seasonLive ? "Next automatic disaster: " + (d.next ? new Date(d.next).toLocaleString() : "being scheduled") : d.auto ? "Automatic disasters start when Season 2 is live." : "Automatic disasters are off.");
       row("Total repair bills so far: Rs " + (d.total || 0).toLocaleString("en")); d.log.forEach((l) => row(new Date(l.at).toLocaleString() + " · " + l.kind + " " + l.name + " · " + l.hits + " players paid Rs " + (l.total || 0).toLocaleString("en") + " (" + l.by + ")")); } catch (e) { I.textContent = e.message || "Failed"; } }
+  async function rgLoad() { // the island regions: open, closed, or opening on a date
+    const L = $("rgList"); let d; try { d = await api("/api/admin/regions"); } catch (e) { L.textContent = e.message || "Could not load the regions."; return; } L.textContent = "";
+    for (const r of d.regions) { const row = document.createElement("div"); row.className = "row"; row.style.cssText = "margin:6px 0;gap:8px;align-items:center";
+      const dot = document.createElement("span"); dot.style.cssText = "width:14px;height:14px;border-radius:50%;flex:none;background:" + (r.open ? r.color : "#888");
+      const nm = document.createElement("b"); nm.textContent = r.name; nm.style.marginRight = "auto";
+      const st = document.createElement("span"); st.className = "muted"; st.textContent = r.open ? "Open" : r.opensAt ? "Opens " + new Date(r.opensAt).toLocaleString() : "Locked";
+      const tog = document.createElement("button"); tog.type = "button"; tog.textContent = r.open ? "Close" : "Open now"; if (r.open) tog.className = "danger";
+      tog.onclick = async () => { if (!confirm((r.open ? "Close " : "Open ") + r.name + " now?" + (r.open ? " Everyone inside is moved to a safe open place." : ""))) return; try { await api("/api/admin/regions", { id: r.id, open: !r.open }); } catch (e) { alert(e.message || "Failed"); } rgLoad(); };
+      const when = document.createElement("input"); when.type = "datetime-local"; when.title = "Opening date"; if (r.opensAt) { const t = new Date(r.opensAt - new Date().getTimezoneOffset() * 60000); when.value = t.toISOString().slice(0, 16); }
+      const set = document.createElement("button"); set.type = "button"; set.textContent = r.opensAt ? "Change date" : "Set date";
+      set.onclick = async () => { const t = when.value ? new Date(when.value).getTime() : 0; try { await api("/api/admin/regions", { id: r.id, opensAt: t }); } catch (e) { alert(e.message || "Failed"); } rgLoad(); };
+      row.append(dot, nm, st); if (!r.open) row.append(when, set); row.append(tog); L.append(row); }
+  }
+  $("rgRe").onclick = rgLoad;
   $("disRe").onclick = disLoad; $("disAuto").onchange = async () => { try { await api("/api/admin/disaster", { auto: $("disAuto").checked }); } catch (e) { alert(e.message || "Failed"); } disLoad(); };
   document.querySelectorAll("[data-dis]").forEach((b) => { b.onclick = async () => { if (!confirm("Start a " + b.dataset.dis + " now? Everyone gets a warning, then repair bills for the wealthy.")) return; try { await api("/api/admin/disaster", { start: b.dataset.dis }); } catch (e) { alert(e.message || "Failed"); } disLoad(); }; });
   $("disCancel").onclick = async () => { try { await api("/api/admin/disaster", { cancel: true }); } catch (e) { alert(e.message || "Failed"); } disLoad(); };

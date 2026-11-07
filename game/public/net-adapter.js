@@ -55,15 +55,21 @@
       else if (m.t === "salon" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-salon", { detail: m })); } catch (e) {} } // Clawed by Taps: a booking changed or a message arrived
       else if (m.t === "flex" || m.t === "chal" || m.t === "passed") { try { window.dispatchEvent(new CustomEvent("fef-" + m.t, { detail: m })); } catch (e) {} } // competition: a flex post, a challenge update, someone passed you
       else if (m.t === "case" && !m.rid) { try { window.dispatchEvent(new Event("fef-case")); } catch (e) {} } // the agent or the court did something about you: look at your case now
+      else if (m.t === "regions") { try { window.dispatchEvent(new CustomEvent("fef-regions", { detail: m.regions })); } catch (e) {} } // a region of the island opened or closed
+      else if (m.t === "region.locked") { if (myPres && m.back) { for (var rk in m.back) { if (m.back[rk] === undefined) delete myPres[rk]; else myPres[rk] = m.back[rk]; } } try { window.dispatchEvent(new CustomEvent("fef-regionlocked", { detail: m })); } catch (e) {} } // the server would not let us into a locked region: our place was put back
       else if (m.t === "disaster") { try { window.dispatchEvent(new CustomEvent("fef-disaster", { detail: m })); } catch (e) {} } // a disaster is coming, hitting or over
       else if (m.t === "heist" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-heist", { detail: m })); } catch (e) {} } // a heist offer, or how it went
       else if (m.t === "hunt" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-hunt", { detail: m })); } catch (e) {} } // someone dug up the treasure
       else if (m.t === "biz" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-biz", { detail: m.m })); } catch (e) {} } // a business sent everyone a message
+      else if (m.t === "lvl" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-lvl", { detail: m })); } catch (e) {} } // XP or a level the server just gave
+      else if (m.t === "flat" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-flat", { detail: m })); } catch (e) {} } // your flat has just been finished
+      else if (m.t === "zone" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-zone", { detail: m })); } catch (e) {} } // you reached a landmark of a new town
+      else if (m.t === "market" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-market", { detail: m })); } catch (e) {} } // a raid on a blanket, or your stall closed
       else if (m.t === "cutz" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-cutz", { detail: m })); } catch (e) {} } // the barber answered your booking
       else if (m.t === "poll" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-poll", { detail: m })); } catch (e) {} } // a new poll, or it closed
       else if (m.t === "trips" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-trips", { detail: m })); } catch (e) {} } // a trip request or answer
       else if (m.t === "belle" && !m.rid) { try { window.dispatchEvent(new CustomEvent("fef-belle", { detail: m })); } catch (e) {} } // Belle's Kitchen answered your booking
-      else if (m.t === "cutz" || m.t === "biz" || m.t === "hw" || m.t === "hunt" || m.t === "dis" || m.t === "poll" || m.t === "trips" || m.t === "belle" || m.t === "heist" || m.t === "wealth" || m.t === "parl" || m.t === "party" || m.t === "account" || m.t === "homes" || m.t === "shop" || m.t === "promo" || m.t === "pay" || m.t === "chat.more" || m.t === "reward" || m.t === "fashion" || (m.t === "case" && m.rid) || (m.t === "gov" && m.rid) || (m.t === "ledger" && m.rid) || (m.t === "build" && m.rid) || (m.t === "feedback" && m.rid) || (m.t === "compete" && m.rid) || (m.t === "salon" && m.rid)) { var ar = asks[m.rid]; if (ar) { clearTimeout(ar.timer); delete asks[m.rid]; ar.resolve(m); } } // an answer to a login or home request
+      else if (m.t === "cutz" || m.t === "biz" || m.t === "hw" || m.t === "hunt" || m.t === "dis" || m.t === "road" || m.t === "poll" || m.t === "trips" || m.t === "belle" || m.t === "heist" || m.t === "wealth" || m.t === "casino" || m.t === "job" || m.t === "market" || m.t === "zone" || m.t === "pass" || m.t === "push" || m.t === "hustle" || m.t === "flat" || m.t === "lvl" || m.t === "parl" || m.t === "party" || m.t === "account" || m.t === "homes" || m.t === "shop" || m.t === "promo" || m.t === "pay" || m.t === "chat.more" || m.t === "reward" || m.t === "fashion" || (m.t === "case" && m.rid) || (m.t === "gov" && m.rid) || (m.t === "ledger" && m.rid) || (m.t === "build" && m.rid) || (m.t === "feedback" && m.rid) || (m.t === "compete" && m.rid) || (m.t === "salon" && m.rid)) { var ar = asks[m.rid]; if (ar) { clearTimeout(ar.timer); delete asks[m.rid]; ar.resolve(m); } } // an answer to a login or home request
       if ((m.t === "welcome" && m.rich) || m.t === "rich") { richNow = m.rich || richNow; richCbs.forEach(function (cb) { try { cb(m.rich, m.prev || null, m.t === "rich"); } catch (e) {} }); } // who is the richest right now, and a change of crown
       if (m.t === "welcome" && m.flex) flexBack = m.flex;
       if (m.t === "welcome" && m.gov) { govNow = m.gov; try { window.dispatchEvent(new Event("fef-gov")); } catch (e) {} }
@@ -229,9 +235,15 @@
       debate: function (town, rival) { return ask({ t: "gov.debate", town: town, rival: rival }); },       // challenge a rival to a TV debate
       debateVote: function (town, uid) { return ask({ t: "gov.debateVote", town: town, for: uid }); },
     },
+    road: { // trips between towns along the real roads
+      plan: function (to) { return ask({ t: "road.plan", to: to }); },
+      start: function (to, mode, car) { return ask({ t: "road.start", to: to, mode: mode, car: !!car }); },
+      arrive: function () { return ask({ t: "road.arrive" }); }
+    },
     dis: { // storm cover and the relief fund
       get: function () { return ask({ t: "dis.get" }); },
       prep: function (tier) { return ask({ t: "dis.prep", tier: tier }); },
+      policy: function () { return ask({ t: "dis.policy" }); },
       give: function (amt) { return ask({ t: "dis.give", amt: amt }); }
     },
     hunt: { // the Halloween treasure hunt
@@ -288,6 +300,67 @@
       answer: function (accept) { return ask({ t: "heist.answer", accept: !!accept }); },
       launch: function () { return ask({ t: "heist.launch" }); },
       cancel: function () { return ask({ t: "heist.cancel" }); }
+    },
+    casino: { // the Port Louis casino: the server spins, deals and rolls
+      state: function () { return ask({ t: "casino.state" }); },
+      exclude: function (days) { return ask({ t: "casino.exclude", days: days }); },
+      roulette: function (bet, stake) { return ask({ t: "casino.roulette", bet: bet, stake: stake }); },
+      slots: function (stake) { return ask({ t: "casino.slots", stake: stake }); },
+      bjStart: function (stake) { return ask({ t: "casino.bj.start", stake: stake }); },
+      bjHit: function () { return ask({ t: "casino.bj.hit" }); },
+      bjStand: function () { return ask({ t: "casino.bj.stand" }); },
+      bjDouble: function () { return ask({ t: "casino.bj.double" }); }
+    },
+    job: { // job challenges: the server sets the questions and pays the bonus
+      start: function (game) { return ask({ t: "job.start", game: game }); },
+      answer: function (id, answers) { return ask({ t: "job.answer", id: id, answers: answers }); },
+      courierStart: function () { return ask({ t: "job.courier.start" }); },
+      courierDone: function (id) { return ask({ t: "job.courier.done", id: id }); }
+    },
+    push: { // notifications: register this phone and choose what to get
+      state: function () { return ask({ t: "push.state" }); },
+      sub: function (sub) { return ask({ t: "push.sub", sub: sub }); },
+      unsub: function (endpoint, all) { return ask({ t: "push.unsub", endpoint: endpoint, all: !!all }); },
+      prefs: function (o) { return ask(Object.assign({ t: "push.prefs" }, o)); },
+      test: function () { return ask({ t: "push.test" }); }
+    },
+    lvl: { // player level and XP: the server decides
+      state: function () { return ask({ t: "lvl.state" }); },
+      gain: function (kind, key) { return ask({ t: "lvl.gain", kind: kind, key: key }); },
+      board: function (scope, board) { return ask({ t: "lvl.board", scope: scope, board: board }); },
+      card: function (id) { return ask({ t: "lvl.card", id: id }); },
+      friend: function (id, remove) { return ask({ t: "lvl.friend", id: id, remove: !!remove }); },
+      hide: function (on) { return ask({ t: "lvl.hide", on: !!on }); }
+    },
+    flat: { // timed upgrades of your flat: the server owns the clock
+      state: function () { return ask({ t: "flat.state" }); },
+      start: function () { return ask({ t: "flat.start" }); },
+      nudge: function () { return ask({ t: "flat.nudge" }); },
+      peek: function (owner) { return ask({ t: "flat.peek", owner: owner }); },
+      help: function (owner) { return ask({ t: "flat.help", owner: owner }); },
+      upkeep: function () { return ask({ t: "flat.upkeep" }); },
+      ack: function () { return ask({ t: "flat.ack" }); }
+    },
+    hustle: { // side hustles: the server times, charges and pays them
+      state: function () { return ask({ t: "hustle.state" }); },
+      start: function (id) { return ask({ t: "hustle.start", id: id }); },
+      finish: function (id) { return ask({ t: "hustle.finish", id: id }); }
+    },
+    pass: { // the Island Pass: opens the highways and the other towns
+      state: function () { return ask({ t: "pass.state" }); },
+      buy: function () { return ask({ t: "pass.buy" }); }
+    },
+    zone: { // discovery: the new-in-town checklist and who is where
+      state: function (town) { return ask({ t: "zone.state", town: town || "" }); },
+      pulse: function () { return ask({ t: "zone.pulse" }); }
+    },
+    market: { // the street market: blankets, stock and sales between players
+      list: function () { return ask({ t: "market.list" }); },
+      open: function () { return ask({ t: "market.open" }); },
+      stock: function (good, qty) { return ask({ t: "market.stock", good: good, qty: qty }); },
+      price: function (good, price) { return ask({ t: "market.price", good: good, price: price }); },
+      close: function () { return ask({ t: "market.close" }); },
+      buy: function (seller, good) { return ask({ t: "market.buy", seller: seller, good: good }); }
     },
     wealth: { // the wealth ladder and the Patron shop
       get: function () { return ask({ t: "wealth.get" }); },
