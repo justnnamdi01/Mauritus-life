@@ -30,10 +30,10 @@ const SOCIAL = 1.25; // helping friends gives a quarter more
 const gift = (lv) => (lv % 5 === 0 ? 500 : 100) * lv; // cash for reaching a level (a bigger one every 5th)
 
 module.exports = function (X) {
-  const { db, send, persist, peers, mailTo, allow } = X;
+  const { db, send, persist, peers, mailTo, allow, nameOf } = X;
   db.lvl = db.lvl && typeof db.lvl === "object" ? db.lvl : {};
   const dayNo = () => Math.floor((Date.now() + MUT) / 86400000);
-  const rec = (uid) => { const r = db.lvl[uid] || (db.lvl[uid] = { xp: 0, level: 1, day: 0, today: 0, n: {}, last: {}, firsts: {}, places: 0, g: { day: 0, p: {}, done: {} }, streak: 0, lastAll: 0 }); if (!r.g) { r.g = { day: 0, p: {}, done: {} }; r.streak = 0; r.lastAll = 0; } if (r.g.day !== dayNo()) r.g = { day: dayNo(), p: {}, done: {} }; if (r.day !== dayNo()) { r.day = dayNo(); r.today = 0; r.n = {}; } return r; };
+  const rec = (uid) => { const r = db.lvl[uid] || (db.lvl[uid] = { xp: 0, level: 1, day: 0, today: 0, n: {}, last: {}, firsts: {}, places: 0, g: { day: 0, p: {}, done: {} }, streak: 0, lastAll: 0, fr: [], helps: 0, hide: false }); if (!r.fr) { r.fr = []; r.helps = 0; r.hide = false; } if (!r.g) { r.g = { day: 0, p: {}, done: {} }; r.streak = 0; r.lastAll = 0; } if (r.g.day !== dayNo()) r.g = { day: dayNo(), p: {}, done: {} }; if (r.day !== dayNo()) { r.day = dayNo(); r.today = 0; r.n = {}; } return r; };
   const levelOfXp = (xp) => { let lv = 1, x = xp; while (lv < MAX && x >= need(lv)) { x -= need(lv); lv++; } return { level: lv, into: lv >= MAX ? 0 : x, need: lv >= MAX ? 0 : need(lv) }; };
   const level = (uid) => rec(uid).level;
   const goalsOf = (uid) => POOL.map((row, i) => row[hash(uid + ":" + dayNo() + ":" + i) % row.length]);
@@ -54,12 +54,40 @@ module.exports = function (X) {
   }
   function grant(uid, kind, amount, opt) { // used by the server's own modules (flat, help): the server decided it happened
     if (!db.players[uid]) return null; const K = SERVER_KINDS[kind]; if (!K) return null; const r = rec(uid); if ((r.n[kind] || 0) >= K.cap) return null; r.n[kind] = (r.n[kind] || 0) + 1;
+    if (kind === "help") r.helps = (r.helps || 0) + 1;
     const out = add(uid, amount === undefined ? K.xp : amount, kind, !!(opt && opt.social)); if (out.gained) push(uid, Object.assign({ label: K.label }, out, { view: view(uid) })); return out; }
+
+  // ---------------------------------------------------------------- the Standing card and the boards (they never reset)
+  const flatLevel = (uid) => Number((db.flat && db.flat[uid] || {}).level) || 0;
+  const regionOf = (uid) => String((db.where || {})[uid] || "");
+  const BOARDS = { // name, how a player scores, what the number means
+    level: { label: "Highest level", score: (u, r) => r.xp, show: (u, r) => "Level " + r.level + " · " + titleOf(r.level) },
+    flat: { label: "Best flat", score: (u, r) => flatLevel(u) * 1e6 + r.xp, show: (u) => "Flat level " + flatLevel(u) },
+    rich: { label: "Richest", score: (u) => Math.round(Number((db.players[u] || {}).money) || 0), show: (u) => "Rs " + Math.round(Number((db.players[u] || {}).money) || 0).toLocaleString("en") },
+    helpful: { label: "Most helpful", score: (u, r) => r.helps || 0, show: (u, r) => (r.helps || 0) + " builds helped" },
+    explorer: { label: "Explorer", score: (u, r) => r.places || 0, show: (u, r) => (r.places || 0) + " places found" }
+  };
+  const nm = (u) => (nameOf ? nameOf(u) : "") || String((db.players[u] || {}).name || "Someone").slice(0, 16);
+  const alive = (u) => db.players[u] && !(db.removed || {})[u];
+  const friendsOf = (uid) => (rec(uid).fr || []).filter(alive);
+  function board(uid, scope, key) { const B = BOARDS[key]; if (!B) return null; const mine = rec(uid); let ids = Object.keys(db.lvl).filter((u) => alive(u) && db.lvl[u].xp > 0 && (u === uid || !db.lvl[u].hide));
+    if (scope === "friends") { const f = new Set(friendsOf(uid)); f.add(uid); ids = ids.filter((u) => f.has(u)); } else if (scope === "region") { const rg = regionOf(uid); ids = ids.filter((u) => u === uid || (rg && regionOf(u) === rg)); }
+    const rows = ids.map((u) => { const r = rec(u); return { uid: u, name: nm(u), level: r.level, score: B.score(u, r), text: B.show(u, r), you: u === uid, friend: friendsOf(uid).includes(u) }; }).sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)); rows.forEach((x, i) => { x.rank = i + 1; });
+    const me = rows.find((x) => x.you) || null, pub = (x) => ({ uid: x.you ? "" : x.uid, id: x.uid, name: x.name, level: x.level, text: x.text, rank: x.rank, you: x.you, friend: x.friend });
+    const top = rows.slice(0, 10).map(pub), near = me && me.rank > 10 ? rows.slice(Math.max(10, me.rank - 4), me.rank + 2).map(pub) : [];
+    return { ok: true, scope, board: key, label: B.label, total: rows.length, top, near, me: me ? { rank: me.rank, text: me.text } : null }; }
+  function card(uid, o) { if (!alive(o)) return null; const r = rec(o); if (r.hide && o !== uid) return { ok: true, hidden: true, name: nm(o) }; const L = levelOfXp(r.xp);
+    return { ok: true, id: o, name: nm(o), you: o === uid, level: r.level, title: titleOf(r.level), xp: r.xp, flat: flatLevel(o), helps: r.helps || 0, places: r.places || 0, streak: r.streak || 0, region: regionOf(o), friend: friendsOf(uid).includes(o), money: BOARDS.rich.score(o), pct: L.need ? Math.round(L.into / L.need * 100) : 100, hide: !!r.hide }; }
+  function befriend(a, b) { for (const [x, y] of [[a, b], [b, a]]) { if (x === y || !db.players[x] || !db.players[y]) continue; const r = rec(x); if (!r.fr.includes(y) && r.fr.length < 60) r.fr.push(y); } persist(); }
   function handle(ws, me, m) {
     const reply = (o) => send(ws, Object.assign({ t: "lvl", rid: m.rid }, o));
     if (!me.uid || !db.players[me.uid]) return reply({ ok: false, error: "Play a little first." }); if (!allow(me)) return reply({ ok: false, error: "Slow down a little." });
     const uid = me.uid;
     if (m.t === "lvl.state") return reply(view(uid));
+    if (m.t === "lvl.board") { const b = board(uid, m.scope === "friends" || m.scope === "region" ? m.scope : "island", String(m.board || "level")); return reply(b || { ok: false, error: "No such board." }); }
+    if (m.t === "lvl.card") { const c = card(uid, String(m.id || uid)); return reply(c || { ok: false, error: "No such player." }); }
+    if (m.t === "lvl.friend") { const o = String(m.id || ""); if (!alive(o) || o === uid) return reply({ ok: false, error: "No such player." }); const r = rec(uid); if (m.remove) { r.fr = r.fr.filter((x) => x !== o); persist(); return reply({ ok: true, friend: false }); } if (r.fr.length >= 60) return reply({ ok: false, error: "Your friends list is full." }); if (!r.fr.includes(o)) { r.fr.push(o); persist(); } return reply({ ok: true, friend: true }); }
+    if (m.t === "lvl.hide") { rec(uid).hide = !!m.on; persist(); return reply({ ok: true, hide: !!m.on }); }
     if (m.t === "lvl.gain") {
       const k = String(m.kind || ""), K = KINDS[k]; if (!K) return reply({ ok: false, error: "That does not give XP." }); const r = rec(uid), now = Date.now();
       let amt = K.xp, key = "", fk = ""; if (K.keyed) { key = String(m.key || "").slice(0, 24).replace(/[^\w:.-]/g, ""); if (!key) return reply({ ok: false, error: "Which place?" }); fk = k + ":" + key; if (r.firsts[fk]) return reply(Object.assign(view(uid), { ok: true, gained: 0, seen: true })); }
@@ -73,5 +101,5 @@ module.exports = function (X) {
     }
     return reply({ ok: false, error: "Unknown request." });
   }
-  return { handle, grant, level, view, titleOf, need, levelOfXp, FLAT_REQ, MAX };
+  return { handle, grant, befriend, board, card, level, view, titleOf, need, levelOfXp, FLAT_REQ, MAX };
 };

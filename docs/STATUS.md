@@ -31,6 +31,13 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 31 (7 Nov 2026): Standing card and leaderboards (level system step 3)
+- Server `game/levels.js`: boards Level, Flat, Richest, Helpful, Explorer in three scopes (Friends, Island, My region), never reset, top 10 plus "around you" and your rank; a player card (level, title, flat, builds helped, places, streak); a simple friends list (add/remove, up to 60; helping a friend build makes you both friends); hide-from-boards switch (hidden players are not listed and their card shows nothing).
+- On the phone: new Leaderboards app (tabs, rows, tap a name for the card, add/remove friend), "My card" and "Leaderboards" buttons in the Standing app. What's new 2027.03.31, two Guide answers.
+- Tested: `levels.test.js` (boards, order, friends scope, hide, card), browser: board and card render, no page errors.
+- Not done: "My region" uses the region a player was last in; showcase picks (three proudest things) and weekly-free badges (Top 100, #1) are not built; the card has no Visit button yet; only one player in the browser test, so a many-player board was only tested on the server; no real phone.
+- **Next step:** step 4: flat upkeep (a small money sink with a comfort bonus), more milestone unlocks (second builder slot), and the level-up fireworks scene; or M2 materials and the pacing script.
+
 ## Done, session 30 (7 Nov 2026): "Your day" goals and promotion XP (level system step 2)
 - Server `game/levels.js`: three goals a day (one shift goal, one hustle or Ferris goal, one visits goal), chosen from the player id and the date, counted only from events the server accepted. Each goal pays 30 XP and Rs 150 by mail; all three pay 60 XP and Rs 400 and add to a days-in-a-row count (one missed day is forgiven). A promotion at the main job gives 60 XP. Walking into a place counts as a visit (no XP by itself; the first time ever still pays 25 XP).
 - On screen: a 🎯 count on the level chip, "Goal done" float and card, confetti when all three are done, a "Your day" section at the top of the Standing app. What's new 2027.03.30, a Guide answer.

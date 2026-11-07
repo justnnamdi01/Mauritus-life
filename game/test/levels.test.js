@@ -42,6 +42,21 @@ const player = (PORT, name, money) => new Promise((resolve) => { const ws = new 
     d = await C.ask("lvl.state"); ok(d.goals[0].done && d.goals[0].have === need0, "the goal shows as done");
     r = await C.ask("lvl.gain", { kind: "promo" }); ok(r.ok && r.gained === 60, "a promotion at work gives 60 XP");
     r = await C.ask("lvl.gain", { kind: "visit" }); ok(r.ok && r.gained === 0, "visiting a place counts for the day but gives no XP itself");
+    // the Standing card and the boards
+    let b = await A.ask("lvl.board", { scope: "island", board: "level" }); ok(b.ok && b.top.length >= 3 && b.top[0].rank === 1 && b.me && b.me.rank >= 1 && b.top.every((x, i) => i === 0 || true), "the island board lists players and your rank (" + b.total + " players)");
+    ok(b.top.every((x, i, a) => i === 0 || a[i - 1].rank < x.rank), "ranks run in order");
+    b = await A.ask("lvl.board", { scope: "friends", board: "level" }); ok(b.ok && b.top.length === 1 && b.top[0].you, "with no friends the friends board is just you");
+    r = await A.ask("lvl.friend", { id: B.uid }); ok(r.ok && r.friend, "add a friend");
+    b = await A.ask("lvl.board", { scope: "friends", board: "level" }); ok(b.top.some((x) => x.name === "Pal"), "the friends board now has both");
+    r = await A.ask("lvl.friend", { id: C.uid }); ok(r.ok && r.friend, "you can add a friend");
+    b = await A.ask("lvl.board", { scope: "friends", board: "level" }); ok(b.top.some((x) => x.name === "Daily"), "the new friend shows on the friends board");
+    for (const k of ["flat", "rich", "helpful", "explorer"]) { b = await A.ask("lvl.board", { scope: "island", board: k }); ok(b.ok && b.label && b.top.length >= 1, "the " + k + " board works"); }
+    b = await A.ask("lvl.board", { scope: "island", board: "nope" }); ok(!b.ok, "an unknown board is refused");
+    r = await A.ask("lvl.card", { id: B.uid }); ok(r.ok && r.name === "Pal" && r.level >= 1 && r.title && r.friend, "a player's card shows their name, level, title and friend status");
+    r = await B.ask("lvl.hide", { on: true }); r = await C.ask("lvl.board", { scope: "island", board: "level" }); ok(!r.top.some((x) => x.name === "Pal"), "a player who hides is not on anyone's board");
+    r = await C.ask("lvl.card", { id: B.uid }); ok(r.ok && r.hidden && r.level === undefined, "and their card shows nothing else");
+    r = await A.ask("lvl.friend", { id: C.uid, remove: true }); ok(r.ok && !r.friend, "friends can be removed");
+    r = await A.ask("lvl.card", { id: "nobody" }); ok(!r.ok, "a card for nobody is refused");
   } finally { srv.kill(); await new Promise((r) => srv.on("exit", r)); try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {} }
   console.log(fails ? fails + " FAILED" : "all passed"); process.exit(fails ? 1 : 0);
 })();

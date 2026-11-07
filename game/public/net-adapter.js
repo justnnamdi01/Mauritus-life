@@ -326,7 +326,11 @@
     },
     lvl: { // player level and XP: the server decides
       state: function () { return ask({ t: "lvl.state" }); },
-      gain: function (kind, key) { return ask({ t: "lvl.gain", kind: kind, key: key }); }
+      gain: function (kind, key) { return ask({ t: "lvl.gain", kind: kind, key: key }); },
+      board: function (scope, board) { return ask({ t: "lvl.board", scope: scope, board: board }); },
+      card: function (id) { return ask({ t: "lvl.card", id: id }); },
+      friend: function (id, remove) { return ask({ t: "lvl.friend", id: id, remove: !!remove }); },
+      hide: function (on) { return ask({ t: "lvl.hide", on: !!on }); }
     },
     flat: { // timed upgrades of your flat: the server owns the clock
       state: function () { return ask({ t: "flat.state" }); },

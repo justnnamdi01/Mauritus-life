@@ -12,7 +12,7 @@
 
   // ---------------------------------------------------------------- the chip on the clock card
   const css = document.createElement("style");
-  css.textContent = ".lvchip{display:flex;align-items:center;gap:6px;margin-top:4px;padding:0;background:none;border:0;color:#fff;font:700 .72rem system-ui,sans-serif;cursor:pointer;width:100%}.lvchip em{font-style:normal;background:#2a9d8f;border-radius:8px;padding:1px 6px;white-space:nowrap}.lvchip u{text-decoration:none;opacity:.85;white-space:nowrap}.lvchip span{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden;min-width:44px}.lvchip span i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ff9f1c);transition:width .6s}.xpfloat{position:fixed;left:18px;top:86px;z-index:60;color:#ffd166;font:800 .95rem system-ui,sans-serif;text-shadow:0 1px 3px #000a;pointer-events:none;animation:xpup 1.6s ease-out forwards}@keyframes xpup{from{opacity:0;transform:translateY(8px)}15%{opacity:1}to{opacity:0;transform:translateY(-34px)}}";
+  css.textContent = ".lvchip{display:flex;align-items:center;gap:6px;margin-top:4px;padding:0;background:none;border:0;color:#fff;font:700 .72rem system-ui,sans-serif;cursor:pointer;width:100%}.lvchip em{font-style:normal;background:#2a9d8f;border-radius:8px;padding:1px 6px;white-space:nowrap}.lvchip u{text-decoration:none;opacity:.85;white-space:nowrap}.lvchip span{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden;min-width:44px}.lvchip span i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ff9f1c);transition:width .6s}.lvtabs{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}.lvtabs button{border:0;border-radius:14px;padding:6px 11px;font:700 .78rem system-ui,sans-serif;background:rgba(255,255,255,.1);color:inherit;cursor:pointer}.lvtabs button.on{background:#2a9d8f;color:#fff}.lvrow{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:12px;padding:9px 11px;margin:4px 0;background:rgba(255,255,255,.07);color:inherit;text-align:left;cursor:pointer;font:inherit}.lvrow.you{background:rgba(42,157,143,.35)}.lvrow b.rk{min-width:28px;text-align:center;font-size:1rem}.lvrow span{flex:1;display:flex;flex-direction:column}.lvrow small{opacity:.75}.xpfloat{position:fixed;left:18px;top:86px;z-index:60;color:#ffd166;font:800 .95rem system-ui,sans-serif;text-shadow:0 1px 3px #000a;pointer-events:none;animation:xpup 1.6s ease-out forwards}@keyframes xpup{from{opacity:0;transform:translateY(8px)}15%{opacity:1}to{opacity:0;transform:translateY(-34px)}}";
   document.head.append(css);
   function chip() { let b = document.getElementById("lvChip"); if (b) return b; const clk = document.querySelector(".hud.clock"); if (!clk) return null; b = document.createElement("button"); b.id = "lvChip"; b.type = "button"; b.className = "lvchip"; b.setAttribute("aria-label", "Your level"); b.innerHTML = "<em>Lv 1</em><span><i></i></span><u>🎯 0/3</u>"; b.onclick = () => { try { openPhone("standing"); } catch (e) {} }; clk.append(b); return b; }
   function paint() { const b = chip(), r = LVX.st; if (!b) return; b.hidden = !r || !(typeof s !== "undefined" && s.made); if (!r) return; b.firstChild.textContent = "Lv " + r.level; b.querySelector("i").style.width = (r.need ? Math.min(100, r.into / r.need * 100) : 100) + "%"; const gd = (r.goals || []).filter((g) => g.done).length; b.querySelector("u").textContent = "🎯 " + gd + "/" + (r.goals || []).length; b.title = r.title + " · " + r.into + "/" + r.need + " XP"; }
@@ -45,6 +45,7 @@
     let r = LVX.st; try { r = (await load()) || r; } catch (e) {} if (!r) { box.append(el("p", "pnote", "Your standing is loading. Try again in a moment.")); return; }
     appHero(box, "🏅", "Island Standing", "Level " + r.level + " · " + r.title, r.level >= r.max ? "You are a legend of the island." : r.into + " / " + r.need + " XP to level " + (r.level + 1) + (r.nextGift ? " (gift " + rsf(r.nextGift) + ")" : ""), r.need ? r.into / r.need * 100 : 100);
     box.append(el("p", "pnote", "You can reach every level on your own. Friends make it faster: helping a friend build gives a quarter more XP."));
+    const lk = el("div", "lvtabs"); const b1 = el("button", "on", "🏆 Leaderboards"), b2 = el("button", "", "🪪 My card"); b1.type = b2.type = "button"; b1.onclick = () => openPhone("boards"); b2.onclick = () => { try { $("phone").hidden = true; } catch (e) {} LVX.card(window.MYUID || ""); }; lk.append(b1, b2); box.append(lk);
     box.append(el("p", "psec", "Your day"));
     (r.goals || []).forEach((g) => prow(box, (g.done ? "✅ " : "⬜ ") + g.text, g.done ? "Done" : g.have + " / " + g.n, "+" + g.xp + " XP and Rs " + g.cash));
     prow(box, r.allDone ? "🌟 All three done" : "🌟 Finish all three", "+" + r.bonus.xp + " XP, Rs " + r.bonus.cash, r.streak > 1 ? r.streak + " days in a row" : "New goals every morning");
@@ -56,6 +57,35 @@
     box.append(el("p", "psec", "Titles"));
     TITLES.forEach(([l, n]) => prow(box, (r.level >= l ? "✅ " : "🔒 ") + n, "Level " + l));
     box.append(el("p", "pnote", "XP today: " + r.today + ". After " + r.soft + " XP in a day, more XP counts half, so nobody has to play for hours. Your level never goes down."));
+  };
+
+
+  // ---------------------------------------------------------------- the Standing card and the leaderboards (they never reset)
+  LVX.sel = { scope: "island", board: "level" };
+  const SCOPES = [["friends", "👥 Friends"], ["island", "🏝️ Island"], ["region", "📍 My region"]];
+  const BOARDS = [["level", "⭐ Level"], ["flat", "🏠 Flat"], ["rich", "💰 Richest"], ["helpful", "🤝 Helpful"], ["explorer", "🧭 Explorer"]];
+  LVX.card = async function (id) {
+    const a = capA("lvl"); if (!a) return; let c = null; try { c = await a.card(id); } catch (e) {} if (!c || !c.ok) { toast("Couldn't open that card."); return; }
+    if (c.hidden) { evCard({ icon: "🔒", tag: "STANDING", title: c.name, text: "This player keeps their standing private.", opts: [{ label: "OK", pri: true, go: () => {} }] }); return; }
+    const lines = ["Level " + c.level + " · " + c.title + " (" + c.pct + "% to the next)", "Flat level " + c.flat + " · " + c.helps + " builds helped · " + c.places + " places found" + (c.streak > 1 ? " · " + c.streak + " days in a row" : "")];
+    const opts = c.you ? [{ label: c.hide ? "Show me on the boards" : "Hide me from the boards", sub: "Your choice", go: async () => { try { await a.hide(!c.hide); toast(c.hide ? "You are on the boards again." : "You are hidden from the boards."); } catch (e) {} } }, { label: "Close", pri: true, go: () => {} }]
+      : [{ label: c.friend ? "Remove friend" : "Add friend", pri: !c.friend, go: async () => { try { const r = await a.friend(c.id, c.friend); if (r && r.ok) toast(r.friend ? "👥 " + c.name + " is your friend." : "Removed."); else toast((r && r.error) || "Couldn't do that."); } catch (e) {} } }, { label: "Close", go: () => {} }];
+    evCard({ icon: "🏅", tag: c.you ? "YOUR STANDING" : "STANDING", title: c.name, text: lines.join("\n"), opts });
+  };
+  LVX.boards = async function (box) {
+    appHero(box, "🏆", "Leaderboards", "Your rank", "These never reset. Tap a name to see their card.");
+    const wrap = el("div"); box.append(wrap); const a = capA("lvl");
+    async function draw() {
+      wrap.innerHTML = ""; const t1 = el("div", "lvtabs"), t2 = el("div", "lvtabs");
+      SCOPES.forEach(([k, n]) => { const b = el("button", LVX.sel.scope === k ? "on" : "", n); b.type = "button"; b.onclick = () => { LVX.sel.scope = k; draw(); }; t1.append(b); });
+      BOARDS.forEach(([k, n]) => { const b = el("button", LVX.sel.board === k ? "on" : "", n); b.type = "button"; b.onclick = () => { LVX.sel.board = k; draw(); }; t2.append(b); }); wrap.append(t1, t2);
+      let r = null; try { r = await a.board(LVX.sel.scope, LVX.sel.board); } catch (e) {} if (!r || !r.ok) { wrap.append(el("p", "pnote", "Couldn't load the board.")); return; }
+      wrap.append(el("p", "pnote", r.me ? "You are #" + r.me.rank + " of " + r.total + " · " + r.me.text : "Play a little to appear on this board."));
+      if (LVX.sel.scope === "friends" && r.total <= 1) wrap.append(el("p", "pnote", "No friends yet. Tap a name on the Island board and add them, or help a friend build their flat."));
+      const row = (x) => { const b = el("button", "lvrow" + (x.you ? " you" : "")); b.type = "button"; b.append(el("b", "rk", x.rank <= 3 ? ["🥇", "🥈", "🥉"][x.rank - 1] : "#" + x.rank)); const sp = el("span"); sp.append(el("b", "", x.name + (x.you ? " (you)" : "") + (x.friend ? " 👥" : "")), el("small", "", x.text)); b.append(sp, el("em", "", "Lv " + x.level)); b.onclick = () => LVX.card(x.id); return b; };
+      r.top.forEach((x) => wrap.append(row(x))); if (r.near.length) { wrap.append(el("p", "psec", "Around you")); r.near.forEach((x) => wrap.append(row(x))); }
+    }
+    draw();
   };
 
   // ---------------------------------------------------------------- what earns XP (the phone only reports; the server decides)
