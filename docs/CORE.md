@@ -176,7 +176,7 @@ The phone's **Hustles app** shows these as "Today in Port Louis", with live stat
 **Compare and strive (the Clash part: your base first, then the world).** The main loop is you and your own place. On top of that, a player who wants to can see where they stand:
 - **Your Standing card** (level, flat level, job rank, Album %, days played) that other players can open from your name tag.
 - **Visit and admire:** walk into a friend's or a stranger's flat (existing home visits) and see their level, their flat and their title. A "Like" on a flat gives the owner a little XP and a notification.
-- **Leaderboards** (weekly reset so newcomers can win): Best Flat, Highest Level this week, Most Helpful, Top Earner of the week, plus a friends-only board. Weekly winners get a badge and a cosmetic.
+- **Leaderboards that never reset** (your rank is what you have built, it is never wiped): tabs **Friends** and **Island** (everyone), plus **My region**. Boards: Highest Level, Best Flat, Richest, Most Helpful, Album %. Because nothing resets, newcomers see "your rank" and the next 3 people above them, not only the top of the island, so they always have a close target. Milestone badges (Top 100, Top 10, #1) are kept for as long as you hold the rank.
 - **Showcase:** pick your three proudest things (flat level, a badge, a rare clothing piece) to show on your card.
 - Never forced: leaderboards are in the phone, not in the way, and a player can hide their card.
 
