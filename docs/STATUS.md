@@ -31,6 +31,13 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 33 (7 Nov 2026): the rest of Port Louis, built but under clouds
+- **What:** `tools/build-surround.mjs` reads the local OpenStreetMap file and writes `game/public/portlouis-surround.js`: the real city and land east of the Port Louis map (a strip 300 x 220 tiles, 14 m each, same tile frame as Port Louis): built-up ground, real roads, farmland, forest, parks. `game/public/surround.js` draws it as far scenery: a hilly ground (forest rises towards the Moka range), about 7,000 small houses in one batch, three drifting cloud layers that are clear at the walkable edge and full cover beyond it, and "Plaine Verte / Cité Martial / The Moka range - Opens soon" signs above the clouds.
+- **Not accessible:** nothing changed in the walkable map. Tiles past x=119 are still solid on the phone, and a hacked position is pulled back. Take the clouds away by setting `SRX.on = false` (or later by building a real region from this data).
+- Tested in the headless browser (cloud bank at the east edge, no page errors, scenery tiles solid). What's new 2027.04.02.
+- **Not done / not tested:** only the strip east of Port Louis is built. The north (Pamplemousses), south (Pailles, Beau Bassin) and the rest of the island still need their own scenery strips, or real maps via `build-region.mjs`. No peaks or heights come from the OSM file (it has none here), so the hills are shaped from forest cover. Not tested on a real phone: the cloud planes and the house batch may need a lower detail setting on weak phones (not wired to the graphics setting). Real fix later: one rule to remove the clouds when a region opens.
+- **Next step:** decide how much more land to build under clouds (north strip first?), then wire the cloud removal to the region opening switch.
+
 ## Done, session 32 (7 Nov 2026): housekeeping and level-up fireworks (level system step 4)
 - **Housekeeping (a money sink with a comfort bonus):** server `flat.upkeep` (Rs 40 + Rs 40 a flat level, one week, safe to repeat, charged by the server's `paid`). While paid, comfort is x1.5 and a housekeeper in a teal uniform wipes around your flat (seen in the room). When it runs out nothing is lost.
 - **Fireworks:** reaching a level bursts coloured sparks over your character, in the room or outdoors, together with paper and the Level-up card.

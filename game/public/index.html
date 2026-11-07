@@ -9864,7 +9864,7 @@ function render3d(dt) { // draw one 3D frame
   setSpriteText(R.fbScore, "WEST " + BALL.fb.a + " : " + BALL.fb.b + " EAST", "rgba(6,28,40,0.85)", "#ffffff", 0.45); setSpriteText(R.bbScore, "YOU " + s.hoops + " PTS", "rgba(6,28,40,0.85)", "#ffffff", 0.4); // scoreboards
   R.fball.visible = R.bball.visible = true; R.fball.position.set(BALL.fb.x, 0.14, BALL.fb.y); const c = BALL.bb, held = c.h && (c.h === meId() ? meMoving : others[c.h] && others[c.h].p.mv); R.bball.position.set(c.x, fly ? 0.7 + fly.z * 1.6 : c.h ? 0.62 + (held ? Math.abs(Math.sin(now / 110)) * 0.35 : 0) : 0.17, c.y); // balls, with dribble bounce and shot arc
   for (const i of [0, 1]) personAt("keeper" + i, { g: "m", skin: SKINS[i ? 3 : 1], hair: "#17100c", shirt: i ? "#ffd23c" : "#35c4bb", pants: "#15171a", role: "resident" }, i ? FB.x1 - 0.6 : FB.x0 + 0.6, keeper[i], i ? 2 : 3, true); // goalkeepers
-  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); ambDraw3d(now); if (window.HUX) HUX.drawOut(now); if (window.FLX) FLX.drawOut(now); marketDraw3d(); shipsDraw3d(now); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
+  if (!R.carM) R.carM = CARS.map((cc) => makeCar(cc)); CARS.forEach((cc, i) => placeCar(R.carM[i], cc.v ? cc.lane : cc.a + cc.len / 2, cc.v ? cc.a + cc.len / 2 : cc.lane, !!cc.v, false)); R.carM.forEach((m) => (m.visible = true)); trafficDraw3d(); ambDraw3d(now); if (window.HUX) HUX.drawOut(now); if (window.FLX) FLX.drawOut(now); if (window.SRX) SRX.draw(now); marketDraw3d(); shipsDraw3d(now); luxDraw3d(); // background traffic, and the luxury cars of Tamarin
   if (ride) { if (!R.rideM || R.rideKind !== ride.kind) { if (R.rideM) R.dyn.remove(R.rideM); R.rideM = makeCar(ride.v); R.rideKind = ride.kind; } R.rideM.visible = true; if (ride.ang !== undefined) { R.rideM.position.set(ride.x, 0, ride.y); R.rideM.rotation.y = -ride.ang; } else placeCar(R.rideM, ride.x, ride.y, ride.vert, ride.rev); } else if (R.rideM) R.rideM.visible = false; // your ride
   if (!R.dogM) R.dogM = DOGS.map((d) => makeDog(d.col)); DOGS.forEach((d, i) => { const m = R.dogM[i]; m.visible = true; m.position.set(d.x, 0, d.y); m.rotation.y = d.dir > 0 ? 0 : Math.PI; m.position.y = d.chase > 0 ? Math.abs(Math.sin(now / 60)) * 0.08 : 0; }); // street dogs (they bounce when chasing)
   govGuards3d(); // the President's bodyguards
@@ -11331,6 +11331,9 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.02", "7 Nov 2026", "The city beyond the clouds", [
+    ["☁️", "More of Port Louis is waiting", "Past the east edge of Port Louis the rest of the real city and the hills behind it are now drawn, hidden under clouds. You cannot walk there yet, but it will open in a later update.", null]
+  ]],
   ["2027.04.01", "7 Nov 2026", "Housekeeping and level-up fireworks", [
     ["🧹", "Housekeeping for your flat", "Hire a cleaner from the 🛠️ board in your home. They work around your room for a week, and while they do your comfort bonus is half as big again. It costs Rs 40 plus Rs 40 for every flat level.", null],
     ["🎆", "Fireworks when you level up", "Reach a new level and fireworks burst over your head, with paper falling and a card with your gift.", null]
@@ -13982,6 +13985,8 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <script src="studio.js?v=1"></script>
 <script src="flat.js?v=1"></script>
 <script src="levels.js?v=1"></script>
+<script src="portlouis-surround.js?v=1"></script>
+<script src="surround.js?v=1"></script>
 
 </body>
 </html>
