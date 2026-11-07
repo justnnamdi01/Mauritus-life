@@ -23,13 +23,13 @@ const HELP_PCT = 0.05, HELP_MAX = 5, HELP_PAY = 40, HELP_DAY_PAY = 5; // each fr
 const MUT = 4 * 3600000;
 
 module.exports = function (X) {
-  const { db, send, allow, mailTo, persist, peers, NOTIFY, nameOf } = X;
+  const { db, send, allow, mailTo, persist, peers, NOTIFY, nameOf, LV } = X;
   db.flat = db.flat && typeof db.flat === "object" ? db.flat : {};
   const rec = (uid) => db.flat[uid] || (db.flat[uid] = { level: 0, run: null, slots: 1, helped: {} });
   const money = (me) => Number((db.players[me.uid] || {}).money) || 0;
   const dayNo = () => Math.floor((Date.now() + MUT) / 86400000);
   function settle(uid) { // if the time is up, the flat is finished (done on every request, so it is true whether or not the player was online)
-    const r = rec(uid), run = r.run; if (!run || Date.now() < run.t1) return null; r.level = Math.max(r.level, run.to); r.run = null; r.ready = { level: r.level, at: run.t1 }; persist(); return r.ready; }
+    const r = rec(uid), run = r.run; if (!run || Date.now() < run.t1) return null; r.level = Math.max(r.level, run.to); r.run = null; r.ready = { level: r.level, at: run.t1 }; persist(); if (LV) LV.grant(uid, "flatDone", 40 + 30 * r.level); return r.ready; }
   const view = (uid) => { settle(uid); const r = rec(uid), next = LEVELS[r.level], run = r.run; return { ok: true, now: Date.now(), slots: r.slots, level: r.level, max: LEVELS.length, comfort: r.level * 3, next: next ? { to: next.lv, name: next.name, desc: next.desc, cost: next.cost, secs: next.secs } : null, run: run ? { to: run.to, name: LEVELS[run.to - 1].name, desc: LEVELS[run.to - 1].desc, t0: run.t0, t1: run.t1, total: run.total, helps: run.helps.length, nudges: run.nudges } : null, ready: r.ready || null, levels: LEVELS.map((l) => ({ lv: l.lv, name: l.name, desc: l.desc, cost: l.cost, secs: l.secs })) }; };
   function announce(uid, level, name) { for (const [, p] of peers) if (p.uid === uid && p.ws) send(p.ws, { t: "flat", ev: "ready", level, name }); }
   function plan(uid) { // schedule (or reschedule) the "ready" notification
@@ -42,8 +42,9 @@ module.exports = function (X) {
     if (m.t === "flat.start") {
       settle(uid); const r = rec(uid); if (r.run) return reply(Object.assign(view(uid), { ok: true, again: true, paid: 0 })); // asked twice: the same upgrade, no second charge
       const next = LEVELS[r.level]; if (!next) return reply({ ok: false, error: "Your flat is already a penthouse." });
+      if (LV && LV.FLAT_REQ[next.lv] && LV.level(uid) < LV.FLAT_REQ[next.lv]) return reply({ ok: false, error: next.name + " opens at player level " + LV.FLAT_REQ[next.lv] + " (you are level " + LV.level(uid) + "). Keep earning XP from shifts and hustles.", needLevel: LV.FLAT_REQ[next.lv] });
       if (money(me) < next.cost) return reply({ ok: false, error: "You need Rs " + next.cost.toLocaleString("en") + " for " + next.name + "." });
-      r.run = { to: next.lv, t0: now, t1: now + next.secs * 1000, total: next.secs, helps: [], nudges: 0, lastNudge: 0 }; r.ready = null; persist(); plan(uid); return reply(Object.assign(view(uid), { ok: true, paid: next.cost }));
+      r.run = { to: next.lv, t0: now, t1: now + next.secs * 1000, total: next.secs, helps: [], nudges: 0, lastNudge: 0 }; r.ready = null; persist(); plan(uid); if (LV) LV.grant(uid, "flatStart"); return reply(Object.assign(view(uid), { ok: true, paid: next.cost }));
     }
     if (m.t === "flat.ack") { const r = rec(uid); r.ready = null; persist(); return reply({ ok: true }); }
     if (m.t === "flat.nudge") { // playing speeds the builders up a little
@@ -55,7 +56,7 @@ module.exports = function (X) {
       const o = String(m.owner || ""); if (!db.players[o]) return reply({ ok: false, error: "No such player." }); if (o === uid) return reply({ ok: false, error: "Ask a friend to help with your own flat." });
       settle(o); const r = rec(o), run = r.run; if (!run) return reply({ ok: false, error: "Nothing is being built there right now." }); if (run.helps.includes(uid)) return reply({ ok: false, error: "You have already helped with this one." }); if (run.helps.length >= HELP_MAX) return reply({ ok: false, error: "They already have all the help they need." });
       const cut = Math.max(1, Math.round(run.total * HELP_PCT)); run.helps.push(uid); run.t1 = Math.max(now + 1000, run.t1 - cut * 1000); const h = rec(uid); if (h.helpDay !== dayNo()) { h.helpDay = dayNo(); h.helpN = 0; } let thanks = 0; if (h.helpN < HELP_DAY_PAY) { h.helpN++; thanks = HELP_PAY; mailTo(uid, HELP_PAY, "Thanks for helping build a flat", nameOf ? nameOf(o) : "A friend"); }
-      persist(); plan(o); if (NOTIFY) NOTIFY.sendNow(o, { kind: "friend", tag: "help:" + uid, title: "🔨 " + (nameOf ? nameOf(uid) : "A friend") + " helped build your flat", body: "A few minutes were taken off the work." }); return reply({ ok: true, cut, thanks, left: run.helps.length >= HELP_MAX ? 0 : HELP_MAX - run.helps.length });
+      persist(); plan(o); if (LV) { LV.grant(uid, "help", undefined, { social: true }); LV.grant(o, "helped"); } if (NOTIFY) NOTIFY.sendNow(o, { kind: "friend", tag: "help:" + uid, title: "🔨 " + (nameOf ? nameOf(uid) : "A friend") + " helped build your flat", body: "A few minutes were taken off the work." }); return reply({ ok: true, cut, thanks, left: run.helps.length >= HELP_MAX ? 0 : HELP_MAX - run.helps.length });
     }
     return reply({ ok: false, error: "Unknown request." });
   }

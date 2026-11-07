@@ -31,6 +31,21 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 29 (7 Nov 2026): player level "Island Standing" (docs/CORE.md section 3.8, step 1)
+- **Phase:** CORE milestone, level system step 1. Server `game/levels.js` owns XP and levels (Level 1-50, placeholders for the curve). Phone only reports "a shift ended"; the server decides if it counts (kinds are a fixed list, per-day caps, gaps between, first-time bonus, one-off places, soft cap of 500 XP a day then half). Server also grants XP itself for starting/finishing flat upgrades and for helping friends (a quarter extra).
+- Level-up pays a cash gift by mail (Rs 100 x level, Rs 500 x level every 5th) and sets a title (Newcomer to Legend). Flat upgrades 5 to 10 now need player level 5, 8, 10, 13, 16, 20 (the first four are open to everyone).
+- **Seen in the world / on screen:** a level chip with a bar under the cash, a "+XP" float for each gain, paper falls and a Level-up card, the Standing phone app (level, ways to earn today, what opens, titles). Guide answers, What's new 2027.03.29, NEWAPPS entry.
+
+## Tested, session 29
+- `game/test/levels.test.js` all pass (XP rules, repeat-proof, caps, places once, flat gate, helper XP); flat and hustle tests still pass.
+- Headless browser: chip, float, level-up card and the Standing app render with no page errors.
+
+## Not tested / not done, session 29
+- Not on a real phone. The level-up is paper and a card, not yet fireworks over the flat (**not yet visual**: add a world fireworks burst and neighbours cheering).
+- Casino turns give no XP yet. "Your day" list, job rank and promotions (step 2), Standing card and never-reset leaderboards, friends and island (step 3), upkeep and milestone unlocks beyond flat levels (step 4) are not built.
+- XP numbers and the curve are placeholders for the pacing script.
+- **Next step:** step 2: "Your day" list and job rank.
+
 ## Done, session 28 (7 Nov 2026): M1, timed flat upgrades (docs/CORE.md milestone 1)
 - **Phase:** CORE milestone M1. Server `game/upgrades.js` owns every timer and price (ten levels, Fresh paint Rs300/2 min up to Penthouse Rs250,000/7 days; placeholders until the pacing script). Start is idempotent and charged by the server (`paid`); finishing is settled lazily so it is true even when the player was offline; a "your flat is ready" push is scheduled for the finish time.
 - **Speed-ups:** a finished shift or hustle shaves 2 min (max 6 per upgrade, one per 45 s); visiting friends can Help (5% off each, max 5; helper gets Rs 40, 5 a day; owner is notified).

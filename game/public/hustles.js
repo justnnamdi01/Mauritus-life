@@ -143,7 +143,7 @@
     if (R0.sc.done) R0.sc.done(); HUX.run = null; HUX.pose = null; HUX.scene = null; panelOff();
     if (!r || !r.ok) { toast("🧺 " + ((r && r.error) || "The round was not counted.")); return; }
     const msg = id === "fish" ? (r.icon || "🐟") + " You caught " + (/^an /.test(r.fish) ? r.fish : "a " + r.fish) + "! Sold for " + rs(r.payout) + "." : id === "busk" ? "🎤 The crowd tipped " + rs(r.payout) + "." : "🧺 Sold out! You made " + rs(r.payout) + " (about " + rs(Math.max(0, r.profit)) + " profit).";
-    toast(msg); s.fun = clamp(s.fun + 8); save(); if (window.FLX) { FLX.nudge(); FLX.offerFirst(); } if (id === "fish" && r.icon) floatIcon(r.icon);
+    toast(msg); s.fun = clamp(s.fun + 8); save(); if (window.LVX) LVX.gain("hustle"); if (window.FLX) { FLX.nudge(); FLX.offerFirst(); } if (id === "fish" && r.icon) floatIcon(r.icon);
     if (!s.pushAsked && !(typeof Notification !== "undefined" && Notification.permission === "denied")) setTimeout(() => HUX.askPush("Good round."), 1800);
   }
   function floatIcon(ch) { try { const sp = sprite(emojiTex(ch), 1.1); sp.position.set(s.x, 2.4, s.y); R.world.add(sp); const t0 = performance.now(); const iv = setInterval(() => { const k = (performance.now() - t0) / 3000; sp.position.y = 2.4 + k * 1.2; if (k >= 1) { clearInterval(iv); R.world.remove(sp); } }, 40); } catch (e) {} }
