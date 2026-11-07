@@ -155,6 +155,26 @@ The phone's **Hustles app** shows these as "Today in Port Louis", with live stat
 
 ---
 
+### 3.8 Player level, "Island Standing" (the reward system that needs other people)
+**Idea.** One number on the player, Level 1 to 50, that says "how much of the island you have built and how many people you have built it with". XP comes from doing things in the world, but **the levels are gated by other people**, so nobody can reach the top alone, and a solo player always sees a next step that needs a friend.
+
+**Two kinds of progress (this is the rule).**
+- **Solo XP** (jobs, hustles, upgrades, album places, missions) fills the bar up to a **gate** at levels 5, 10, 15, 20 and so on. A solo player can always play and always earns, but at each gate the bar stops at 100% and says what is missing.
+- **Gate task: a thing you can only do with people.** Examples: L5 get one friend to help build your flat and help one of theirs; L10 join or start a Crew; L15 finish a Crew job together (a shared build, a market stall day, a party); L20 host a visit where 3 friends come to your flat; L25 a Crew reaches a Crew level; later: mentor a new player, run an event. Gate tasks are server-checked (the server decides, never the phone).
+- **Social XP counts extra** (helping a friend's build, Crew jobs, a visit to your place, inviting someone who stays 3 days) so the fastest way up is together, never a grind alone.
+
+**What a level gives (so it feels like building something).**
+- Every level: a small gift (cash, a cosmetic or a material) and a visible change, a title on the name tag (Newcomer, Local, Regular, Lakaz Owner, Boss, Legend...).
+- Unlocks that grow the world: a second builder slot (flat upgrades in parallel), higher flat levels (the Penthouse needs player level 20), more hustle slots, new shops and districts, Crew size, new clothes in the Studio, a bigger phone, a place on the Leaderboard.
+- Mauritian titles and badges from the Album (Rodrig, Kreol, Ti Dimounn) so levels have local flavour.
+- Level-up moment: a short scene in the world (fireworks over the flat, friends cheer, notification to Crew), never just a toast.
+
+**How it ties to what exists.** Flat levels already exist (M1): flat level N needs player level N-ish at the top end. Shifts and hustles already call `FLX.nudge()`, add `XP.gain(kind)` beside it. Server owns XP and level (`db.players[uid].xp`), a new `levels.js` module, same `paid`/server-decides pattern.
+
+**Ethics.** No timers that punish being away; the level never goes down; no text saying anyone is behind. Social gates can always be met with new people from town chat, so a lonely player is not stuck forever.
+
+**Build order.** (1) XP and levels, titles, level-up scene, solo gates visible (a day). (2) Gate tasks tied to flat help and friend visits (works today). (3) Crew gates when M5 exists. Numbers are placeholders for the pacing script.
+
 ## 4. Part B, the GTA side: a story to follow and an island to be free in
 
 ### 4.1 The campaign: "Zistwar" (the story)
