@@ -31,6 +31,13 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 32 (7 Nov 2026): housekeeping and level-up fireworks (level system step 4)
+- **Housekeeping (a money sink with a comfort bonus):** server `flat.upkeep` (Rs 40 + Rs 40 a flat level, one week, safe to repeat, charged by the server's `paid`). While paid, comfort is x1.5 and a housekeeper in a teal uniform wipes around your flat (seen in the room). When it runs out nothing is lost.
+- **Fireworks:** reaching a level bursts coloured sparks over your character, in the room or outdoors, together with paper and the Level-up card.
+- Tested: `flat.test.js` (housekeeping cost, comfort x1.5, no double charge), levels and hustle tests; browser: housekeeper and sparks visible, no page errors. What's new 2027.04.01, a Guide answer.
+- **Decided not to build the second builder slot yet:** the flat has one ladder of levels, so a second builder would have nothing different to build at the same time. It makes sense once there are separate rooms or materials (M2). Not done: neighbours cheering at a level-up, a reminder when housekeeping runs out (kept silent on purpose), a real phone test.
+- **Next step:** M2 materials and the pacing script (retunes every price, time and XP number), or a real-phone playtest of everything so far.
+
 ## Done, session 31 (7 Nov 2026): Standing card and leaderboards (level system step 3)
 - Server `game/levels.js`: boards Level, Flat, Richest, Helpful, Explorer in three scopes (Friends, Island, My region), never reset, top 10 plus "around you" and your rank; a player card (level, title, flat, builds helped, places, streak); a simple friends list (add/remove, up to 60; helping a friend build makes you both friends); hide-from-boards switch (hidden players are not listed and their card shows nothing).
 - On the phone: new Leaderboards app (tabs, rows, tap a name for the card, add/remove friend), "My card" and "Leaderboards" buttons in the Standing app. What's new 2027.03.31, two Guide answers.

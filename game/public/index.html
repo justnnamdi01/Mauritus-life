@@ -3828,6 +3828,7 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["What is \"Your day\"?", "Three small goals that change every morning: for example finish 2 shifts, do a side hustle, visit 3 places. Each one gives 30 XP and Rs 150 in your mail, and finishing all three gives a bonus of 60 XP and Rs 400. Open the Standing app to see them. Missing a day never takes anything away.", "standing"],
     ["How do I see the leaderboards?", "Open Phone → Leaderboards (or Standing → Leaderboards). Pick Friends, Island or My region, then a board: Level, Flat, Richest, Helpful or Explorer. Boards never reset. Tap a name to see their card and add them as a friend.", "boards"],
     ["Can I hide from the leaderboards?", "Yes. Open Standing → My card and tap Hide me from the boards. You can show yourself again the same way.", "standing"],
+    ["What does housekeeping do?", "In your home, tap the 🛠️ Flat upgrades board and choose Hire housekeeping. A cleaner works around your flat for a week and the comfort bonus from your flat levels is half as big again. It costs Rs 40 plus Rs 40 for each flat level. If it runs out nothing is taken away, you just lose the extra.", null],
     ["How do I level up?", "Just play. Finishing shifts, side hustles, flat upgrades and visiting a new place all give XP, and the level chip under your cash fills up. Every new level gives a gift of cash (it arrives in your mail) and sometimes a new title. You can reach every level on your own; helping friends gives a quarter more XP. Open the Standing app to see what to do today.", "standing"],
     ["Why can't I start a later flat upgrade?", "The first four flat upgrades are open to everyone. Later ones open at a higher player level, up to the penthouse at level 20. Open the Standing app to see which level opens which upgrade.", "standing"],
     ["Can I help a friend build their flat?", "Visit their home (Phone → Contacts → Visit). If their builders are working you will see a 🔨 Help build board. Tap it and lend a hand: you take a few minutes off and they thank you with Rs 40. One help each per upgrade, up to five per upgrade."],
@@ -11330,6 +11331,10 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.01", "7 Nov 2026", "Housekeeping and level-up fireworks", [
+    ["🧹", "Housekeeping for your flat", "Hire a cleaner from the 🛠️ board in your home. They work around your room for a week, and while they do your comfort bonus is half as big again. It costs Rs 40 plus Rs 40 for every flat level.", null],
+    ["🎆", "Fireworks when you level up", "Reach a new level and fireworks burst over your head, with paper falling and a card with your gift.", null]
+  ]],
   ["2027.03.31", "7 Nov 2026", "Leaderboards and your Standing card", [
     ["🏆", "Leaderboards that never reset", "See your rank for level, flat, money, helping and exploring. Switch between Friends, the whole Island and My region. Your rank is what you have built, so it is never wiped.", () => openPhone("boards")],
     ["🪪", "Your Standing card", "Tap any name on a board to see their level, title, flat and how many builds they helped. Add them as a friend from there. You can hide yourself from the boards any time.", () => openPhone("standing")]

@@ -59,6 +59,12 @@
     if (!FLX.acts.length || FLX.actsFor !== run.t0 + ":" + w + "x" + h) { FLX.actsFor = run.t0 + ":" + w + "x" + h; const off = -(run.t0 / 1000); FLX.acts = [X.mkActor({ id: "b1", look: BUILD_LOOK(0), off, nodes: [[door[0], door[1], 0.2, 1], [w - 3.0, 3.8, 14, 1, "stack", "box"], [door[0], door[1], 1.5, 1, "stand"], [w - 3.2, 3.8, 10, 1, "carry", "box", "", 1]] }), X.mkActor({ id: "b2", look: BUILD_LOOK(2), off: off - 6, nodes: [[door[0] - 1, door[1], 0.2, 1], [2.1, h / 2, 16, 2, "chop"], [2.1, h / 2 + 1.4, 12, 2, "wipe"]] })]; }
     for (const a of FLX.acts) { const q = X.actorAt(a, sec); if (q.hide) continue; personAt("flat_" + a.id, q.look, q.x, q.y, q.face, q.moving, { name: a.id === "b1" ? "🏗️ Builder" : "", bubble: q.say, pose: q.pose ? { k: q.pose, x: q.x, y: q.y, h: q.h, face: q.face, prop: q.prop } : null, prop: q.prop }); }
   }
+  function maid(now, def) { // while housekeeping is paid for, a cleaner works around your flat
+    const r = FLX.st, X = window.WKX; if (!X || !X.mkActor || !r || !(r.kept && r.kept > nowS())) { FLX.maidAct = null; return; } const w = def.w, h = def.h, door = [w / 2, h - 1.3], sec = now / 1000;
+    if (!FLX.maidAct || FLX.maidFor !== w + "x" + h) { FLX.maidFor = w + "x" + h; FLX.maidAct = X.mkActor({ id: "hk", look: X.staffLook(1, "shop", { shirt: "#3fa7a0" }), off: -(r.kept % 100000) / 1000, nodes: [[door[0] + 1, door[1], 0.2, 1], [w - 3.4, h / 2, 12, 1, "wipe"], [2.1, h / 2, 12, 2, "wipe"], [w / 2, h / 2 + 1.6, 10, 1, "wipe"], [door[0] + 1, door[1], 4, 1, "stand", "", "Tout propre!"]] }); }
+    const q = X.actorAt(FLX.maidAct, sec); if (q.hide) return; personAt("flat_hk", q.look, q.x, q.y, q.face, q.moving, { name: "🧹 Housekeeper", bubble: q.say, pose: q.pose ? { k: q.pose, x: q.x, y: q.y, h: q.h, face: q.face, prop: q.prop } : null, prop: q.prop });
+  }
+  if (window.WKX && WKX.ticks) WKX.ticks.push((now, def) => { if (s.inside === "home") { try { maid(now, def); } catch (e) { console.warn("maid", e); } } });
   if (window.WKX && WKX.ticks) WKX.ticks.push((now, def) => { if (s.inside === "home") { try { builders(now, def); } catch (e) { console.warn("builders", e); } } });
   // dress the room and add the upgrade board when the home is laid out
   const _hs = window.homeSetup;
@@ -73,9 +79,14 @@
     if (r.run && nowS() < r.run.t1) { const n = r.run.nudges, max = 6; out.push({ label: "🏗️ Building: " + r.run.name, info: fmt(left()) + " left · " + r.run.desc, go: () => closeMenu() }); out.push({ label: "⏩ Work a shift to speed it up", info: "Each finished shift takes about 2 minutes off (" + n + " of " + max + " used)", go: () => { closeMenu(); openPhone("hustle"); } }); out.push({ label: "👫 Ask a friend to help", info: "A friend who visits can take 5% off (" + r.run.helps + " of 5 so far)", go: () => { closeMenu(); openPhone("people"); } }); }
     else if (r.next) { const n = r.next, why = s.money < n.cost ? "You need " + rs(n.cost) : ""; out.push({ label: "🛠️ Start level " + n.to + ": " + n.name, info: rs(n.cost) + " · " + fmt(n.secs) + " · " + n.desc, why, go: () => { closeMenu(); startUpgrade(); } }); }
     else out.push({ label: "👑 Your flat is a penthouse", info: "There is nothing left to build", go: () => closeMenu() });
+    { const kept = r.kept && r.kept > nowS(); out.push({ label: kept ? "🧹 Housekeeping: tidy for " + fmt((r.kept - nowS()) / 1000) : "🧹 Hire housekeeping: " + rs(r.keep.cost), info: kept ? "Comfort bonus +" + r.comfort + "% while it lasts" : "A cleaner keeps the flat tidy for a week and the comfort bonus is half as big again", why: !kept && s.money < r.keep.cost ? "You need " + rs(r.keep.cost) : "", go: () => { closeMenu(); hireKeep(); } }); }
     out.push({ label: "📋 All the levels", info: "Level " + r.level + " of " + r.max + " · comfort +" + r.comfort + "%", go: () => { closeMenu(); levelsMenu(); } }); return out;
   }
   function levelsMenu() { const r = FLX.st; openMenu("🏠 Your flat · level " + r.level, r.levels.map((l) => ({ label: (l.lv <= r.level ? "✅ " : l.lv === r.level + 1 ? "🛠️ " : "🔒 ") + "Level " + l.lv + ": " + l.name, info: l.desc + " · " + rs(l.cost) + " · " + fmt(l.secs), go: () => {} })), "Each level takes longer. Playing speeds it up; friends can help."); }
+  async function hireKeep() {
+    const a = capA("flat"); if (!a) return; if (s.money < ((FLX.st && FLX.st.keep) ? FLX.st.keep.cost : 0)) { toast("You need " + rs(FLX.st.keep.cost) + " for housekeeping."); return; } const r = await a.upkeep().catch(() => null); if (!r || !r.ok) { toast("🧹 " + ((r && r.error) || "Could not do that.")); return; }
+    if (r.paid) { s.money -= r.paid; txn("Flat housekeeping", -r.paid); save(); } FLX.st = r; FLX.off = r.now - Date.now(); FLX.loaded = Date.now(); toast("🧹 A cleaner will keep your flat tidy for a week. Comfort bonus is now +" + r.comfort + "%.");
+  }
   async function startUpgrade() {
     const a = capA("flat"); if (!a) return; const r = await a.start().catch(() => null); if (!r || !r.ok) { toast("🛠️ " + ((r && r.error) || "Could not start.")); return; }
     if (r.paid && !r.again) { s.money -= r.paid; txn("Flat upgrade: " + r.run.name, -r.paid); save(); } FLX.st = r; FLX.off = r.now - Date.now(); FLX.loaded = Date.now(); FLX.acts = []; FLX.sp = null;
@@ -88,7 +99,7 @@
   FLX.nudge = async function () { const r = FLX.st; if (!r || !r.run || nowS() >= r.run.t1) return; const a = capA("flat"); try { const n = await a.nudge(); if (n && n.ok) { FLX.st = n; FLX.off = n.now - Date.now(); FLX.loaded = Date.now(); toast("⏩ The builders speed up: about " + fmt(n.saved) + " saved."); } } catch (e) {} };
   const _finish = window.finish;
   window.finish = function (a) {
-    let a2 = a; const lv = level(); if (lv && a && a.fx && s.inside === "home") { const f = Object.assign({}, a.fx), k = 1 + 0.03 * lv; for (const key of ["energy", "fun"]) if (f[key] > 0) f[key] = Math.round(f[key] * k); a2 = Object.assign({}, a, { fx: f }); }
+    let a2 = a; const lv = level(); if (lv && a && a.fx && s.inside === "home") { const f = Object.assign({}, a.fx), k = 1 + 0.03 * lv * (FLX.st && FLX.st.kept && FLX.st.kept > nowS() ? 1.5 : 1); for (const key of ["energy", "fun"]) if (f[key] > 0) f[key] = Math.round(f[key] * k); a2 = Object.assign({}, a, { fx: f }); }
     const res = _finish.call(this, a2); if (a && (a.job !== undefined || /Part-time/.test(a.label || ""))) FLX.nudge(); if (a && (a.job !== undefined || /Part-time/.test(a.label || ""))) FLX.offerFirst(); return res; };
   FLX.offerFirst = function () { if (s.flatOffer || level() > 0 || (FLX.st && FLX.st.run) || !FLX.st || s.money < 300 || s.inside || (typeof introOn !== "undefined" && introOn)) return; s.flatOffer = 1; save(); setTimeout(() => evCard({ icon: "🛠️", tag: "YOUR PLACE", title: "Make your flat yours", text: "Your first upgrade costs Rs 300 and takes just 2 minutes: fresh panelling along the walls. Builders do the work while you play, and the next ones take longer, so there is always something to come back to.", opts: [{ label: "Take me home", sub: "Then tap the 🛠️ board", pri: true, go: () => { try { goHome(); } catch (e) {} } }, { label: "Later", go: () => {} }] }), 2500); };
   // ---------------------------------------------------------------- a sign over your door while it is being built

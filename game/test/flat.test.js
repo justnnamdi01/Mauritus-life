@@ -33,6 +33,11 @@ const player = (PORT, name, money) => new Promise((resolve) => { const ws = new 
     r = await A.ask("flat.ack"); r = await A.ask("flat.state"); ok(r.ok && !r.ready, "seeing it clears the 'ready' flag");
     r = await A.ask("flat.start"); ok(r.ok && r.paid === 800 && r.run.to === 2, "level 2 costs Rs 800 and takes longer");
     const q1 = await (await fetch(`http://127.0.0.1:${PORT}/api/test/push?uid=${A.uid}&n=0`)).json(); ok(q1.queue.some((x) => x.tag === "flat" && x.kind === "build"), "a 'your flat is ready' notification is queued for the finishing time");
+    // housekeeping: a week of tidy, a bigger comfort bonus
+    const s0 = await A.ask("flat.state"); r = await C.ask("flat.upkeep"); ok(r.ok && r.paid === 40, "a level 0 flat costs just Rs 40 to keep tidy");
+    r = await C.ask("flat.upkeep"); ok(!r.ok, "and with no money left (Rs 10) a second go is refused either way");
+    r = await A.ask("flat.upkeep"); ok(r.ok && r.paid === 40 + 40 * s0.level && r.kept > r.now && r.comfort === Math.round(s0.level * 3 * 1.5), "housekeeping costs Rs 40 plus 40 a level and raises the comfort bonus by half (" + r.comfort + "%)");
+    r = await A.ask("flat.upkeep"); ok(!r.ok && /already tidy/.test(r.error), "paying twice in a row is refused (nothing charged)");
     A.ws.close(); await wait(9000);
     r = await B.ask("flat.peek", { owner: A.uid }); ok(r.ok && r.level === 2 && !r.running, "an upgrade that finished while the player was offline is already done when anyone looks (level 2)");
   } finally { srv.kill(); await new Promise((r) => srv.on("exit", r)); try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {} }

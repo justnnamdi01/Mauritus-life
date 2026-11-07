@@ -338,6 +338,7 @@
       nudge: function () { return ask({ t: "flat.nudge" }); },
       peek: function (owner) { return ask({ t: "flat.peek", owner: owner }); },
       help: function (owner) { return ask({ t: "flat.help", owner: owner }); },
+      upkeep: function () { return ask({ t: "flat.upkeep" }); },
       ack: function () { return ask({ t: "flat.ack" }); }
     },
     hustle: { // side hustles: the server times, charges and pays them

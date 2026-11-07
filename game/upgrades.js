@@ -20,6 +20,8 @@ const LEVELS = [ // level, name, what you will see, price, seconds, comfort (a s
 ].map(([lv, name, desc, cost, secs]) => ({ lv, name, desc, cost, secs: Math.max(1, Math.round(secs * SCALE)), comfort: lv * 3 }));
 const NUDGE_SECS = 120, NUDGE_MAX = 6, NUDGE_GAP = 45000; // finished shifts shave 2 minutes off, six times per upgrade, not faster than one every 45 seconds
 const HELP_PCT = 0.05, HELP_MAX = 5, HELP_PAY = 40, HELP_DAY_PAY = 5; // each friend's help takes 5% off (five at most); the helper is thanked with Rs 40 (five a day)
+const KEEP_SECS = Math.max(5, Math.round(7 * 24 * HOUR * SCALE)); // housekeeping lasts a week
+const keepCost = (level) => 40 + 40 * level; // Rs 40, plus Rs 40 for every flat level
 const MUT = 4 * 3600000;
 
 module.exports = function (X) {
@@ -30,7 +32,7 @@ module.exports = function (X) {
   const dayNo = () => Math.floor((Date.now() + MUT) / 86400000);
   function settle(uid) { // if the time is up, the flat is finished (done on every request, so it is true whether or not the player was online)
     const r = rec(uid), run = r.run; if (!run || Date.now() < run.t1) return null; r.level = Math.max(r.level, run.to); r.run = null; r.ready = { level: r.level, at: run.t1 }; persist(); if (LV) LV.grant(uid, "flatDone", 40 + 30 * r.level); return r.ready; }
-  const view = (uid) => { settle(uid); const r = rec(uid), next = LEVELS[r.level], run = r.run; return { ok: true, now: Date.now(), slots: r.slots, level: r.level, max: LEVELS.length, comfort: r.level * 3, next: next ? { to: next.lv, name: next.name, desc: next.desc, cost: next.cost, secs: next.secs } : null, run: run ? { to: run.to, name: LEVELS[run.to - 1].name, desc: LEVELS[run.to - 1].desc, t0: run.t0, t1: run.t1, total: run.total, helps: run.helps.length, nudges: run.nudges } : null, ready: r.ready || null, levels: LEVELS.map((l) => ({ lv: l.lv, name: l.name, desc: l.desc, cost: l.cost, secs: l.secs })) }; };
+  const view = (uid) => { settle(uid); const r = rec(uid), next = LEVELS[r.level], run = r.run; return { ok: true, now: Date.now(), slots: r.slots, level: r.level, max: LEVELS.length, comfort: Math.round(r.level * 3 * ((r.kept || 0) > Date.now() ? 1.5 : 1)), kept: (r.kept || 0) > Date.now() ? r.kept : 0, keep: { cost: keepCost(r.level), secs: KEEP_SECS }, next: next ? { to: next.lv, name: next.name, desc: next.desc, cost: next.cost, secs: next.secs } : null, run: run ? { to: run.to, name: LEVELS[run.to - 1].name, desc: LEVELS[run.to - 1].desc, t0: run.t0, t1: run.t1, total: run.total, helps: run.helps.length, nudges: run.nudges } : null, ready: r.ready || null, levels: LEVELS.map((l) => ({ lv: l.lv, name: l.name, desc: l.desc, cost: l.cost, secs: l.secs })) }; };
   function announce(uid, level, name) { for (const [, p] of peers) if (p.uid === uid && p.ws) send(p.ws, { t: "flat", ev: "ready", level, name }); }
   function plan(uid) { // schedule (or reschedule) the "ready" notification
     const r = rec(uid); if (!NOTIFY) return; if (!r.run) { NOTIFY.cancel(uid, "flat"); return; } const l = LEVELS[r.run.to - 1]; NOTIFY.schedule(uid, r.run.t1, { kind: "build", tag: "flat", title: "🏠 Your flat is ready", body: "Level " + l.lv + ", \"" + l.name + "\", is finished. Come and see it." }); }
@@ -45,6 +47,10 @@ module.exports = function (X) {
       if (LV && LV.FLAT_REQ[next.lv] && LV.level(uid) < LV.FLAT_REQ[next.lv]) return reply({ ok: false, error: next.name + " opens at player level " + LV.FLAT_REQ[next.lv] + " (you are level " + LV.level(uid) + "). Keep earning XP from shifts and hustles.", needLevel: LV.FLAT_REQ[next.lv] });
       if (money(me) < next.cost) return reply({ ok: false, error: "You need Rs " + next.cost.toLocaleString("en") + " for " + next.name + "." });
       r.run = { to: next.lv, t0: now, t1: now + next.secs * 1000, total: next.secs, helps: [], nudges: 0, lastNudge: 0 }; r.ready = null; persist(); plan(uid); if (LV) LV.grant(uid, "flatStart"); return reply(Object.assign(view(uid), { ok: true, paid: next.cost }));
+    }
+    if (m.t === "flat.upkeep") { // housekeeping: a cleaner keeps the flat tidy for a week and the comfort bonus is half as big again
+      settle(uid); const r = rec(uid), cost = keepCost(r.level), left = (r.kept || 0) - now; if (left > KEEP_SECS * 1000 / 7) return reply(Object.assign(view(uid), { ok: false, error: "The flat is already tidy. Come back when the week is nearly up." }));
+      if (money(me) < cost) return reply({ ok: false, error: "You need Rs " + cost.toLocaleString("en") + " for housekeeping." }); r.kept = Math.max(now, r.kept || 0) + KEEP_SECS * 1000; persist(); return reply(Object.assign(view(uid), { ok: true, paid: cost }));
     }
     if (m.t === "flat.ack") { const r = rec(uid); r.ready = null; persist(); return reply({ ok: true }); }
     if (m.t === "flat.nudge") { // playing speeds the builders up a little

@@ -30,11 +30,27 @@
   window.addEventListener("fef-lvl", (e) => absorb(e.detail));
   LVX.gain = async function (kind, key) { const a = capA("lvl"); if (!a || typeof s === "undefined" || !s.made) return; try { absorb(await a.gain(kind, key)); } catch (e) {} };
 
+
+  // ---------------------------------------------------------------- fireworks over your head when you level up
+  LVX.fireworks = function () {
+    try {
+      if (typeof THREE === "undefined" || typeof R === "undefined" || !R.scene || (matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+      const room = s.inside && R.rooms && R.rooms[s.inside], parent = room || R.scene, ind = !!room, cols = [0xffd166, 0xff6b6b, 0x4ecdc4, 0xa78bfa, 0x7bd88f], N = 64, list = [], t0 = performance.now();
+      for (let b = 0; b < 4; b++) setTimeout(() => {
+        const g = new THREE.BufferGeometry(), pos = new Float32Array(N * 3), vel = [], ox = (Math.random() - 0.5) * (ind ? 2.4 : 6), oy = (ind ? 2.8 : 6) + Math.random() * (ind ? 0.6 : 2), oz = (Math.random() - 0.5) * (ind ? 1.6 : 4), sp = ind ? 2.6 : 4.4;
+        for (let i = 0; i < N; i++) { const a = Math.random() * Math.PI * 2, e = Math.acos(2 * Math.random() - 1), v = sp * (0.55 + Math.random() * 0.45); vel.push([Math.sin(e) * Math.cos(a) * v, Math.cos(e) * v, Math.sin(e) * Math.sin(a) * v]); }
+        g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); const m = new THREE.PointsMaterial({ size: ind ? 0.34 : 0.6, color: cols[b % cols.length], map: R.vfx ? R.vfx.soft : null, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, fog: false }), pt = new THREE.Points(g, m); pt.frustumCulled = false; pt.position.set(s.x + ox, oy, s.y + oz); parent.add(pt); list.push({ pt, g, m, vel, t: performance.now() });
+      }, b * 450);
+      const step = (now) => { let live = 0; for (const f of list) { const age = (now - f.t) / 1000; if (age > 2.2) { if (f.pt.parent) { f.pt.parent.remove(f.pt); f.g.dispose(); f.m.dispose(); } continue; } live++; const p = f.g.attributes.position.array; for (let i = 0; i < N; i++) { p[i * 3] = f.vel[i][0] * age; p[i * 3 + 1] = f.vel[i][1] * age - (ind ? 1.2 : 3.2) * age * age; p[i * 3 + 2] = f.vel[i][2] * age; } f.g.attributes.position.needsUpdate = true; f.m.opacity = Math.max(0, 1 - age / 2.2); }
+        if (live || now - t0 < 2200) requestAnimationFrame(step); }; requestAnimationFrame(step);
+    } catch (e) { console.warn("fireworks", e); }
+  };
+
   // ---------------------------------------------------------------- the level-up moment
   let showing = 0;
   function next() {
     if (showing || !LVX.queue.length) return; if ((typeof introOn !== "undefined" && introOn) || !$("sheet").hidden || !$("phone").hidden) { setTimeout(next, 2500); return; }
-    const u = LVX.queue.shift(); showing = 1; try { confetti(120); } catch (e) {} setTimeout(() => { try { confetti(90); } catch (e) {} }, 700);
+    const u = LVX.queue.shift(); showing = 1; LVX.fireworks(); try { confetti(120); } catch (e) {} setTimeout(() => { try { confetti(90); } catch (e) {} }, 700);
     const perk = LVX.st && (LVX.st.perks || []).find((p) => p.lv === u.level);
     evCard({ icon: u.milestone ? "🏆" : "⭐", tag: "LEVEL UP", title: "Level " + u.level + ": " + u.title, text: "You earned a gift of " + rsf(u.gift) + ", waiting in your mail." + (perk ? " " + perk.text + " now." : "") + (u.milestone ? " A big milestone!" : ""), opts: [{ label: "Nice!", pri: true, go: () => { showing = 0; setTimeout(next, 600); } }, { label: "See my standing", go: () => { showing = 0; try { openPhone("standing"); } catch (e) {} } }] });
     setTimeout(() => { showing = 0; }, 20000);
