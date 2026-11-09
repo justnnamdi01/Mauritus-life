@@ -1233,7 +1233,7 @@ function fresh() { // a brand new life
     goals: 0, hoops: 0, baskets: 0, // football goals, basketball points, baskets made
     harass: 0, reported: 0, reportAt: 0, // street harassment encounters, reports made, when the police follow up
     story: 0, quest: 0, realFriends: {}, qActive: false, beachMin: 0, qParty0: 0, hostEnd: 0, hpHost: "", guests: {}, hpJoined: {}, // starter goals, and house parties you host or join
-    cls: "", // your class (Big Baller, Pretty Girl), worked out from how you play
+    cls: "", // your class (Big Baller, Stylish), worked out from how you play
     saidHey: false, qv: 2, // said hey in public chat; goal list version
     inv: { save: 0, fund: 0, crypto: 0 }, px: { fund: 100, crypto: 100 }, invDay: 1, txns: [], club: false, runs: 0, bigBoys: false, // investments, market prices, bank history, run club, Maravan big boys table
     course: "cs", credits: 0, lastClass: 0, skips: 0, study: 0, grad: false, // university: course, credits, last class day, missed classes, library sessions, graduated
@@ -4130,7 +4130,7 @@ const designerActs = (id, kinds) => kinds.map(([kind, label, info]) => ({ label,
 const HAIRS = [["Short cut", "short", 300], ["Skin fade", "fade", 400], ["Afro", "afro", 500], ["Long and loose", "long", 600], ["Braids", "braids", 900], ["Top bun", "bun", 500], ["Clean shave", "bald", 250]]; // hairstyles: name, style, price
 const HCOLS = [["Natural black", "#17100c", 400], ["Brown", "#5a3a22", 600], ["Blonde", "#d8b25a", 800], ["Copper red", "#b5482f", 800], ["Electric blue", "#2f6fd0", 900], ["Pink", "#ff5fa2", 900]]; // hair colours
 const NAILS = [["Red nails", "#d81e2c"], ["Nude nails", "#e8b9a0"], ["Black nails", "#15171a"], ["Teal nails", "#35c4bb"], ["Gold nails", "#d4a017"]]; // nail polish
-function salonAct(key, name, price, mins, put) { if (myClass() === "pretty") price = Math.round(price * 0.8); // Pretty Girl discount
+function salonAct(key, name, price, mins, put) { if (myClass() === "pretty") price = Math.round(price * 0.8); // Stylish discount
   // one salon service: you pay each visit, style goes up the first time
   return A(name, rs(price) + " · " + mins + " min" + (s.wardrobe[key] ? "" : " · +1 style"), mins, price, { fun: 8, social: 6 }, { why: openAt(8, 24), run() { if (!s.wardrobe[key]) { s.wardrobe[key] = 1; s.style++; } put(); return name + " done. Style is " + s.style + "."; } }); // do it and show it
 } // end salonAct
@@ -5141,6 +5141,14 @@ const RDEF = [ // the people who live here: name, kind, town, what they are like
   { id: "kishan", name: "Kishan", type: "driver", city: "west", traits: ["relaxed", "funny"], home: 1, catch: "My truck has air conditioning. Windows.", car: { len: 1.7, col: "#c0392b", tall: true }, look: { g: "m", skin: 2, hair: "#17100c", shirt: "#5a7ad8", pants: "#1d6f9a" } },
   { id: "tijean", name: "Ti-Jean", type: "vendor", city: "west", traits: ["funny", "honest"], home: 1, catch: "Pwason fresh! He was rude.", look: { g: "m", skin: 4, hair: "#101010", shirt: "#2aa4a0", pants: "#d6573a" }, spot: "fish" },
   { id: "lucie", name: "Tante Lucie", type: "uncle", city: "west", traits: ["wise", "bossy"], home: 1, catch: "You are too thin and too fast.", look: { g: "f", skin: 3, hair: "#cfcfcf", shirt: "#d94f6a", pants: "#6b7d90" } },
+  { id: "nirmala", name: "Nirmala", type: "vendor", city: "grandbaie", traits: ["chatty", "kind"], home: 1, catch: "Fresh litchis, sweet like a Sunday!", look: { g: "f", skin: 3, hair: "#101010", shirt: "#e94f8a", pants: "#f1e6c8" }, spot: "bazar" },
+  { id: "celine", name: "Céline", type: "regular", city: "grandbaie", traits: ["funny", "relaxed"], home: 1, catch: "I came for the surf. I stayed for the gâteaux piments.", look: { g: "f", skin: 1, hair: "#5a3a22", shirt: "#18b6c9", pants: "#ffffff" } },
+  { id: "roshni", name: "Roshni", type: "vendor", city: "portlouis", traits: ["rushed", "helpful"], home: 1, catch: "Fresh from the Central Market, still smiling!", look: { g: "f", skin: 3, hair: "#17100c", shirt: "#f7c948", pants: "#3a4a5e" }, spot: "bazar" },
+  { id: "aicha", name: "Tante Aïcha", type: "uncle", city: "portlouis", traits: ["wise", "kind"], home: 1, catch: "Sit with me. The harbour never rushes, so why should you?", look: { g: "f", skin: 2, hair: "#cfcfcf", shirt: "#7a4fd1", pants: "#26303c" } },
+  { id: "madeleine", name: "Madeleine", type: "regular", city: "portlouis", traits: ["bossy", "funny"], home: 1, catch: "I run three businesses and I still have time for you.", look: { g: "f", skin: 0, hair: "#3a2414", shirt: "#c8d0d8", pants: "#26303c" } },
+  { id: "sandy", name: "Sandy", type: "regular", city: "west", traits: ["relaxed", "musical"], home: 1, catch: "Sunsets are free. Everything else, ask me.", look: { g: "f", skin: 2, hair: "#b5482f", shirt: "#f0a030", pants: "#1d6f9a" } },
+  { id: "josee", name: "Mama Josée", type: "uncle", city: "west", traits: ["wise", "chatty"], home: 1, catch: "Eat first, then I will tell you all about it.", look: { g: "f", skin: 4, hair: "#d8d8d8", shirt: "#2aa4a0", pants: "#6b7d90" } },
+  { id: "priya", name: "Priya", type: "vendor", city: "west", traits: ["honest", "funny"], home: 1, catch: "Alouda, cold, with extra love!", look: { g: "f", skin: 3, hair: "#17100c", shirt: "#d94f6a", pants: "#2f6fd0" }, spot: "bazar" },
   { id: "zoe", name: "Zoé", type: "visitor", city: "west", traits: ["relaxed", "helpful"], catch: "Came for a week. Three years ago.", look: { g: "f", skin: 1, hair: "#b58a4a", shirt: "#2aa4a0", pants: "#1d6f9a", role: "tourist" } },
   { id: "rajen", name: "Rajen", type: "regular", city: "west", traits: ["musical", "broke"], home: 1, catch: "Rs 50 and I sing all night.", look: { g: "m", skin: 3, hair: "#101010", shirt: "#f0a030", pants: "#2a2a2a" } }
 ];
@@ -5994,7 +6002,7 @@ const seenHp = {}; // house parties already announced
 // ================= relationships between players =================
 const spoke = {}, seenSig = {}; // who you have exchanged messages with, and the last request seen from each player
 const relKey = (o) => (typeof o.p.uid === "string" && o.p.uid) || peerName(o); // how a player is remembered in your save
-const relWord = (kind, g) => (kind === "sneak" ? "sneak link" : g === "f" ? "girlfriend" : "boyfriend"); // the word for the relationship
+const relWord = (kind, g) => (kind === "sneak" ? "sneak link" : s.partnerWord ? "partner" : g === "f" ? "girlfriend" : g === "m" ? "boyfriend" : "partner"); // the word for the relationship
 const relTag = (o) => { const r = s.rel[relKey(o)]; return r ? (r.kind === "sneak" ? " 🤫" : " ♥") : ""; }; // mark shown beside their name
 function sendSig(to, type, kind) { if (room) room.presence({ sig: { n: Date.now(), to, type, kind } }).catch(() => {}); } // send a request or an answer to one player
 function relMenu(id) { // the relationship options for one player
@@ -6830,7 +6838,7 @@ function phoneRender0() { // draw the current phone screen
     const tiles = el("div", "htiles"), tile = (ic, label, val, sub) => { const d = el("div", "htile"); d.append(el("i", "", ic), el("b", "", val), el("span", "", label), el("small", "", sub)); tiles.append(d); }; // stat tiles
     tile("🏃", "Fitness", String(s.fit), "Gym, sport, runs"); tile("🔋", "Stamina", (s.stamina || 0) + "/" + STAM_MAX, "Needs drop " + Math.round((1 - staminaMul()) * 100) + "% slower"); tile("✨", "Charisma", String(s.cha), "Chat, parties, jokes"); tile("👗", "Style", String(s.style), "Clothes and hair"); if (s.surf && (s.surf.lvl || s.surf.waves)) tile("🏄", "Surfing", SURF_LVL[sf().lvl], sf().waves + " waves ridden"); box.append(el("p", "psec", "Skills"), tiles);
     moodletRows(box); // your feelings
-    box.append(el("p", "psec", "Records")); prow(box, "⚽ Football goals · 🏀 Basketball points", s.goals + " · " + s.hoops); if (s.g === "f") prow(box, "Harassed in the street · reported", s.harass + " · " + s.reported); // records
+    box.append(el("p", "psec", "Records")); prow(box, "⚽ Football goals · 🏀 Basketball points", s.goals + " · " + s.hoops); prow(box, "Pushy strangers handled · reported", s.harass + " · " + s.reported); // records
     prow(box, "Dog bite", s.sick ? "Infected" : s.bitten ? "Needs treatment" : "None", s.sick || s.bitten ? "Go to the Hospital" : ""); // bite status
     if (s.g === "f") { box.append(el("p", "psec", "🩸 Your cycle")); const link = (label, sub, fn) => { const r = el("button", "prow"), l = el("span", "", label); if (sub) l.append(el("small", "", sub)); r.type = "button"; r.append(l, el("b", "", "›")); r.onclick = fn; box.append(r); }; // periods (and a button helper)
       if (cycleOn()) { const cd = cycleDay(); prow(box, "Cycle", onPeriod() ? "Period · day " + (cd + 1) + " of " + PERIOD : "Day " + (cd + 1) + " of " + CYCLE, onPeriod() ? (crampsNow() ? "Cramps: rest with a hot water bottle, a warm shower, comfort food or a painkiller" : "Take it easy and look after yourself") : "Next period in " + (CYCLE - cd) + " day" + (CYCLE - cd === 1 ? "" : "s")); prow(box, "Pads and tampons", (s.pads || 0) + " days' supply", "Supermarché Baie and Jumbo sell them"); prow(box, "Painkillers", (s.pills || 0) + " tablets", "Supermarché Baie or the Hospital pharmacy");
@@ -7024,6 +7032,7 @@ function phoneRender0() { // draw the current phone screen
     { const r = el("button", "prow"), l = el("span", "", "✨ What's new"); l.append(el("small", "", "Latest update: " + updList()[0][1] + " · " + updList()[0][2])); r.type = "button"; r.append(l, el("b", "", "›")); r.onclick = () => { closePhone(); whatsNew(true); }; box.append(r); }
     { const r = el("button", "prow"), l = el("span", "", "👵🏾 First Day with Auntie Marie"); l.append(el("small", "", "A guided practice run: learn by doing, earn as you go")); r.type = "button"; r.append(l, el("b", "", "›")); r.onclick = fdStart; box.append(r); }
     { const r = el("button", "prow"), l = el("span", "", "🔞 Adult romance"); l.append(el("small", "", "18+ only · unlocks 🔥 Get intimate with partners (fades to black)")); r.type = "button"; r.append(l, el("b", "", s.adult ? "On" : "Off")); r.onclick = () => { if (!s.adult && !confirm("Adult romance is for players aged 18 or over. Are you 18 or older?")) return; s.adult = s.adult ? 0 : 1; save(); phoneRender(); }; box.append(r); } // opt-in, off by default
+    { const r = el("button", "prow"), l = el("span", "", "💞 Relationship words"); l.append(el("small", "", "How a partner is called: girlfriend or boyfriend (matched to them), or just \"partner\"")); r.type = "button"; r.append(l, el("b", "", s.partnerWord ? "Partner" : "Matched")); r.onclick = () => { s.partnerWord = s.partnerWord ? 0 : 1; save(); phoneRender(); }; box.append(r); } // for everyone
     { const r = el("button", "prow"), l = el("span", "", "📘 How to play"); l.append(el("small", "", "The full guide, how to do things, and every update")); r.type = "button"; r.append(l, el("b", "", "›")); r.onclick = () => openPhone("guide"); box.append(r); } // the tutorial again
     if (!fsCan() && isIOS() && !isAppMode()) { const r = el("button", "prow"), l = el("span", "", "⛶ Full screen"); l.append(el("small", "", "Add the game to your home screen to play without browser bars")); r.type = "button"; r.append(l, el("b", "", "How ›")); r.onclick = () => { closePhone(); iosFsHelp(); }; box.append(r); } // iPhone: the home screen way
     if (fsCan()) { const r = el("button", "prow"), l = el("span", "", "⛶ Full screen"); l.append(el("small", "", "Hide the browser bars while you play")); r.type = "button"; r.append(l, el("b", "", fsOn() ? "On" : "Off")); r.onclick = () => { s.fs = fsOn() ? 0 : 1; save(); (s.fs ? fsEnter() : fsExit()).finally(() => setTimeout(phoneRender, 300)); }; box.append(r); } // full screen on or off
@@ -7148,48 +7157,47 @@ function drawSportBalls() { // keepers, balls and the shot meter
   } // end meter
 } // end drawSportBalls
 
-// ================= street harassment (female characters) =================
-let creep = null, creepCool = 120; // the man bothering you right now, and seconds before it can happen again
-const CREEP_LINES = ["Psst psst! Bonzour zoli!", "Eh cherie, where you going so fast?", "Smile for me, darling!", "Ki to fer, zoli? Come sit with me.", "Mmm, nice outfit, baby!", "Eh beauté, give me your number!"]; // cat-calls
-function spawnCreep() { // an older man appears near you
+// ================= pushy strangers (everyone, now and then): a salesman, a scammer or someone tugging your bag =================
+let creep = null, creepCool = 900; // the stranger talking to you right now, and seconds before it can happen again
+const PUSHY = [
+  { k: "sales", title: "A salesman stops you", say: "Friend! Best phone case in Mauritius!", line: "Friend! Special price today, only for you: the best phone case in Mauritius, Rs 300!" },
+  { k: "scam", title: "A stranger asks for help", say: "Excuse me, please?", line: "Excuse me, I lost my wallet. Can you lend me Rs 200 for the bus? I will pay you back, promise!" },
+  { k: "tug", title: "Someone brushes your bag", say: "Oops, so sorry!", line: "Oops, so sorry! Is this your bag? It was open, you should be careful..." }
+];
+function spawnCreep() { // a stranger appears near you (a man or a woman, any age)
   for (let k = 0; k < 12; k++) { // try a few spots around you
     const a = Math.random() * 6.28, x = s.x + Math.cos(a) * 4, y = s.y + Math.sin(a) * 4; // four tiles away
     if (hit(x, y) || inLagoon(x, y)) continue; // not inside a wall or the sea
-    const offer = Math.random() < 0.35, amt = rnd(3, 8) * 1000; // sometimes he offers money
-    creep = { x, y, phase: "come", offer, face: 0, t: 0, look: { g: "m", skin: SKINS[rnd(1, 4)], hair: "#c9c9c9", hs: "fade", shirt: ["#8a6a3c", "#3a4a5a", "#7a2f2f", "#e8e2c4"][rnd(0, 3)], pants: "#4a3b2a", role: "resident" }, // a grey-haired man
-      say: offer ? "Eh zoli... I have money for you" : CREEP_LINES[rnd(0, CREEP_LINES.length - 1)], line: offer ? "Eh zoli, I have money. Rs " + amt.toLocaleString("en") + " if you come to my bungalow tonight." : "" }; // what he says
-    creep.line = creep.line || creep.say; return; // full line for the menu
+    const P = PUSHY[rnd(0, PUSHY.length - 1)], g = Math.random() < 0.5 ? "m" : "f";
+    creep = { x, y, phase: "come", kind: P.k, title: P.title, face: 0, t: 0, look: { g, skin: SKINS[rnd(0, 4)], hair: ["#17100c", "#3a2414", "#c9c9c9", "#101010"][rnd(0, 3)], hs: g === "m" ? "fade" : "long", shirt: ["#8a6a3c", "#3a4a5a", "#7a2f2f", "#e8e2c4", "#2f7a5a", "#c2457a"][rnd(0, 5)], pants: "#4a3b2a", role: "resident" }, say: P.say, line: P.line };
+    return; // full line for the menu
   } // end tries
 } // end spawnCreep
-function creepDone(reply, bubble) { // he leaves after your choice
-  s.harass++; creep.phase = "leave"; creep.t = 5; creep.say = bubble; creepCool = rnd(180, 360); save(); return reply; // count it, send him off, and rest before the next one
+function creepDone(reply, bubble) { // they leave after your choice
+  s.harass++; creep.phase = "leave"; creep.t = 5; creep.say = bubble; creepCool = rnd(600, 1200); save(); return reply; // count it, send them off, and rest before the next one
 } // end creepDone
-function creepMenu() { // your decision
-  const c = creep, crowd = NPC.some((n) => Math.hypot(n.x - s.x, n.y - s.y) < 7) || Object.keys(others).length > 0; // is anyone around to back you up?
-  const door = OBJ.filter((o) => o.enter).sort((a, b) => Math.hypot(a.x - s.x, a.y - s.y) - Math.hypot(b.x - s.x, b.y - s.y))[0]; // nearest place to duck into
-  const acts = c.offer ? [ // he offered money
-    A("Say no and walk off", "Keep your head up and leave", 0, 0, { fun: -8 }, { run() { return creepDone("You said no and walked away. It still leaves a bad taste.", "Pff... your loss"); } }), // refuse
-    A("Threaten to call the police", "Loud and clear", 0, 0, { fun: -4 }, { run() { s.cha++; return creepDone("He put his hands up and backed off fast.", "Ok ok, no police!"); } }), // threaten
-    A("Report him to the police hotline", "10 minutes on the phone", 10, 0, { fun: -4, social: 5 }, { run() { s.reported++; s.reportAt = s.t + 180; return creepDone("You reported him with his description and where it happened.", "Who you calling?"); } }) ] // report
-    : [ // cat-call
-    A("Ignore him and keep walking", "Do not give him a reaction", 0, 0, { fun: -5 }, { run() { return creepDone("You kept walking. He kept muttering behind you.", "Eh, no need to be rude..."); } }), // ignore
-    A("Tell him to get lost", "Firm and loud", 0, 0, { fun: -2 }, { run() { s.cha++; return creepDone("You told him to get lost. He went quiet.", "Ok ok..."); } }), // shut him down
-    A("Shame him in front of everyone", crowd ? "People are around to back you up" : "Nobody else is around", 0, 0, crowd ? { social: 10, fun: 5 } : { fun: -5 }, { run() { return creepDone(crowd ? "People nearby backed you up. He shuffled off, embarrassed." : "Nobody around. He laughed and wandered off.", crowd ? "Sorry, sorry..." : "Haha"); } }), // call him out
-    A("Walk fast to " + door.name, "Get somewhere with people", 0, 0, {}, { run() { pending = door; path = findPath(s.x, s.y, door.x, door.y); return creepDone("You walked straight to " + door.name + ".", "Where you going, zoli?"); } }) ]; // leave
-  openMenu(c.offer ? "An old man makes you an offer" : "An old man calls out to you", acts, "\u201c" + c.line + "\u201d"); // show the choice with what he said
+function creepMenu() { // your decision (nothing here is serious: you can always just walk away)
+  const c = creep, crowd = NPC.some((n) => Math.hypot(n.x - s.x, n.y - s.y) < 7) || Object.keys(others).length > 0;
+  const door = OBJ.filter((o) => o.enter).sort((a, b) => Math.hypot(a.x - s.x, a.y - s.y) - Math.hypot(b.x - s.x, b.y - s.y))[0];
+  const acts = [];
+  if (c.kind === "sales") acts.push(A("Buy the phone case", "Rs 300 · it is actually quite nice", 0, 300, { fun: 3 }, { why: s.money < 300 ? "Not enough money" : "", run() { s.style = Math.min(10, (s.style || 0) + 0.1); return creepDone("You bought a phone case. It really is quite nice.", "Thank you, friend!"); } }), A("Haggle", s.cha >= 3 ? "You are good at this" : "Hard to do with little charm", 0, 0, {}, { run() { if (s.cha >= 3 && s.money >= 120) { s.money -= 120; txn("Phone case (haggled)", -120); s.cha += 0.2; return creepDone("You haggled it down to Rs 120. Everybody wins.", "You drive a hard bargain!"); } return creepDone("He would not go lower than Rs 300. You smiled and moved on.", "Next time, friend!"); } }), A("Politely say no", "No problem at all", 0, 0, {}, { run() { return creepDone("You said no, thank you, and carried on.", "No problem, friend!"); } }));
+  else if (c.kind === "scam") acts.push(A("Say no politely", "You do not have to explain", 0, 0, {}, { run() { return creepDone("You said sorry and kept walking.", "Okay, thank you anyway."); } }), A("Offer Rs 50 for the bus", "A kind gesture (it may be a scam)", 0, 50, { social: 4 }, { why: s.money < 50 ? "Not enough money" : "", run() { return creepDone("You handed over Rs 50. They did not look back. You will never know.", "God bless you!"); } }), A("Call it out", crowd ? "People are around to back you up" : "Nobody else is around", 0, 0, crowd ? { social: 6 } : {}, { run() { s.cha += 0.2; return creepDone("You said it looked like a scam. They shrugged and left.", "Ok ok, no problem."); } }));
+  else acts.push(A("Hold your bag and say 'Hey!'", "Firm and loud", 0, 0, {}, { run() { s.cha += 0.3; return creepDone("You held your bag tight and said hey. They hurried off.", "Sorry, sorry!"); } }), A("Check your bag", "Pockets, phone, wallet", 0, 0, {}, { run() { return creepDone("Everything was still there. You kept walking, a little more careful.", "Sorry again!"); } }));
+  acts.push(A("Walk to " + (door ? door.name : "a busy place"), "Get somewhere with people", 0, 0, {}, { run() { if (door) { pending = door; path = findPath(s.x, s.y, door.x, door.y); } return creepDone(door ? "You walked straight to " + door.name + "." : "You walked off.", "Bye!"); } }), A("Report it", "10 minutes on the police hotline (no penalty)", 10, 0, { social: 3 }, { run() { s.reported++; s.reportAt = s.t + 180; return creepDone("You reported it with a description and where it happened.", "Who you calling?"); } }));
+  openMenu(c.title, acts, "\u201c" + c.line + "\u201d"); // show the choice with what they said
 } // end creepMenu
-function creepStep(dt) { // move him and trigger encounters
+function creepStep(dt) { // move them and trigger encounters
   creepCool -= dt; // countdown
-  if (!creep) { // nobody bothering you yet
-    if (s.g === "f" && s.made && !s.inside && !ride && !busy && meMoving && creepCool <= 0 && Math.random() < dt * (hour() >= 17 || hour() < 6 ? 0.02 : 0.008)) spawnCreep(); // random moments while you walk, more often in the evening
+  if (!creep) { // nobody yet
+    if (s.made && !s.inside && !ride && !busy && meMoving && creepCool <= 0 && !(window.ONB && ONB.quiet()) && Math.random() < dt * (hour() >= 17 || hour() < 6 ? 0.004 : 0.002)) spawnCreep(); // rare, for everyone, and never in your first visit
     return; // done
   } // end idle
-  const c = creep, dx = s.x - c.x, dy = s.y - c.y, d = Math.hypot(dx, dy); // where you are from him
+  const c = creep, dx = s.x - c.x, dy = s.y - c.y, d = Math.hypot(dx, dy); // where you are from them
   if (c.phase === "come") { // walking up to you
     if (s.inside || ride) { creep = null; return; } // you got away
     c.x += dx / d * 3 * dt; c.y += dy / d * 3 * dt; c.face = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 2 : 3) : (dy < 0 ? 1 : 0); // approach
     if (d < 1.4) { c.phase = "talk"; creepMenu(); } // close enough to talk
-  } else if (c.phase === "talk") { if ($("sheet").hidden && !busy) creepDone("", "Eh, no need to be rude..."); } // you closed the menu without choosing: counts as ignoring him
+  } else if (c.phase === "talk") { if ($("sheet").hidden && !busy) creepDone("", "Okay, bye!"); } // you closed the menu without choosing: counts as walking on
   else { c.x -= dx / d * 2.5 * dt; c.y -= dy / d * 2.5 * dt; c.face = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 3 : 2) : (dy < 0 ? 0 : 1); c.t -= dt; if (c.t <= 0) creep = null; } // walking away, then gone
 } // end creepStep
 
@@ -7203,11 +7211,11 @@ const CLASSES = { // classes are earned automatically from how you play
   jetsetter: { name: "Jet Setter", icon: "✈️", how: "Own a private jet", perk: "VIP: free entry to every party" },
   baller: { name: "Big Baller", icon: "💰", how: "Have Rs 50,000 or more", perk: "VIP: free entry to every party" }, // the rich
   surfer: { name: "Surf Legend", icon: "🏄", how: "Reach Surfing level 4", perk: "Respected on every break" },
-  pretty: { name: "Pretty Girl", icon: "💅", how: "Play as a woman with style 5 or more (fashion and salon)", perk: "20% off at Hair & Nails, +10% tips at work" } // the stylish
+  pretty: { name: "Stylish", icon: "✨", how: "Have style 5 or more (fashion and salon)", perk: "20% off at Hair & Nails, +10% tips at work" } // the stylish
 }; // end CLASSES
 const VIP_CLASSES = ["president", "majestym", "majestyf", "king", "queen", "tycoon", "mogul", "jetsetter", "baller"]; // the classes that walk into parties free
 const isVip = () => VIP_CLASSES.includes(myClass());
-function myClass() { if (typeof isPres === "function" && isPres()) return "president"; const w = netWorth(), f = s.g === "f", me = RICH && RICH.uid && RICH.uid === (uid || "me"); if (w >= 20000000) return f ? "majestyf" : "majestym"; if (me && w >= 100000) return f ? "queen" : "king"; if (w >= 3000000) return "tycoon"; if (w >= 500000) return "mogul"; if (s.jet) return "jetsetter"; if (w >= 50000) return "baller"; if (s.surf && s.surf.lvl >= 4) return "surfer"; if (f && s.style >= 5) return "pretty"; return ""; } // the highest class you have earned
+function myClass() { if (typeof isPres === "function" && isPres()) return "president"; const w = netWorth(), f = s.g === "f", me = RICH && RICH.uid && RICH.uid === (uid || "me"); if (w >= 20000000) return f ? "majestyf" : "majestym"; if (me && w >= 100000) return f ? "queen" : "king"; if (w >= 3000000) return "tycoon"; if (w >= 500000) return "mogul"; if (s.jet) return "jetsetter"; if (w >= 50000) return "baller"; if (s.surf && s.surf.lvl >= 4) return "surfer"; if (s.style >= 5) return "pretty"; return ""; } // the highest class you have earned
 const clsTag = (c) => (CLASSES[c] ? " · " + CLASSES[c].icon + " " + CLASSES[c].name : ""); // badge text beside a name
 
 // ================= starter goals =================
@@ -8015,7 +8023,7 @@ function fridgeActs() { // grab something quick, have a drink, or get groceries 
 
 // ================= periods: a monthly cycle for women, and ways to feel better =================
 const CYCLE = 10, PERIOD = 3; // days in a cycle, and days of the period (shortened so it comes round often enough to matter in play)
-const cycleOn = () => !!s && s.made && s.g === "f" && s.cycleOn !== false; // only for women, and they can switch it off
+const cycleOn = () => !!s && s.made && s.g === "f" && s.cycleOn === true; // only for women, and only if they switch it on
 function cycleDay() { if (s.cyc0 == null) { s.cyc0 = day() - Math.floor(Math.random() * CYCLE); save(); } return ((day() - s.cyc0) % CYCLE + CYCLE) % CYCLE; } // day 0..27 of the cycle
 const onPeriod = () => cycleOn() && cycleDay() < PERIOD; // on her period now?
 const crampsNow = () => onPeriod() && (s.cramps || 0) > 0 && !(s.reliefUntil > s.t); // cramps that haven't been eased
@@ -10824,10 +10832,11 @@ function pregRisk(partnerProtected) { // the chance a hook-up leads to a pregnan
 }
 function pregRoll(partnerProtected) { // after intimacy: use a condom, then maybe conceive (women only; the moment is a surprise)
   const mine = (s.condoms || 0) > 0; if (mine) s.condoms--;
-  if (s.g !== "f" || s.preg || s.pregRoll) return; if (Math.random() < pregRisk(mine || partnerProtected)) { s.pregRoll = { at: s.t }; save(); }
+  if (s.g === "m") { if (s.adult && !s.dadRoll && Math.random() < pregRisk(mine || partnerProtected)) { s.dadRoll = { at: s.t }; save(); } return; } /* a man's partner may conceive too: he finds out and shares the childcare */ if (s.g !== "f" || s.preg || s.pregRoll) return; if (Math.random() < pregRisk(mine || partnerProtected)) { s.pregRoll = { at: s.t }; save(); }
 }
 function pregTick() { // checked now and then: the first signs, symptoms, and the birth
   if (!s.made) return;
+  if (s.dadRoll && s.t - s.dadRoll.at >= PREG_MIN) { s.dadRoll = null; s.kids = (s.kids || 0) + 1; s.birthAt = s.t; addMoodlet("baby", "A new baby", 3, 4320, "happy"); s.fun = clamp(s.fun + 15); save(); toast("👶 Your partner had a baby! You share the childcare: " + rs(KID_WEEK) + " a week, and a lot of love."); }
   if (s.pregRoll && s.t - s.pregRoll.at >= TEST_AFTER) { s.preg = { at: s.pregRoll.at, known: false, checks: 0, sick: s.t }; s.pregRoll = null; save(); toast("🤢 You feel a bit off today. A pregnancy test from Supermarché Baie or the Hospital will tell you."); }
   const P = s.preg; if (!P) return;
   if (s.t - P.sick >= 1440 && s.t - P.at >= 2 * 1440) { P.sick = s.t; s.energy = clamp(s.energy - 12); s.hunger = clamp(s.hunger - 8); addMoodlet("preg", "Pregnancy symptoms", -1, 600, "tense"); save(); toast("🤢 Morning sickness. Rest and eat well."); } // a rough day now and then
@@ -11345,6 +11354,14 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.11", "10 Nov 2026", "The game speaks to you", [
+    ["🗣️", "Words that fit you", "People now call you madame or monsieur, and a Bambous local says sœur or frer, depending on your character.", null],
+    ["🧍", "Pushy strangers for everyone", "A salesman, someone asking for help or a brush against your bag can now happen to any player, rarely, and you can always walk away or report it. The old street event is gone.", null],
+    ["✨", "Stylish", "The Pretty Girl class is now Stylish and is open to everyone with style 5 or more.", null],
+    ["🎨", "Everyday looks", "Open the mirror: Everyday looks and free top and trousers colours give men and women many more outfits.", null],
+    ["💞", "Partner words and life events", "Choose 'partner' for relationships in Settings. Period tracking is now opt-in. A man's partner can have a baby too, and childcare is shared.", null],
+    ["👩‍🦱", "More women in town", "Eight new residents: Nirmala, Céline, Roshni, Tante Aïcha, Madeleine, Sandy, Mama Josée and Priya.", null]
+  ]],
   ["2027.04.10", "9 Nov 2026", "More room in town, and the railway leaves town", [
     ["🏘️", "Roomier streets", "Big buildings are a little smaller and every shop and house has been nudged so there is more space between them.", null],
     ["🚇", "The line leads out of town", "The Metro Express no longer stops at a hole in the corner: the track carries on across the countryside to a tunnel portal on the way to Rose Hill and Curepipe, clear of every building and field.", null]
@@ -14043,6 +14060,7 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <script src="tpv.js?v=1"></script>
 <script src="onboard.js?v=1"></script>
 <script src="metro.js?v=1"></script>
+<script src="gender.js?v=1"></script>
 
 </body>
 </html>

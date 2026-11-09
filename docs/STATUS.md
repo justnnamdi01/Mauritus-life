@@ -31,6 +31,12 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 43 (10 Nov 2026): equal treatment for women and men (see docs/GENDER.md)
+- Neutral rare "pushy strangers" for everyone replace the women-only street harassment; "Pretty Girl" is "Stylish"; period tracking is opt-in; men share pregnancy and childcare costs; relationship words can be "partner"; 8 new women residents (16 and 16); `gender.js` makes madame/monsieur and frer/sœur follow the player; free top and trousers dyes and 8 Everyday looks for both.
+- Tested in the browser: wording both ways, class name, 16/16 residents, the new stranger event menu; no page errors. Not browser-tested: the Studio colour tab (the 3D studio is too slow for the headless browser here; code checked), the father path (server logic only read, not run).
+- **Needs art:** swimwear, formal, traditional and modest wear and natural hair textures (new 3D models).
+- **Next step:** commission or choose clothing and hair models; then Bambous crews with women in them.
+
 ## Done, session 42 (9 Nov 2026): more room in town, and the railway leads out of town
 - **`tools/space-out.mjs`** (run after `build-region.mjs` and `widen-water.mjs`; already applied): buildings 7+ tiles wide are made 1-2 tiles smaller keeping their front and door, then any building closer than 3 tiles to a neighbour, a house or the Metro line is nudged away where there is free ground (not road, water or rail). Result: Grand Baie 4 smaller / 10 moved, Port Louis 15 / 9, Flic en Flac 0 / 13, Bambous 1 / 9. Afterwards nothing is closer than 2 tiles except two Port Louis buildings.
 - **Railway out of town:** the line used to end in a tunnel mouth in the map corner. `railExt` (stored in `portlouis-map.js`) now carries it on past the bottom of the Port Louis map across about 55 tiles of grass to a tunnel portal under a hill ("To Rose Hill and Curepipe, opening soon"). The whole line is kept at least 1.8 tiles clear of every building (checked by the tool; only the two station buildings sit beside it, on purpose) and the sugar cane fields are kept 4.5 tiles away from it (`life.js`). Trains now come from that far portal: long fast run through the countryside, slowing into Victoria.

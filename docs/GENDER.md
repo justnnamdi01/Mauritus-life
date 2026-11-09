@@ -33,3 +33,12 @@ Both men and women will play, so every system should feel equally good for both.
 3. Life events as a switch for everyone, and a matching cost for men (medium).
 4. New everyday outfits and hair textures for both (medium, art).
 5. Residents and relationship words (small).
+
+## Done (10 Nov 2026)
+1. **Street event:** replaced by rare "pushy strangers" (a salesman, someone asking for Rs 200, a bag brush) for every player, men or women as the stranger, no money-for-sex offer, with Walk away and Report (no penalty). Never in the first visit.
+2. **Classes:** "Pretty Girl" is now "Stylish" (style 5+, open to everyone, same perks). King/Queen and His/Her Majesty stay as two titles of the same level.
+3. **Life events:** period tracking is now opt-in (it was on by default). Adult romance stays an opt-in 18+ switch. A man who hooks up now has the same pregnancy chance for his partner: after the same time he becomes a father and pays the same childcare as a mother (Rs 1,500 a week each child).
+4. **Outfits:** the character pack only has these pieces, so no new clothes models were possible. Instead: free top and trousers dyes with 14 and 10 colours for both genders, and 8 "Everyday looks" (Beach day, Smart, Night out, Sporty, Sunday best, Tropical, Pink and grey, Classic) in the mirror and the Studio. **Still needs art:** swimwear, formal wear, traditional and modest wear (sari, salwar, hijab) and natural hair textures (braids, curls, afro) need new 3D models (commission or a CC0 pack).
+5. **Residents and words:** 8 new women (16 and 16 now). A Settings switch for "partner" instead of girlfriend/boyfriend (matched to the other person by default).
+6. **Wording that fits the player (`gender.js`):** madame/monsieur and frer/sœur follow your character in toasts, NPC speech and menus.
+Not yet: other "he/she" lines in older text, builders' looks, Bambous crews.
