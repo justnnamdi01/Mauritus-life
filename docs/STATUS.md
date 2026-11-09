@@ -31,6 +31,13 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 39 (9 Nov 2026): boats that stay on the water, and rides you can spot
+- **Land overlap fixed:** all hulls are drawn at 62% of their old size (`SC` in `harbour.js`) so they fit the thin harbours. Berths now require the whole hull to sit in water, and every route is checked against the full hull along its length (only a one-tile corner is tolerated in the last ten tiles by the pier). A vessel whose route fails is not built rather than sailing over land. Audit over a full cycle: 0 to 2 one-frame corner clips per vessel, none at dock.
+- **Fleet now:** Grand Baie ferry (shuttle, rideable) and sailing tour (rideable); Port Louis ferry (shuttle, rideable) plus a container ship, tanker and cruise ship **at anchor** in the deepest water (the harbour is too narrow for them to sail); Flic en Flac two fishing boats. Not built because no valid route existed on the map: a second Grand Baie ferry, pirogues, tug and more fishing boats. The map's water would need widening for those.
+- **Which one can I ride:** a label above each rideable boat ("🎟️ FERRY · Rs 120 · BOARDING" in green when you can get on, or when it is next at the pier), a sign on a post at each pier, and gold dots for rideable boats (grey for others) on the third-person mini-map.
+- Tested: audit of every vessel through a full cycle, and a browser look at the label and sign. Not tested on a real phone, and the ride itself was last tested before this change (seat positions are scaled to the smaller hull).
+- **Next step:** widen the harbour water in the map data so more vessels fit, and add a cross-town ride.
+
 ## Done, session 38 (9 Nov 2026): the first five minutes (instant drop, mirror, bucket list, late account, quiet session)
 - **Instant drop (`onboard.js`):** new players skip the intro film and the forms. One screen: a name box (default `IslandRider_NN`) and **Jump In**. They get a random look (gender, skin, hair, outfit) and stand on the paving by the Caudan waterfront with the controls in their hands (the street is visible behind the card), and third-person view switches on. A small "Already have a character? Log in" link stays for returning players.
 - **Style it in the world:** a mirror and clothes rack with a floating "Style Your Avatar" marker stand beside the spawn; it opens the Character Studio (wardrobe).
