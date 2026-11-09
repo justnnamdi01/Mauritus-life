@@ -80,6 +80,28 @@
       ]
     },
     {
+      "id": "bambous",
+      "name": "Bambous",
+      "open": true,
+      "opensAt": "",
+      "color": "#6b7280",
+      "map": "bambous",
+      "seeds": [
+        [
+          57.4177,
+          -20.2571
+        ],
+        [
+          57.428,
+          -20.268
+        ]
+      ],
+      "gate": [
+        57.4177,
+        -20.2571
+      ]
+    },
+    {
       "id": "north",
       "name": "Pamplemousses and the north",
       "open": false,

@@ -99,6 +99,7 @@ body.wmOn .hud, body.wmOn .dock { display: none !important; }
 <script src="grandbaie-map.js"></script>
 <script src="portlouis-map.js"></script>
 <script src="west-map.js"></script>
+<script src="bambous-map.js"></script>
 <script src="road-grandbaie-portlouis-map.js"></script>
 <script src="road-portlouis-west-map.js"></script>
 <script src="net-adapter.js?v=8"></script>
@@ -1156,16 +1157,17 @@ html[data-theme="light"] .chat, html[data-theme="light"] .chatform input { color
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
 <script>
 // ================= basics =================
-const GBM = (window.REGION_MAPS || {}).grandbaie, PLM = (window.REGION_MAPS || {}).portlouis, FLM = (window.REGION_MAPS || {}).west, RAM = (window.REGION_MAPS || {}).road_grandbaie_portlouis, RBM = (window.REGION_MAPS || {}).road_portlouis_west; // the walkable regions, each a map built from OpenStreetMap by tools/build-region.mjs and tools/build-road.mjs
+const GBM = (window.REGION_MAPS || {}).grandbaie, PLM = (window.REGION_MAPS || {}).portlouis, FLM = (window.REGION_MAPS || {}).west, BBM = (window.REGION_MAPS || {}).bambous, RAM = (window.REGION_MAPS || {}).road_grandbaie_portlouis, RBM = (window.REGION_MAPS || {}).road_portlouis_west; // the walkable regions, each a map built from OpenStreetMap by tools/build-region.mjs and tools/build-road.mjs
 // The island is one continuous strip of map, north to south, and you walk the whole of it: Grand Baie, the road, Port Louis, the road, Flic en Flac. Each map starts on the row where the one above ends.
 const W = 460, NH = 60, HO = 232, GBY = 236, GBH = GBM.h, GBW = 124; // HO: the old bottom edge (Tamarin ends there); Grand Baie is rows GBY to GBY+GBH-1 (four rows of deep sea above it, so nobody walks there from Tamarin)
-const RAO = GBY + GBH, RAY = RAO, PLO = RAY + RAM.h, PLY = PLO, RBO = PLY + PLM.h, RBY = RBO, FLO = RBY + RBM.h, FLY = FLO, PLH = PLM.h, FLH = FLM.h, H = FLY + FLH + 4; // the maps are joined edge to edge, so there is no gap between a town and its highway
+const RAO = GBY + GBH, RAY = RAO, PLO = RAY + RAM.h, PLY = PLO, RBO = PLY + PLM.h, RBY = RBO, FLO = RBY + RBM.h, FLY = FLO, PLH = PLM.h, FLH = FLM.h, BBO = FLY + FLH, BBY = BBO, BBH = BBM.h, H = BBY + BBH + 4; // the maps are joined edge to edge, so there is no gap between a town and its highway
 const WREG = [ // every walkable region from north to south: its map, where its block of rows starts, and a few labels. A new region is one more row here (and a map from tools/build-region.mjs)
   { id: "grandbaie", pre: "gb", name: "Grand Baie", M: GBM, block: HO, y0: GBY, isl: [57.585, -20.012], pin: "🏝️", pinKey: "gb" },
   { id: "road_grandbaie_portlouis", pre: "ra", name: "The road to Port Louis", M: RAM, block: RAO, y0: RAY, isl: RAM.mid, kind: "road" }, // the real highways between the towns: one tile for every 75 m of road
   { id: "portlouis", pre: "pl", name: "Port Louis", M: PLM, block: PLO, y0: PLY, isl: [57.502, -20.162], pin: "🏙️", pinKey: "pl" },
   { id: "road_portlouis_west", pre: "rb", name: "The road to Flic en Flac", M: RBM, block: RBO, y0: RBY, isl: RBM.mid, kind: "road" },
-  { id: "west", pre: "fl", name: "Flic en Flac", M: FLM, block: FLO, y0: FLY, isl: [57.372, -20.280], pin: "🏖️", pinKey: "fl" }
+  { id: "west", pre: "fl", name: "Flic en Flac", M: FLM, block: FLO, y0: FLY, isl: [57.372, -20.280], pin: "🏖️", pinKey: "fl" },
+  { id: "bambous", pre: "bb", name: "Bambous", M: BBM, block: BBO, y0: BBY, isl: [57.4177, -20.2571], pin: "🏚️", pinKey: "bb" }
 ];
 const regionOfY = (y) => { for (let i = WREG.length - 1; i >= 0; i--) if (y >= WREG[i].block) return WREG[i].id; return "old"; }, inWalk = (x, y) => y >= HO, regionDef = (id) => WREG.find((r) => r.id === id), regionEnd = (id) => { const k = WREG.findIndex((r) => r.id === id); return k >= 0 && k + 1 < WREG.length ? WREG[k + 1].block : H; }; // which region a row is in ("old" = the unreachable rows of the first game), whether it is on a walkable map at all, and where a region's rows end
 const ELEV = 2.6; // Tamarin stands on a bluff this high above the sea and the plain around Flic en Flac
@@ -1423,7 +1425,8 @@ function gbTile(x, y) { for (let i = WREG.length - 1; i >= 0; i--) { const r = W
 const CITY = { // what each town is like: its colour, its ground, its houses. So you can tell where you are before you read a sign
   grandbaie: { name: "Grand Baie", icon: "🏝️", col: "#14b8c9", tag: "Sun, sand and sega", gc: { 3: "#6cc25a", 9: "#7fd070", 2: "#f6e6b0", 22: "#eadfc4" }, road: "#7e8791", pal: [["#ffffff", "#18a7b5"], ["#fdf3d8", "#e8a33d"], ["#e4f6f8", "#2a8fa0"], ["#fff1d6", "#c9a45a"], ["#fbe3dc", "#d4563a"]] },
   portlouis: { name: "Port Louis", icon: "🏙️", col: "#e4572e", tag: "The busy capital", gc: { 3: "#7b9a64", 9: "#6f9560", 2: "#d4c9a8", 22: "#bdbbb3" }, road: "#565d66", pal: [["#d9d6cc", "#5f6f82"], ["#e8d9b5", "#8d4a3a"], ["#c9ced4", "#46566c"], ["#e2c9a0", "#7a5a3a"], ["#cfc7bb", "#6b3f35"]] },
-  west: { name: "Flic en Flac", icon: "🏖️", col: "#f0a030", tag: "Waves, sunsets and slow days", gc: { 3: "#a9b862", 9: "#97b055", 2: "#f0d9a0", 22: "#e0cfa6" }, road: "#8f887a", pal: [["#ffd9c7", "#c8553d"], ["#fff2b8", "#4a8fb8"], ["#cfe8d8", "#a85a3a"], ["#f7c6d0", "#5a7a4a"], ["#d8e6ff", "#d2693f"]] }
+  west: { name: "Flic en Flac", icon: "🏖️", col: "#f0a030", tag: "Waves, sunsets and slow days", gc: { 3: "#a9b862", 9: "#97b055", 2: "#f0d9a0", 22: "#e0cfa6" }, road: "#8f887a", pal: [["#ffd9c7", "#c8553d"], ["#fff2b8", "#4a8fb8"], ["#cfe8d8", "#a85a3a"], ["#f7c6d0", "#5a7a4a"], ["#d8e6ff", "#d2693f"]] },
+  bambous: { name: "Bambous", icon: "🏚️", col: "#8a8f98", tag: "Rough, local and risky", gc: { 3: "#8d9a5c", 9: "#7d9150", 2: "#d8c898", 22: "#a9a597", 11: "#a6b04a" }, road: "#454a50", pal: [["#b9b4aa", "#5b4a44"], ["#c9a98c", "#3d3a3a"], ["#9fa6ad", "#4a3d3d"], ["#d1c3a6", "#6b3f35"], ["#aeb7a2", "#3a4a44"]] }
 };
 const CITY_ROAD = { name: "The road", icon: "🛣️", col: "#7a8896", tag: "", gc: {}, road: "#6a7078", pal: CITY.grandbaie.pal.slice(0, 2).concat(CITY.portlouis.pal.slice(0, 2), CITY.west.pal.slice(0, 2)) }; // between the towns
 const palOf = (reg) => (CITY[reg] || CITY_ROAD).pal;
@@ -1449,7 +1452,7 @@ if (!PARTNERS_ON) for (const id of PARTNER_IDS) { const i = BUILD.findIndex((q) 
 const GBSHOPS = GBSOON.filter((b) => b.gbKind); for (const b of GBSHOPS) { GBSOON.splice(GBSOON.indexOf(b), 1); BUILD.push(b); } // the first Grand Baie shops you can walk into
 for (const r of WREG) r.stop = { x: r.M.stop.x, y: r.y0 + r.M.stop.y };
 const DECOH = []; for (const r of WREG) for (const [hx, hy, hw, hh] of r.M.houses || []) { const PAL = palOf(r.id), k = (hx * 7 + hy * 13) % PAL.length, pal = PAL[k]; DECOH.push({ x: hx, y: r.y0 + hy, w: hw, h: hh, col: pal[0], roofCol: PAL[(k + 2) % PAL.length][1], deco: 1, reg: r.id }); } // scenery houses that fill the blocks along the streets (from the real building density)
-const LAKAZ = []; for (const rg of ["grandbaie", "portlouis", "west"]) { // a few of each town's houses are lived in, and you can walk in
+const LAKAZ = []; for (const rg of ["grandbaie", "portlouis", "west", "bambous"]) { // a few of each town's houses are lived in, and you can walk in
   const R0 = regionDef(rg), cand = DECOH.filter((d) => d.reg === rg).map((d) => { const dx = d.x + (d.w >> 1), okS = [3, 4, 9, 22].includes(gbTile(dx, d.y + d.h)), okN = [3, 4, 9, 22].includes(gbTile(dx, d.y - 1)); return { d, door: okS ? "S" : "N", ok: okS || okN, dist: Math.hypot(d.x - R0.stop.x, d.y - R0.stop.y) }; }).filter((c) => c.ok && c.dist > 8 && c.dist < 48).sort((a, b) => hash(a.d.x, a.d.y) - hash(b.d.x, b.d.y)), got = [];
   for (const c of cand) { if (got.length >= 5) break; if (got.some((g) => Math.hypot(g.d.x - c.d.x, g.d.y - c.d.y) < 10)) continue; got.push(c); }
   if (got.length < 4) { const M = R0.M, taken = BUILD.concat(GBSOON), plots = (M.plots || []).map((q) => ({ x: q.x, y: R0.y0 + q.y })); // not enough scenery houses (Grand Baie keeps its space for players' plots): find a few empty spots beside a road
@@ -1887,7 +1890,7 @@ for (const st of metroPlat()) OBJ.push({ x: st.x, y: st.y + 1.4, icon: "🚇", n
 
 OBJ.push({ x: 60.5, y: 14.5, icon: "🚏", stop: true, name: "Cascavelle bus stop", acts: busActs }); // bus stop for the mall and the university
 // (Flic Motors is now a real building with a car lot: see BUILD "motors" and motorsActs)
-for (const r of WREG) if (r.kind !== "road") OBJ.push({ x: r.stop.x, y: r.stop.y, icon: "🚌", stop: true, travelPoint: true, name: r.name + " bus station", acts: () => busActs().concat([carDeskAct()], ...["grandbaie", "portlouis", "west", "north", "east"].filter((id) => id !== r.id).map((id) => intercityActs(id))) }); // every region has a bus station: local rides, a car desk, and travel by road to the other towns (closed until they open)
+for (const r of WREG) if (r.kind !== "road") OBJ.push({ x: r.stop.x, y: r.stop.y, icon: "🚌", stop: true, travelPoint: true, name: r.name + " bus station", acts: () => busActs().concat([carDeskAct()], ...["grandbaie", "portlouis", "west", "bambous", "north", "east"].filter((id) => id !== r.id).map((id) => intercityActs(id))) }); // every region has a bus station: local rides, a car desk, and travel by road to the other towns (closed until they open)
 for (const r of WREG) if (r.M.district) OBJ.push({ x: r.M.district.x, y: r.y0 + r.M.district.y + 2.4, icon: "⚓", name: r.M.district.name, acts: () => [A("Stroll along the quay", "Free · 30 min · fun and calm", 30, 0, { fun: 14, energy: 4 }, { why: "", msg: "Boats bobbing in the marina, the fountain, the old harbour wall and the sea breeze." }), A("Watch the boats", "Free · 20 min · calm", 20, 0, { fun: 8, energy: 6 }, { why: "", msg: "A sailing boat slides out past the jetties." })] }); // a district: the Caudan Waterfront
 for (const r of WREG) { if (r.kind === "road") continue; if (r.M.exits && r.M.exits.length) { for (const e of r.M.exits) { const n = WREG.find((q) => q.id === e.to); OBJ.push({ x: e.x, y: r.y0 + e.y, icon: "🛣️", travelPoint: true, name: "Road to " + (n ? n.name : RG_NAME[e.to] || e.to), acts: () => ["grandbaie", "portlouis", "west", "north", "east"].filter((id) => id !== r.id).flatMap((id) => intercityActs(id)) }); } continue; } /* the real highway the map builder drew out of this town, with its sign at the end */
   const used = [[r.stop.x, r.stop.y - r.y0]]; for (const n of WREG) { if (n.id === r.id || n.kind === "road") continue; const dx = n.isl[0] - r.isl[0], dy = -(n.isl[1] - r.isl[1]) * 0.95, ln = Math.hypot(dx, dy) || 1; let best = null, bs = -1e9; for (let ly = 2; ly < r.M.h - 2; ly++) for (let x = 2; x < r.M.w - 2; x++) { if (r.T[ly * r.M.w + x] !== 4 || used.some(([ux, uy]) => Math.hypot(ux - x, uy - ly) < 9)) continue; const sc = ((x - r.M.w / 2) * dx + (ly - r.M.h / 2) * dy) / ln; if (sc > bs) { bs = sc; best = [x, ly]; } } if (!best) continue; used.push(best); OBJ.push({ x: best[0] + 0.5, y: r.y0 + best[1] + 0.5, icon: "🛣️", travelPoint: true, name: "Road to " + n.name, acts: () => intercityActs(n.id) }); } } // a road sign where the real road leaves each town
@@ -3830,6 +3833,7 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["Can I hide from the leaderboards?", "Yes. Open Standing → My card and tap Hide me from the boards. You can show yourself again the same way.", "standing"],
     ["What does housekeeping do?", "In your home, tap the 🛠️ Flat upgrades board and choose Hire housekeeping. A cleaner works around your flat for a week and the comfort bonus from your flat levels is half as big again. It costs Rs 40 plus Rs 40 for each flat level. If it runs out nothing is taken away, you just lose the extra.", null],
     ["How do I ride a ferry or a boat?", "Walk to a pier and look for the ⛴️ Ferry, ⛵ Sailing tour or 🛶 Pirogue trip sign. Tap it, pick Board, and pay the fare (Rs 120 for the ferry, Rs 250 for a sailing tour, Rs 80 for a pirogue trip). The boat has to be at the pier with a little time left. Sit back, drag to look around, and you get off when it docks.", null],
+    ["How do I use third-person view?", "Tap the 🎥 button at the right of the screen (or press V). Move with W A S D or the stick at the bottom left, drag anywhere to look around, and use Q and E to turn the camera. The round mini-map at the top left shows where you are: tap it to zoom in and out. Tap 🎥 again to go back to the overview.", null],
     ["How do I level up?", "Just play. Finishing shifts, side hustles, flat upgrades and visiting a new place all give XP, and the level chip under your cash fills up. Every new level gives a gift of cash (it arrives in your mail) and sometimes a new title. You can reach every level on your own; helping friends gives a quarter more XP. Open the Standing app to see what to do today.", "standing"],
     ["Why can't I start a later flat upgrade?", "The first four flat upgrades are open to everyone. Later ones open at a higher player level, up to the penthouse at level 20. Open the Standing app to see which level opens which upgrade.", "standing"],
     ["Can I help a friend build their flat?", "Visit their home (Phone → Contacts → Visit). If their builders are working you will see a 🔨 Help build board. Tap it and lend a hand: you take a few minutes off and they thank you with Rs 40. One help each per upgrade, up to five per upgrade."],
@@ -4173,7 +4177,7 @@ const ROADSECS = (minutes) => Math.max(32, Math.min(55, minutes / 1.5)); // the 
 let TRN = null; // the journey on screen
 const TRIP_KIND = { bus: "bus", taxi: "taxi", car: "mine" };
 function tripRoute(from, to) { // the way from where you stand to the stop of the town you are going to: through each town's exit, along the real highway, into the next town
-  const chain = ["grandbaie", "portlouis", "west"], i = chain.indexOf(from), j = chain.indexOf(to); if (i < 0 || j < 0 || i === j) return null; const dir = j > i ? 1 : -1, pts = [{ x: s.x, y: s.y }]; let cur = { x: s.x, y: s.y };
+  const chain = ["grandbaie", "portlouis", "west", "bambous"], i = chain.indexOf(from), j = chain.indexOf(to); if (i < 0 || j < 0 || i === j) return null; const dir = j > i ? 1 : -1, pts = [{ x: s.x, y: s.y }]; let cur = { x: s.x, y: s.y };
   const leg = (x, y) => { const p = locPath(cur.x, cur.y, x, y); if (p.length) for (const q of p) pts.push(q); else pts.push({ x, y }); cur = pts[pts.length - 1]; };
   for (let k = i; k !== j; k += dir) { const A = regionDef(chain[k]), B = regionDef(chain[k + dir]), road = regionDef("road_" + (dir > 0 ? chain[k] + "_" + chain[k + 1] : chain[k + dir] + "_" + chain[k])); if (!A || !B || !road) return null;
     const exA = (A.M.exits || []).find((e) => e.to === chain[k + dir]), exB = (B.M.exits || []).find((e) => e.to === chain[k]); if (!exA || !exB) return null; leg(exA.x, A.y0 + exA.y);
@@ -5109,6 +5113,8 @@ const LN = { // what people say, by town then by kind of person: hi, joke, tip, 
     regular: { hi: ["Sega, sega! Rs 50 and I sing for you all night.", "Psst. I am a bit short. Of money, not of songs."], joke: ["I have a guitar. My landlord has opinions.", "I am not drunk. The beach is tilted."], tip: ["The best sunset spot is behind the casuarinas. Do not tell the tourists.", "For a friend: the fishermen's bar, after dark. Songs for free."], bub: ["La la sega...", "Rs 50, friend?", "Hic! Sunset!"] }
   }
 };
+LN.bambous = {}; for (const k of Object.keys(LN.west)) LN.bambous[k] = { hi: ["Eh frer. Pa fer problem isi.", "Bambous, sa nou lakaz. Respe nou.", "Ou nouvo? Rete pre dimounn ou konn."], joke: ["Dan Bambous, bann sat konn plis ki lapolis.", "Mo bann zanfan pa pe nuzer: zot pe dormi dan lari."], tip: ["Pa tro tar dan bann lari ou pa konn.", "Gard ou lakour. Bann opps pe get."], bub: ["Eh!", "Respe.", "Ou pe rod kiksoz?"], story: "" };
+
 const RDEF = [ // the people who live here: name, kind, town, what they are like, how they look, whether they have a home you can visit
   { id: "dev", name: "Dev", type: "driver", city: "grandbaie", traits: ["funny", "helpful"], home: 1, catch: "Meter is broken, price is friendly!", car: { len: 1.5, col: "#f4f4f4", taxi: true }, look: { g: "m", skin: 2, hair: "#17100c", shirt: "#18b6c9", pants: "#f1e6c8", shades: true } },
   { id: "marierose", name: "Marie-Rose", type: "vendor", city: "grandbaie", traits: ["funny", "chatty"], home: 1, catch: "Ananas, with chilli and love!", look: { g: "f", skin: 3, hair: "#17100c", shirt: "#f7c948", pants: "#2f6fd0" }, spot: "bazar" },
@@ -5135,10 +5141,10 @@ const RDEF = [ // the people who live here: name, kind, town, what they are like
   { id: "zoe", name: "Zoé", type: "visitor", city: "west", traits: ["relaxed", "helpful"], catch: "Came for a week. Three years ago.", look: { g: "f", skin: 1, hair: "#b58a4a", shirt: "#2aa4a0", pants: "#1d6f9a", role: "tourist" } },
   { id: "rajen", name: "Rajen", type: "regular", city: "west", traits: ["musical", "broke"], home: 1, catch: "Rs 50 and I sing all night.", look: { g: "m", skin: 3, hair: "#101010", shirt: "#f0a030", pants: "#2a2a2a" } }
 ];
-const RXTRA = { grandbaie: ["Nadia", "Kélian", "Patricia", "Jerome", "Lucas", "Anaïs", "Sébastien", "Fiona", "Rodrigue", "Leïla"], portlouis: ["Sophie", "Anil", "Brigitte", "Hassan", "Meera", "Didier", "Clarisse", "Imran", "Joëlle", "Vikash"], west: ["Tom", "Maya", "Jonathan", "Sandrine", "Alex", "Noémie", "Zack", "Léna", "Mathieu", "Dilshaad"] }; // passers-by who have no home here (they wander and go home off the map)
+const RXTRA = { grandbaie: ["Nadia", "Kélian", "Patricia", "Jerome", "Lucas", "Anaïs", "Sébastien", "Fiona", "Rodrigue", "Leïla"], portlouis: ["Sophie", "Anil", "Brigitte", "Hassan", "Meera", "Didier", "Clarisse", "Imran", "Joëlle", "Vikash"], bambous: ["Kevin", "Ashley", "Jordy", "Prisca", "Dylan", "Mélodie", "Ryan", "Océane", "Teddy", "Naïma"], west: ["Tom", "Maya", "Jonathan", "Sandrine", "Alex", "Noémie", "Zack", "Léna", "Mathieu", "Dilshaad"] }; // passers-by who have no home here (they wander and go home off the map)
 const RXTYPES = ["visitor", "uncle", "regular", "visitor"];
 const RES = []; // everyone who lives here
-const RLOOK_ = { grandbaie: { sh: ["#ff7a59", "#18b6c9", "#f7c948", "#e94f8a", "#7ed957"], pa: ["#f1e6c8", "#ffffff", "#2f6fd0"] }, portlouis: { sh: ["#e8ecef", "#9fb3c8", "#3a4a5e", "#c8d0d8"], pa: ["#26303c", "#3a4a5e"] }, west: { sh: ["#2aa4a0", "#f0a030", "#d94f6a", "#5a7ad8"], pa: ["#1d6f9a", "#d6573a", "#2a2a2a"] } };
+const RLOOK_ = { grandbaie: { sh: ["#ff7a59", "#18b6c9", "#f7c948", "#e94f8a", "#7ed957"], pa: ["#f1e6c8", "#ffffff", "#2f6fd0"] }, portlouis: { sh: ["#e8ecef", "#9fb3c8", "#3a4a5e", "#c8d0d8"], pa: ["#26303c", "#3a4a5e"] }, west: { sh: ["#2aa4a0", "#f0a030", "#d94f6a", "#5a7ad8"], pa: ["#1d6f9a", "#d6573a", "#2a2a2a"] }, bambous: { sh: ["#3a3f46", "#7a2a2a", "#c9a45a", "#4a5a6a"], pa: ["#26303c", "#4a3d3d", "#6a6a6a"] } };
 for (const d of RDEF) RES.push(Object.assign({}, d, { look: Object.assign({ role: "resident" }, d.look, { skin: SKINS[d.look.skin] }) }));
 for (const c of Object.keys(RXTRA)) RXTRA[c].forEach((name, i) => { const L = RLOOK_[c], g = i % 2 ? "f" : "m", type = RXTYPES[i % RXTYPES.length]; RES.push({ id: "x" + c + i, name, type, city: c, traits: [["chatty", "funny"], ["relaxed", "kind"], ["rushed", "helpful"]][i % 3], extra: 1, catch: "", look: { g, skin: SKINS[(i * 2 + c.length) % 5], hair: ["#17100c", "#3a2414", "#101010", "#b58a4a"][(i + c.length) % 4], shirt: pickOf(L.sh, i * 3 + c.length), pants: pickOf(L.pa, i + 1), role: type === "visitor" ? "tourist" : "resident" } }); });
 const resKey = (n) => "npc:" + n.name;
@@ -5210,7 +5216,8 @@ const playerAt = () => ({ x: s.inside ? s.ox : s.x, y: s.inside ? s.oy : s.y });
 const CITYCAR = { // the traffic of each place looks different
   grandbaie: [{ len: 1.4, col: "#f4f4f4", taxi: true }, { len: 1.45, col: "#18b6c9", conv: true }, { len: 0.9, col: "#e94f8a", moto: true }, { len: 1.4, col: "#f7c948" }, { len: 1.4, col: "#ffffff" }, { len: 1.5, col: "#2f6fd0" }],
   portlouis: [{ len: 2.4, col: "#2f6fd0", bus: true }, { len: 1.45, col: "#5d6670" }, { len: 1.4, col: "#c8d0d8", taxi: true }, { len: 1.5, col: "#3a4a5e" }, { len: 1.6, col: "#c0392b", tall: true }, { len: 2.4, col: "#e4572e", bus: true }, { len: 1.4, col: "#f4f4f4", taxi: true }, { len: 1.45, col: "#1d2a36" }],
-  west: [{ len: 1.7, col: "#c0392b", tall: true }, { len: 1.4, col: "#2aa4a0" }, { len: 1.7, col: "#f0a030", tall: true }, { len: 0.9, col: "#2a2a2a", moto: true }, { len: 1.4, col: "#d94f6a" }, { len: 1.45, col: "#f4f4f4" }]
+  west: [{ len: 1.7, col: "#c0392b", tall: true }, { len: 1.4, col: "#2aa4a0" }, { len: 1.7, col: "#f0a030", tall: true }, { len: 0.9, col: "#2a2a2a", moto: true }, { len: 1.4, col: "#d94f6a" }, { len: 1.45, col: "#f4f4f4" }],
+  bambous: [{ len: 1.4, col: "#3a3f46" }, { len: 1.7, col: "#7a2a2a", tall: true }, { len: 0.9, col: "#1a1a1a", moto: true }, { len: 1.45, col: "#6a6a6a" }, { len: 1.4, col: "#b9b4aa" }, { len: 1.5, col: "#c9a45a" }]
 };
 const RGRAPH = {}; // each town's roads as junctions joined by streets
 function roadGraph(city) {
@@ -5263,7 +5270,7 @@ function trafficInit() { // the three taxi drivers' cars live on their town's ro
   trafficReady = true; const PLR = regionDef("portlouis"); if (PLR && PLR.M.railLine && PLR.M.railLine.length > 3) { const pts = PLR.M.railLine.map(([x, y]) => ({ x, y: PLR.y0 + y })), len = routeLenOf(pts), sts = (PLR.M.railStations || []).map((q) => ({ x: q.x, y: PLR.y0 + q.y })); for (let k = 0; k < 2; k++) { const t = newVeh({ len: 5.6, col: "#ffffff", tram: true }, { kind: "r", pts, len, d: len * (0.15 + 0.5 * k), dir: k ? -1 : 1, town: "portlouis", sp: 3.4, keep: 1, tram: 1, lane: 0.55, st: sts }); routePos(t, 0); } } // the Metro Express: two trams, one on each track
   for (const n of RES) if (n.type === "driver") { const G = roadGraph(n.city); if (!G.live.length) continue; const i = pickOf(G.live), t = newVeh(n.car, { sp: 3.2, drv: n, town: n.city, keep: 1 }); placeOnGraph(t, G, i, pickOf(G.nodes[i].adj), Math.random()); n.veh = t; n.inCar = true; }
 }
-const TRAF_TARGET = { grandbaie: 14, portlouis: 22, west: 12 };
+const TRAF_TARGET = { grandbaie: 14, portlouis: 22, west: 12, bambous: 8 };
 function trafficTick(dt) { // keep the roads around you busy
   trafT -= dt; if (trafT > 0) return; trafT = 0.5; const pa = playerAt(), rid = regionOfY(pa.y), R0 = regionDef(rid); for (let i = TRAF.length - 1; i >= 0; i--) { const t = TRAF[i]; if (t.keep) continue; if (t.dead || Math.hypot(t.x - pa.x, t.y - pa.y) > 85) { dropMesh(t); TRAF.splice(i, 1); } } if (!R0) return;
   if (R0.kind !== "road") { const have = TRAF.filter((t) => t.town === rid && !t.keep && Math.hypot(t.x - pa.x, t.y - pa.y) < 80).length, cars = CITYCAR[rid]; if (have < (TRAF_TARGET[rid] || 8)) spawnGraphVeh(rid, pa, 22, 46, pickOf(cars), {}); return; }
@@ -5481,7 +5488,7 @@ const BCN_RING = { work: "🟢", shop: "🟡", fun: "🩷", go: "🔵" };
 async function pulseApp(box, link) {
   box.append(el("p", "pnote", "Rings on the ground: 🟢 work (Rs) · 🟡 shops · 🩷 food and fun · 🔵 travel. Tap a place in your town for glowing arrows to its door.")); const a = capApi("zone"), slot = el("div"); box.append(slot); let r = null; if (a) { try { r = await a.pulse(); } catch (e) { r = null; } }
   slot.append(el("p", "psec", r ? "Right now: " + r.online + " player" + (r.online === 1 ? "" : "s") + " online" + (r.onRoad ? " (" + r.onRoad + " on the road)" : "") + (r.stalls ? " · " + r.stalls + " market blanket" + (r.stalls === 1 ? "" : "s") : "") : "Right now"));
-  const here = regionOfY(s.inside ? s.oy : s.y), order = ["grandbaie", "portlouis", "west"].sort((x, y) => (x === here ? -1 : y === here ? 1 : 0));
+  const here = regionOfY(s.inside ? s.oy : s.y), order = ["grandbaie", "portlouis", "west", "bambous"].sort((x, y) => (x === here ? -1 : y === here ? 1 : 0));
   for (const id of order) { const T = r && r.towns.find((q) => q.id === id), c = CITY[id]; const hot = T && T.areas.filter((q) => q.n > 0).sort((p2, q) => q.n - p2.n).slice(0, 3).map((q) => q.n + " at " + q.name).join(", "); slot.append(el("p", "psec", c.icon + " " + c.name + (id === here ? " · you are here" : "") + (T ? " · " + T.players + " here now" + (hot ? " (" + hot + ")" : "") : "")));
     for (const h of dirOf(id).slice(0, 9)) { const rowB = el("button", "prow"), l = el("span", "", BCN_RING[h.col] + " " + h.name); l.append(el("small", "", h.gets)); rowB.type = "button"; rowB.append(l, el("b", "", id === here ? "📍" : "›")); rowB.onclick = () => { if (id === here) guideTo(h.x, h.y, h.name); else { closePhone(); travelMenu(id); } }; slot.append(rowB); } }
 }
@@ -8102,6 +8109,7 @@ function movePlayer(dt) { // read input and move
   let routeD = 1e9; // how far the next waypoint is (so a fast scooter never overshoots it)
   let dx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0); // left and right keys
   let dy = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0); // up and down keys
+  if (window.TPX && TPX.on && TPX.camOn()) { const ax = TPX.axis(); dx = ax.dx; dy = ax.dy; } // third-person view: move relative to the camera
   if (dx || dy) { path = []; pending = null; } // keys cancel tap-walking
   else if (path.length) { // follow the tapped route
     const p = path[0], d = Math.hypot(p.x - s.x, p.y - s.y); // next waypoint
@@ -8110,6 +8118,7 @@ function movePlayer(dt) { // read input and move
     dx = (p.x - s.x) / d; dy = (p.y - s.y) / d; // head towards it
   } // end route
   if (!dx && !dy) return; // standing still
+  if (window.TPX) TPX.heading = Math.atan2(dx, dy); // which way you face, for the smooth turn in third-person view
   s.face = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 2 : 3) : (dy < 0 ? 1 : 0); // remember which way you look
   meMoving = true; // you are walking
   const len = Math.hypot(dx, dy), step = Math.min(speed() * dt, Math.max(routeD, 0.02)); // normalise diagonal speed (and stop exactly on a waypoint)
@@ -8915,7 +8924,7 @@ function buildingGroup(b) { // one building as a 3D block with roof, windows, do
 function fadeBuildings() { // see-through buildings that stand between the camera and you
   const groups = R.world.children.concat(R.estate ? R.estate.children : []); // every building
   for (const gr of groups) { const bx = gr.userData.box; if (!bx) continue; // not a building
-    let hide = false; for (let k = 0.6; k < 9 && !hide; k += 0.6) { const px = s.x + 0.36 * k, pz = s.y + 0.56 * k; hide = px > bx.x - 0.3 && px < bx.x + bx.w + 0.3 && pz > bx.y - 1.2 && pz < bx.y + bx.h + 0.3; } // walk from you towards the camera and check this footprint
+    let hide = false; for (let k = 0.6; k < 9 && !hide; k += 0.6) { const px = s.x + (window.TPX && TPX.k > 0.5 ? TPX.dirx : 0.36) * k, pz = s.y + (window.TPX && TPX.k > 0.5 ? TPX.dirz : 0.56) * k; hide = px > bx.x - 0.3 && px < bx.x + bx.w + 0.3 && pz > bx.y - 1.2 && pz < bx.y + bx.h + 0.3; } // walk from you towards the camera and check this footprint
     if (gr.userData.faded === hide) continue; gr.userData.faded = hide; // only change when needed
     gr.traverse((m) => { if (gr.userData.tag) gr.userData.tag.visible = true; if (m.isMesh && m.material !== R.winMat) { m.material.transparent = hide; m.material.opacity = hide ? 0.22 : 1; m.material.depthWrite = !hide; m.castShadow = !hide && m.userData.cs !== false; } }); // fade it out or back in
   } // end buildings
@@ -9300,7 +9309,7 @@ function personAt(id, L, x, z, face, moving, opt) { // show one person this fram
   const key = JSON.stringify(L); let p = PP[id]; // look as text, and this person's model
   if (!p || p.key !== key || (p.wait && p.wait.every((f) => CHARS[f].state !== "loading"))) { const old = p; if (old) R.dyn.remove(old.g); p = PP[id] = makePerson(L); p.key = key; p.ang = old ? old.ang : 0; if (old) { p.label = old.label; p.bub = old.bub; p.arrow = old.arrow; } R.dyn.add(p.g); } // build or rebuild when the look changes or the real body arrives (keeping the name tag, bubble and arrow)
   p.seen = R.frame; p.g.visible = true; p.g.position.set(x, opt && opt.swim ? -0.62 : (opt && (opt.lift || (opt.pose && opt.pose.lift))) || 0, z); if (R.blobGeo) { if (!p.blob) { p.blob = new THREE.Mesh(R.blobGeo, R.blobMat); p.blob.rotation.x = -Math.PI / 2; p.blob.position.y = 0.03; p.blob.renderOrder = 1; p.g.add(p.blob); } p.blob.visible = gfxLevel() > 0 && !(opt && opt.swim); } // a soft shadow underfoot // place it (sunk to the chest when swimming)
-  p.g.rotation.x = 0; p.g.rotation.z = 0; p.g.scale.y = 1; const want = [0, Math.PI, -Math.PI / 2, Math.PI / 2][face | 0]; let da = want - p.ang; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; p.ang += da * 0.25; p.g.rotation.y = p.ang; // turn smoothly to face the way you walk
+  p.g.rotation.x = 0; p.g.rotation.z = 0; p.g.scale.y = 1; const want = opt && opt.yaw !== undefined ? opt.yaw : [0, Math.PI, -Math.PI / 2, Math.PI / 2][face | 0]; let da = want - p.ang; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; p.ang += da * 0.25; p.g.rotation.y = p.ang; // turn smoothly to face the way you walk
   const ph = moving ? performance.now() / 110 + x : 0, sw = Math.sin(ph); p.parts.legL.rotation.x = sw * 0.6; p.parts.legR.rotation.x = -sw * 0.6; p.parts.armL.rotation.x = -sw * 0.5; p.parts.armR.rotation.x = sw * 0.5; p.parts.armL.rotation.z = 0; p.parts.armR.rotation.z = 0; // walking swing
   if (opt && opt.pose && POSES.includes(opt.pose.k)) applyPose(p, opt.pose); else if (opt && GENRES[opt.dance]) danceMoves(p, opt.dance, x + z); // dancing replaces the walk
   propSet(p, (opt && ((opt.pose && opt.pose.prop) || opt.prop)) || ""); // what they carry: a tray, a crate, bread...
@@ -9834,7 +9843,7 @@ function render3d(dt) { // draw one 3D frame
   const dist = inside ? (inside && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk ? (rw() + rh() * 0.6) * (window.WKX && WKX.at ? 0.5 : wkc ? 0.8 : 1.0) * (innerWidth / innerHeight < 0.8 ? 1.28 : 0.9) : Math.max(rw(), rh()) * 1.15) / Math.max(0.6, s.zoom) : 17 / s.zoom + (s.jf || s.hf ? JFH * 1.2 + 5 : 0); R.scene.fog.near = Math.max(70, dist * 1.3); R.scene.fog.far = Math.max(160, dist * 3); /* less haze when far out */ R.camera.position.set(R.tgt.x + dist * 0.36, R.tgt.y + dist * 0.98, R.tgt.z + dist * 0.56); R.camera.lookAt(R.tgt); // camera above and to the south-east
   try { vfxTick(dt, now, dayK, glow, inside, wet, sd); } catch (e) { if (!R.vfxErr) { R.vfxErr = 1; console.error(e); } } try { hwFrame(dt, now, dayK, inside, wet); } catch (e) { if (!R.hwErr) { R.hwErr = 1; console.error(e); } } // glow, flare, particles and colour
   R.sun.target.position.copy(R.tgt); R.sun.position.copy(R.tgt).addScaledVector(R.sunL, 40); // the light follows you so shadows stay sharp, from wherever the sun is in the sky
-  if (introOn) introCam(now); else if (TAMC.on) tamCam(now); else if (STORY.cam) storyCam(now); else if (SIT.on || SIT.k > 0) sitCam(now); else if (window.HUX && HUX.rideOn()) HUX.rideCam(now); else if (window.HB && HB.camOn()) HB.camTick(now); else if (window.FLX && FLX.camOn()) FLX.camTick(now); // the intro and the Tamarin arrival fly the camera instead
+  if (introOn) introCam(now); else if (TAMC.on) tamCam(now); else if (STORY.cam) storyCam(now); else if (SIT.on || SIT.k > 0) sitCam(now); else if (window.HUX && HUX.rideOn()) HUX.rideCam(now); else if (window.HB && HB.camOn()) HB.camTick(now); else if (window.FLX && FLX.camOn()) FLX.camTick(now); else if (window.TPX && TPX.camOn()) TPX.camTick(now); // the intro and the Tamarin arrival fly the camera instead
   tamAnim(now); // dolphins and surfers
   govFrame(now); // the President's helicopter and bodyguards
   try { cyFrame(now); } catch (e) {} // Ebène's neon, drones and steam
@@ -9852,7 +9861,7 @@ function render3d(dt) { // draw one 3D frame
     if (s.inside === "mall") for (let i = 0; i < 5; i++) personAt("shop" + i, NPC[i].look, 2 + ((now / 1000 * 1.2 + i * 3.7) % 16), 5 + (i % 3) * 1.1, 3, true); // shoppers walking through
     govGuards3d();
     for (const k in others) { const o = others[k]; if (o.p.in === s.inside) personAt("peer" + k, peerLook(o.p), o.x, o.y, o.p.face | 0, !!o.p.mv, { dance: o.p.dn, pose: POSES.includes(o.p.po) ? { k: o.p.po, h: Math.max(-0.5, Math.min(1, Number(o.p.pz) || 0)) } : null, name: (o.p.away ? "💤 " : "") + peerName(o) + relTag(o) + clsTag(o.p.cls), real: true, md: o.p.md, bubble: o.until > now ? o.bubble : "" }); } // real players in here
-    personAt("me", myLook(), s.x, s.y, s.face, meMoving, { me: true, dance: dancing, pose: curPose(), name: myClass() ? CLASSES[myClass()].icon + " " + CLASSES[myClass()].name : "", bubble: myBubble.until > now ? myBubble.text : curPose() && curPose().k === "sleep" ? (wooLie && wooLie.until > Date.now() ? "💞" : "💤 z z z") : "" }); // you
+    personAt("me", myLook(), s.x, s.y, s.face, meMoving, { me: true, yaw: window.TPX && TPX.on && TPX.k > 0.5 ? TPX.heading : undefined, dance: dancing, pose: curPose(), name: myClass() ? CLASSES[myClass()].icon + " " + CLASSES[myClass()].name : "", bubble: myBubble.until > now ? myBubble.text : curPose() && curPose().k === "sleep" ? (wooLie && wooLie.until > Date.now() ? "💞" : "💤 z z z") : "" }); // you
     for (const id of ["fb", "bb"]) R[id === "fb" ? "fball" : "bball"].visible = false; for (const m of R.carM || []) m.visible = false; if (R.rideM) R.rideM.visible = false; for (const m of R.dogM || []) m.visible = false; // hide outdoor things
     trafficDraw3d(); homeDraw3d(now); if (window.WKX) WKX.draw(now); shipsDraw3d(now); pets3d(); hideUnused(); R.renderer.render(R.scene, R.camera); return; // draw the room (and the people who work there)
   } // end inside
@@ -11333,6 +11342,11 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.05", "9 Nov 2026", "Third-person view and a mini-map", [
+    ["🎥", "Third-person view", "Tap 🎥 (or press V) and the camera glides down behind your shoulder. Move with W A S D or the on-screen stick, drag to look around, Q and E turn the camera. It works outdoors and inside every building. Tap 🎥 again to go back to the overview.", null],
+    ["🧭", "Mini-map", "In third-person view a round map sits at the top left, turning with the camera. It shows roads, buildings, water, other players and you. Tap it to zoom.", null],
+    ["🏚️", "Bambous", "Bambous, the rough inland town, now has its own map after Flic en Flac.", null]
+  ]],
   ["2027.04.04", "9 Nov 2026", "Sugar cane, birds and boats you can ride", [
     ["🌾", "Sugar cane fields", "Tall swaying cane now grows in the fields along the highways and inland from Flic en Flac.", null],
     ["🦜", "Birds in the sky", "Gulls and tropicbirds over the sea, green parakeets, red fodies and bulbuls in the trees, a kestrel over the cane and pigeons over town. They fly by day and rest at night.", null],
@@ -14001,6 +14015,7 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <script src="nightcity.js?v=1"></script>
 <script src="life.js?v=1"></script>
 <script src="harbour.js?v=1"></script>
+<script src="tpv.js?v=1"></script>
 
 </body>
 </html>

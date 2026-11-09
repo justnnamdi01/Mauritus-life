@@ -19,8 +19,8 @@ const DEFAULT_RG = "portlouis"; // the map every new player starts on: the capit
 const GB_ROW = 232; // the walkable map: rows from here down are Grand Baie (HO in public/index.html); its first tile row is GBY = 236
 const loadMap = (id) => { try { const t = fs.readFileSync(path.join(__dirname, "public", id + "-map.js"), "utf8"); return JSON.parse(t.slice(t.indexOf("= {") + 2, t.lastIndexOf(";"))); } catch (e) { return null; } }; // a walkable map built from OpenStreetMap
 // The island is one continuous strip of map, north to south, and the server lays it out exactly as the client does (see WREG in public/index.html): Grand Baie, the road, Port Louis, the road, Flic en Flac. Each map starts on the row where the one above ends.
-const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), FLM = loadMap("west"), RAM = loadMap("road-grandbaie-portlouis"), RBM = loadMap("road-portlouis-west");
-const LAYOUT = []; { let y = GB_ROW + 4; for (const [id, M, kind] of [["grandbaie", GBM], ["road_grandbaie_portlouis", RAM, "road"], ["portlouis", PLM], ["road_portlouis_west", RBM, "road"], ["west", FLM]]) { if (!M) continue; LAYOUT.push({ id, M, kind, y0: y, block: LAYOUT.length ? y : GB_ROW }); y += M.h; } LAYOUT.END = y + 4; }
+const GBM = loadMap("grandbaie"), PLM = loadMap("portlouis"), FLM = loadMap("west"), BBM = loadMap("bambous"), RAM = loadMap("road-grandbaie-portlouis"), RBM = loadMap("road-portlouis-west");
+const LAYOUT = []; { let y = GB_ROW + 4; for (const [id, M, kind] of [["grandbaie", GBM], ["road_grandbaie_portlouis", RAM, "road"], ["portlouis", PLM], ["road_portlouis_west", RBM, "road"], ["west", FLM], ["bambous", BBM]]) { if (!M) continue; LAYOUT.push({ id, M, kind, y0: y, block: LAYOUT.length ? y : GB_ROW }); y += M.h; } LAYOUT.END = y + 4; }
 const STOPS = {}; for (const r of LAYOUT) STOPS[r.id] = { x: r.M.stop.x, y: r.y0 + r.M.stop.y }; // the bus stations: where to put someone back
 if (!STOPS.grandbaie) STOPS.grandbaie = { x: 30.5, y: 260.5 };
 const ROADMAPS = LAYOUT.filter((r) => r.kind === "road");

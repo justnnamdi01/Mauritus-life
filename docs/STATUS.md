@@ -31,6 +31,14 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 37 (9 Nov 2026): third-person view, mini-map and the Bambous map
+- **Third-person view (`tpv.js`):** a 🎥 button (and the V key) blends the camera smoothly (about a second, with a wider lens) from the overview to behind your shoulder, outdoors and in every room (the camera is kept inside the room). Move with W A S D or an on-screen stick, relative to the camera; drag anywhere to look around (a short tap still taps doors and things); Q and E turn. Your character turns smoothly to face where you walk. Buildings between you and the camera fade as before. The camera falls back to the overview by itself on rides, sitting, flying and boats.
+- **Mini-map:** a round map at the top left (hidden indoors) drawn from the real tiles, turning with the camera, with roads, buildings, water, other players and an arrow for you. Tap to zoom. It also shows the town name.
+- **Bambous:** a new walkable region built from OpenStreetMap (`bambous-map.js`, 26 places) after Flic en Flac, wired into the server layout, region list, island map, travel list, traffic and people tables. Open to everyone who can travel. Region test updated.
+- **Not done (asked for, not built yet):** carrying guns in Bambous, joining a cartel, rival gangs ("opps") that shoot at you there with good-looking character models, and aim assist like GTA. Plan: server-owned membership, guns and damage; client enemies with proper outfits; lock-on aim. Needs your steer on the details (see the chat).
+- Tested in the headless browser: switching on, moving, drag-look, going inside the terminal (works, no errors), mini-map. Not tested on a real phone: the stick position next to the chat pill, and drag-look on touch.
+- **Next step:** guns, cartel and opps in Bambous (new session of work).
+
 ## Done, session 36 (9 Nov 2026): sugar cane, birds, and a new harbour system with boat rides
 - **Sugar cane:** swaying cane stalks (drawn only near the player, new `life.js`) on every cane tile, and real cane fields painted on the highway regions and the inland edge of Flic en Flac. They were missing because the old cane code only covered the first game's rows.
 - **Birds:** gulls, tropicbirds, parakeet flocks, fodies, bulbuls, kingfishers, pigeons and a hovering kestrel (28 birds, 3 draw calls each), day only, not in rain or indoors. The old birds were part of the Season 2 effects, which are still off.

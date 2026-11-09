@@ -8,8 +8,8 @@
   const hash = (a, b, c) => { let h = (a * 374761393 + b * 668265263 + (c || 0) * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
   // ---- 1. make real cane fields on the grass of the highway regions and the inland side of Flic en Flac (before the ground is painted)
   try {
-    if (typeof WREG !== "undefined" && typeof terr !== "undefined") for (const r of WREG) { const inland = r.id === "west", road = r.kind === "road"; if (!inland && !road) continue;
-      for (let y = 2; y < r.M.h - 2; y++) for (let x = 2; x < r.M.w - 2; x++) { const gy = r.y0 + y, i = gy * W + x; if (terr[i] !== 3 || solid[i]) continue; if (inland && x < 80) continue; const cx = Math.floor((x + hash(Math.floor(y / 16), 1) * 5) / 9), cy = Math.floor(y / 16); if (hash(cx, cy, 7) > (inland ? 0.5 : 0.34)) continue;
+    if (typeof WREG !== "undefined" && typeof terr !== "undefined") for (const r of WREG) { const inland = r.id === "west" || r.id === "bambous", road = r.kind === "road"; if (!inland && !road) continue;
+      for (let y = 2; y < r.M.h - 2; y++) for (let x = 2; x < r.M.w - 2; x++) { const gy = r.y0 + y, i = gy * W + x; if (terr[i] !== 3 || solid[i]) continue; if (r.id === "west" && x < 80) continue; const cx = Math.floor((x + hash(Math.floor(y / 16), 1) * 5) / 9), cy = Math.floor(y / 16); if (hash(cx, cy, 7) > (inland ? 0.5 : 0.34)) continue;
         let ok = true; for (let dy = -2; dy <= 2 && ok; dy++) for (let dx = -2; dx <= 2; dx++) { const j = (gy + dy) * W + (x + dx); if (terr[j] !== 3 && terr[j] !== 11) { ok = false; break; } } if (ok) { terr[i] = 11; try { r.T[y * r.M.w + x] = 11; } catch (e) {} } }
     }
   } catch (e) { console.warn("cane fields", e); }

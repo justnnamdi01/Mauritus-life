@@ -14,7 +14,7 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     for (let i = 0; i < 50; i++) { try { await fetch(`http://127.0.0.1:${PORT}/api/regions`); break; } catch (e) { await wait(200); } }
     const pub = await fetch(`http://127.0.0.1:${PORT}/api/regions`).then((r) => r.json());
     const open = pub.regions.filter((r) => r.open).map((r) => r.id).sort().join(",");
-    ok(open === "grandbaie,portlouis,west", "open at start: Grand Baie, Port Louis and Flic en Flac, the regions with a walkable map (got " + open + ")");
+    ok(open === "bambous,grandbaie,portlouis,west", "open at start: Bambous, Grand Baie, Port Louis and Flic en Flac, the regions with a walkable map (got " + open + ")");
 
     const ws = new WebSocket(`ws://127.0.0.1:${PORT}`), got = [];
     ws.on("message", (d) => { try { got.push(JSON.parse(d)); } catch (e) {} });
@@ -90,8 +90,8 @@ const admin = (method, body) => fetch(`http://127.0.0.1:${PORT}/api/admin/region
     pres({ x: 20, y: 30, rg: "grandbaie" }); l = await locked(); ok(l && l.back.y > 232, "a phone that stands in the first game's old rows is put back");
     a = await admin("POST", { id: "west", open: false }); l = await locked(); ok(a.ok && l && l.id === "west", "closing Flic en Flac sends the player standing there back to Port Louis");
     pres({ x: plStop.x, y: plStop.y, rg: "portlouis" }); l = await locked(); ok(!l, "and the server then agrees they are in Port Louis");
-    a = await admin("POST", { id: "portlouis", open: false }); a = await admin("POST", { id: "grandbaie", open: false }); ok(!a.ok, "the last region with a walkable map cannot be closed");
-    a = await admin("POST", { id: "portlouis", open: true }); a = await admin("POST", { id: "west", open: true }); ok(a.ok, "the regions open again");
+    a = await admin("POST", { id: "bambous", open: false }); a = await admin("POST", { id: "portlouis", open: false }); a = await admin("POST", { id: "grandbaie", open: false }); ok(!a.ok, "the last region with a walkable map cannot be closed");
+    a = await admin("POST", { id: "portlouis", open: true }); a = await admin("POST", { id: "west", open: true }); a = await admin("POST", { id: "bambous", open: true }); ok(a.ok, "the regions open again");
     while (await locked()) {} /* the lock notices from closing Port Louis, where the server sent the player to the next open town */ pres({ x: 3, y: 4, in: "home", rg: "grandbaie" }); l = await locked(); ok(!l, "indoors, room positions are not mistaken for regions");
     pres({ in: "" });
     ws.close();
