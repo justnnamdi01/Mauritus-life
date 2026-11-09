@@ -42,3 +42,5 @@ Both men and women will play, so every system should feel equally good for both.
 5. **Residents and words:** 8 new women (16 and 16 now). A Settings switch for "partner" instead of girlfriend/boyfriend (matched to the other person by default).
 6. **Wording that fits the player (`gender.js`):** madame/monsieur and frer/sœur follow your character in toasts, NPC speech and menus.
 Not yet: other "he/she" lines in older text, builders' looks, Bambous crews.
+
+**Age floor decided: 18+** (10 Nov 2026). Jump In shows "Mauritius Life is for players aged 18 and over. By tapping Jump In you confirm that you are 18 or older." The About page says the same. A tap is a declaration, not proof of age; a real check would need an outside service.

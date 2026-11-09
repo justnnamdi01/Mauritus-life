@@ -402,7 +402,10 @@ Add simple counters on the server (no personal data): **time to first upgrade, t
 
 ---
 
-## 10. Questions for you (these change the plan)
+## 10. Questions for you
+
+**Answered (10 Nov 2026):** the minimum age is **18+**. The Jump In screen says so and asks players to confirm by tapping the button; adult romance keeps its own 18+ switch.
+ (these change the plan)
 
 1. **Audience age floor**: is 15 the real minimum? If younger players are expected, we tighten chat, the casino and the notifications.
 2. **Notifications**: the best channel for this audience is **WhatsApp or web push**. Which do you want to use first (it needs a small service)? Without any notification, the Clash loop works much less well.
