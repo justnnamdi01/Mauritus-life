@@ -3829,6 +3829,7 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["How do I see the leaderboards?", "Open Phone → Leaderboards (or Standing → Leaderboards). Pick Friends, Island or My region, then a board: Level, Flat, Richest, Helpful or Explorer. Boards never reset. Tap a name to see their card and add them as a friend.", "boards"],
     ["Can I hide from the leaderboards?", "Yes. Open Standing → My card and tap Hide me from the boards. You can show yourself again the same way.", "standing"],
     ["What does housekeeping do?", "In your home, tap the 🛠️ Flat upgrades board and choose Hire housekeeping. A cleaner works around your flat for a week and the comfort bonus from your flat levels is half as big again. It costs Rs 40 plus Rs 40 for each flat level. If it runs out nothing is taken away, you just lose the extra.", null],
+    ["How do I ride a ferry or a boat?", "Walk to a pier and look for the ⛴️ Ferry, ⛵ Sailing tour or 🛶 Pirogue trip sign. Tap it, pick Board, and pay the fare (Rs 120 for the ferry, Rs 250 for a sailing tour, Rs 80 for a pirogue trip). The boat has to be at the pier with a little time left. Sit back, drag to look around, and you get off when it docks.", null],
     ["How do I level up?", "Just play. Finishing shifts, side hustles, flat upgrades and visiting a new place all give XP, and the level chip under your cash fills up. Every new level gives a gift of cash (it arrives in your mail) and sometimes a new title. You can reach every level on your own; helping friends gives a quarter more XP. Open the Standing app to see what to do today.", "standing"],
     ["Why can't I start a later flat upgrade?", "The first four flat upgrades are open to everyone. Later ones open at a higher player level, up to the penthouse at level 20. Open the Standing app to see which level opens which upgrade.", "standing"],
     ["Can I help a friend build their flat?", "Visit their home (Phone → Contacts → Visit). If their builders are working you will see a 🔨 Help build board. Tap it and lend a hand: you take a few minutes off and they thank you with Rs 40. One help each per upgrade, up to five per upgrade."],
@@ -8866,7 +8867,7 @@ function buildProps() { neonSigns(); // the scenery of the real towns: the Cauda
     else if (q.k === "lamp") { cyl(0.05, 0.07, 2.6, "#2f3a40", x, 1.3, z, W3, 6); box(0.4, 0.08, 0.16, "#2f3a40", x, 2.6, z, W3); box(0.2, 0.08, 0.12, R.lampMat, x, 2.52, z, W3); if (r.id === "portlouis") { R.night = R.night || []; for (let k = 0; k < 4; k++) R.night.push(mesh(new THREE.SphereGeometry(0.08, 5, 4), new THREE.MeshBasicMaterial({ color: k % 2 ? 0xffd98a : 0xffb3d1 }), x + (k - 1.5) * 0.35, 2.35 - Math.abs(k - 1.5) * 0.1, z + 0.1, W3, false)); } } }
     { const bb = r.M.barriers || []; for (let i = 0; i < bb.length; i += 2) { box(0.96, 0.62, 0.96, "#aaa9a3", bb[i] + 0.5, 0.31, r.y0 + bb[i + 1] + 0.5, R.world); box(0.7, 0.1, 0.7, "#e4572e", bb[i] + 0.5, 0.67, r.y0 + bb[i + 1] + 0.5, R.world); } } // the M1's concrete crash barriers
     for (const q of r.M.signs || []) { const x = q.x, z = r.y0 + q.y, bg = q.k === "km" ? "#1f4f9a" : "#1c6b3a", tex = textTex(q.t, bg, "#ffffff", 56); cyl(0.05, 0.05, 2.4, "#5b6168", x - 0.9, 1.2, z, R.world, 6); cyl(0.05, 0.05, 2.4, "#5b6168", x + 0.9, 1.2, z, R.world, 6); const sp = mesh(geo("plane", () => new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }), x, 2.35, z, R.world, false); const asp = tex.userData && tex.userData.aspect || 4; sp.scale.set(Math.min(4.2, 0.62 * asp), 0.62, 1); } // the highway's town and kilometre signs
-    for (const b of r.M.boats || []) { const g = new THREE.Group(); g.position.set(b.x, 0.12, r.y0 + b.y); g.rotation.y = b.rot ? Math.PI / 2 : 0; const L = b.len || 3; box(L, 0.45, 1.0, "#f2f0e8", 0, 0.2, 0, g); box(L * 0.9, 0.12, 0.9, "#2f6fa8", 0, 0.45, 0, g); box(L * 0.35, 0.45, 0.7, "#e9e2d2", -L * 0.1, 0.75, 0, g); cyl(0.04, 0.04, 2.6, "#8a8f94", L * 0.2, 1.7, 0, g, 6); box(0.04, 1.7, 0.9, "#f4efe6", L * 0.2 + 0.05, 1.55, 0.05, g); R.world.add(g); } }
+    for (const b of r.M.boats || []) { { const cx = Math.floor(b.x), cy = Math.floor(r.y0 + b.y); if (terr[cy * W + cx] >= 2) continue; } const g = new THREE.Group(); g.position.set(b.x, 0.12, r.y0 + b.y); g.rotation.y = b.rot ? Math.PI / 2 : 0; const L = b.len || 3; box(L, 0.45, 1.0, "#f2f0e8", 0, 0.2, 0, g); box(L * 0.9, 0.12, 0.9, "#2f6fa8", 0, 0.45, 0, g); box(L * 0.35, 0.45, 0.7, "#e9e2d2", -L * 0.1, 0.75, 0, g); cyl(0.04, 0.04, 2.6, "#8a8f94", L * 0.2, 1.7, 0, g, 6); box(0.04, 1.7, 0.9, "#f4efe6", L * 0.2 + 0.05, 1.55, 0.05, g); R.world.add(g); } }
 }
 function decoHouse(b) { // a plain scenery house: walls, a hipped roof and a few windows (cheap to draw, so towns can be full)
   const gr = new THREE.Group(); gr.position.set(b.x, 0, b.y); const w = b.w, h = b.h, H3 = 2.3 + ((b.x * 3 + b.y) % 3) * 0.3; box(w, H3, h, b.col, w / 2, H3 / 2, h / 2, gr); box(w + 0.1, 0.2, h + 0.1, shade(b.col, 0.7), w / 2, 0.1, h / 2, gr);
@@ -9833,7 +9834,7 @@ function render3d(dt) { // draw one 3D frame
   const dist = inside ? (inside && ROOMDEF[s.inside] && ROOMDEF[s.inside].wk ? (rw() + rh() * 0.6) * (window.WKX && WKX.at ? 0.5 : wkc ? 0.8 : 1.0) * (innerWidth / innerHeight < 0.8 ? 1.28 : 0.9) : Math.max(rw(), rh()) * 1.15) / Math.max(0.6, s.zoom) : 17 / s.zoom + (s.jf || s.hf ? JFH * 1.2 + 5 : 0); R.scene.fog.near = Math.max(70, dist * 1.3); R.scene.fog.far = Math.max(160, dist * 3); /* less haze when far out */ R.camera.position.set(R.tgt.x + dist * 0.36, R.tgt.y + dist * 0.98, R.tgt.z + dist * 0.56); R.camera.lookAt(R.tgt); // camera above and to the south-east
   try { vfxTick(dt, now, dayK, glow, inside, wet, sd); } catch (e) { if (!R.vfxErr) { R.vfxErr = 1; console.error(e); } } try { hwFrame(dt, now, dayK, inside, wet); } catch (e) { if (!R.hwErr) { R.hwErr = 1; console.error(e); } } // glow, flare, particles and colour
   R.sun.target.position.copy(R.tgt); R.sun.position.copy(R.tgt).addScaledVector(R.sunL, 40); // the light follows you so shadows stay sharp, from wherever the sun is in the sky
-  if (introOn) introCam(now); else if (TAMC.on) tamCam(now); else if (STORY.cam) storyCam(now); else if (SIT.on || SIT.k > 0) sitCam(now); else if (window.HUX && HUX.rideOn()) HUX.rideCam(now); else if (window.FLX && FLX.camOn()) FLX.camTick(now); // the intro and the Tamarin arrival fly the camera instead
+  if (introOn) introCam(now); else if (TAMC.on) tamCam(now); else if (STORY.cam) storyCam(now); else if (SIT.on || SIT.k > 0) sitCam(now); else if (window.HUX && HUX.rideOn()) HUX.rideCam(now); else if (window.HB && HB.camOn()) HB.camTick(now); else if (window.FLX && FLX.camOn()) FLX.camTick(now); // the intro and the Tamarin arrival fly the camera instead
   tamAnim(now); // dolphins and surfers
   govFrame(now); // the President's helicopter and bodyguards
   try { cyFrame(now); } catch (e) {} // Ebène's neon, drones and steam
@@ -11332,6 +11333,12 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.04", "9 Nov 2026", "Sugar cane, birds and boats you can ride", [
+    ["🌾", "Sugar cane fields", "Tall swaying cane now grows in the fields along the highways and inland from Flic en Flac.", null],
+    ["🦜", "Birds in the sky", "Gulls and tropicbirds over the sea, green parakeets, red fodies and bulbuls in the trees, a kestrel over the cane and pigeons over town. They fly by day and rest at night.", null],
+    ["⛴️", "Ferries and boats with timetables", "Every ship and boat now follows a set timetable on real water routes: ferries shuttle between two piers, big ships call at the quay, and fishing boats and pirogues go out and come back. Nothing sails over land any more.", null],
+    ["🎟️", "Ride the ferry", "Walk to a pier, tap the ⛴️ ferry sign and board. You sit on deck, drag to look around and get off at the other pier. Sailing tours and pirogue trips leave from their own piers too.", null]
+  ]],
   ["2027.04.03", "7 Nov 2026", "The city lights up at night", [
     ["🌃", "Lit streets and windows", "After dusk every road gets street lamps with pools of warm light, and the windows in the buildings come on. Late at night most go dark again, and the casino, bars and market glow in their own colours.", null],
     ["🏙️", "Lights beyond the clouds", "The rest of Port Louis glows faintly through the clouds at night.", null]
@@ -13993,6 +14000,7 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <script src="surround.js?v=1"></script>
 <script src="nightcity.js?v=1"></script>
 <script src="life.js?v=1"></script>
+<script src="harbour.js?v=1"></script>
 
 </body>
 </html>
