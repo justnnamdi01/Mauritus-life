@@ -31,6 +31,14 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 40 (9 Nov 2026): wider harbours, more boats
+- **`tools/widen-water.mjs`:** run after `build-region.mjs` (`node widen-water.mjs grandbaie portlouis west --by=3`). Beach and grass tiles within 3 tiles of the water become shallow lagoon, but never within 2-3 tiles of roads, paving, buildings, houses, props, lots, bus stops or exits. Already applied: Grand Baie 67 tiles, Port Louis 443, Flic en Flac 126. If a region map is rebuilt, run the tool again.
+- **Berth approach redesigned:** boats leave and arrive on short diagonal legs towards open water, instead of hugging the beach. A hull may touch the shore with a single corner sample (the real hulls are pointed). Sailing tours try up to eight waypoint pairs.
+- **Fleet now (11 vessels):** Grand Baie: 2 ferries and a sailing tour (all rideable); Port Louis: a ferry (rideable), a container ship, a tanker and a cruise ship at anchor, a fishing boat; Flic en Flac: 2 pirogue trips (rideable) and a fishing boat. Six rideable boats in all. Still missing: a Grand Baie pirogue trip and fishing boat, the Port Louis tug and yacht (no valid route).
+- Audit: 0 to 2 one-frame corner clips per vessel per cycle; the Port Louis ferry shows 9 of 240 frames (a corner brushing the shore on one leg). Ferry ride re-tested on the widened map (charged Rs 120, crossed, no errors).
+- **Not done:** real phone; sailing hulls are small relative to the buildings (62%); the widened beach is a little narrower in Port Louis.
+- **Next step:** a cross-town boat ride, and fill the last missing vessels by shaping the water by hand where a route is blocked.
+
 ## Done, session 39 (9 Nov 2026): boats that stay on the water, and rides you can spot
 - **Land overlap fixed:** all hulls are drawn at 62% of their old size (`SC` in `harbour.js`) so they fit the thin harbours. Berths now require the whole hull to sit in water, and every route is checked against the full hull along its length (only a one-tile corner is tolerated in the last ten tiles by the pier). A vessel whose route fails is not built rather than sailing over land. Audit over a full cycle: 0 to 2 one-frame corner clips per vessel, none at dock.
 - **Fleet now:** Grand Baie ferry (shuttle, rideable) and sailing tour (rideable); Port Louis ferry (shuttle, rideable) plus a container ship, tanker and cruise ship **at anchor** in the deepest water (the harbour is too narrow for them to sail); Flic en Flac two fishing boats. Not built because no valid route existed on the map: a second Grand Baie ferry, pirogues, tug and more fishing boats. The map's water would need widening for those.
