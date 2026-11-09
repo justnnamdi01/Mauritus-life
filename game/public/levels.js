@@ -50,7 +50,7 @@
   let showing = 0;
   function next() {
     if (showing || !LVX.queue.length) return; if ((typeof introOn !== "undefined" && introOn) || !$("sheet").hidden || !$("phone").hidden) { setTimeout(next, 2500); return; }
-    const u = LVX.queue.shift(); showing = 1; LVX.fireworks(); try { confetti(120); } catch (e) {} setTimeout(() => { try { confetti(90); } catch (e) {} }, 700);
+    const u = LVX.queue.shift(); if (window.ONB && ONB.quiet()) { LVX.fireworks(); toast("⭐ Level " + u.level + ": " + u.title + ". A gift of " + rsf(u.gift) + " is in your mail."); setTimeout(next, 800); return; } showing = 1; LVX.fireworks(); try { confetti(120); } catch (e) {} setTimeout(() => { try { confetti(90); } catch (e) {} }, 700);
     const perk = LVX.st && (LVX.st.perks || []).find((p) => p.lv === u.level);
     evCard({ icon: u.milestone ? "🏆" : "⭐", tag: "LEVEL UP", title: "Level " + u.level + ": " + u.title, text: "You earned a gift of " + rsf(u.gift) + ", waiting in your mail." + (perk ? " " + perk.text + " now." : "") + (u.milestone ? " A big milestone!" : ""), opts: [{ label: "Nice!", pri: true, go: () => { showing = 0; setTimeout(next, 600); } }, { label: "See my standing", go: () => { showing = 0; try { openPhone("standing"); } catch (e) {} } }] });
     setTimeout(() => { showing = 0; }, 20000);

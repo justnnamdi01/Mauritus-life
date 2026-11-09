@@ -25,6 +25,10 @@ const POOL = [ // "Your day": three small goals a day, one from each row, the sa
 ];
 const GOAL_XP = 30, GOAL_CASH = 150, ALL_XP = 60, ALL_CASH = 400;
 const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const BUCKET = [ // the Island Checklist: Auntie Marie pays once for each, in any order (the server pays; nothing here can be done twice)
+  { id: "ride", text: "Ride a vehicle", pay: 500 }, { id: "chat", text: "Send a chat message", pay: 200 }, { id: "snack", text: "Grab a snack", pay: 100 }, { id: "style", text: "Style your avatar at the mirror", pay: 300 },
+  { id: "enter", text: "Walk into a shop or building", pay: 100 }, { id: "phone", text: "Open your phone", pay: 100 }, { id: "work", text: "Earn your first wages", pay: 500 }, { id: "fun", text: "Try something fun", pay: 300 }
+]; const BUCKET_ALL = 400; // a bonus for finishing the whole list
 const SOFT = 500; // after this much XP in a day, more XP counts half (nobody has to play for hours)
 const SOCIAL = 1.25; // helping friends gives a quarter more
 const gift = (lv) => (lv % 5 === 0 ? 500 : 100) * lv; // cash for reaching a level (a bigger one every 5th)
@@ -33,7 +37,7 @@ module.exports = function (X) {
   const { db, send, persist, peers, mailTo, allow, nameOf } = X;
   db.lvl = db.lvl && typeof db.lvl === "object" ? db.lvl : {};
   const dayNo = () => Math.floor((Date.now() + MUT) / 86400000);
-  const rec = (uid) => { const r = db.lvl[uid] || (db.lvl[uid] = { xp: 0, level: 1, day: 0, today: 0, n: {}, last: {}, firsts: {}, places: 0, g: { day: 0, p: {}, done: {} }, streak: 0, lastAll: 0, fr: [], helps: 0, hide: false }); if (!r.fr) { r.fr = []; r.helps = 0; r.hide = false; } if (!r.g) { r.g = { day: 0, p: {}, done: {} }; r.streak = 0; r.lastAll = 0; } if (r.g.day !== dayNo()) r.g = { day: dayNo(), p: {}, done: {} }; if (r.day !== dayNo()) { r.day = dayNo(); r.today = 0; r.n = {}; } return r; };
+  const rec = (uid) => { const r = db.lvl[uid] || (db.lvl[uid] = { xp: 0, level: 1, day: 0, today: 0, n: {}, last: {}, firsts: {}, places: 0, g: { day: 0, p: {}, done: {} }, streak: 0, lastAll: 0, fr: [], helps: 0, hide: false, bucket: {} }); if (!r.fr) { r.fr = []; r.helps = 0; r.hide = false; } if (!r.bucket) r.bucket = {}; if (!r.g) { r.g = { day: 0, p: {}, done: {} }; r.streak = 0; r.lastAll = 0; } if (r.g.day !== dayNo()) r.g = { day: dayNo(), p: {}, done: {} }; if (r.day !== dayNo()) { r.day = dayNo(); r.today = 0; r.n = {}; } return r; };
   const levelOfXp = (xp) => { let lv = 1, x = xp; while (lv < MAX && x >= need(lv)) { x -= need(lv); lv++; } return { level: lv, into: lv >= MAX ? 0 : x, need: lv >= MAX ? 0 : need(lv) }; };
   const level = (uid) => rec(uid).level;
   const goalsOf = (uid) => POOL.map((row, i) => row[hash(uid + ":" + dayNo() + ":" + i) % row.length]);
@@ -43,7 +47,7 @@ module.exports = function (X) {
     for (const g of goalsOf(uid)) if (g.k === kind && !r.g.done[g.id] && r.g.p[kind] >= g.n) { r.g.done[g.id] = 1; fin.push({ id: g.id, text: g.text, xp: GOAL_XP, cash: GOAL_CASH }); }
     return fin; }
   function view(uid) { const r = rec(uid), L = levelOfXp(r.xp), next = TITLES.find(([l]) => l > r.level), perks = Object.entries(FLAT_REQ).map(([f, l]) => ({ lv: l, text: "Flat level " + f + " opens", done: r.level >= l })).sort((a, b) => a.lv - b.lv);
-    return Object.assign(goalView(uid), { ok: true, level: r.level, xp: r.xp, into: L.into, need: L.need, max: MAX, title: titleOf(r.level), nextTitle: next ? { lv: next[0], name: next[1] } : null, today: r.today, soft: SOFT, perks, nextGift: r.level < MAX ? gift(r.level + 1) : 0,
+    return Object.assign(goalView(uid), { ok: true, bucket: { items: BUCKET.map((b) => ({ id: b.id, text: b.text, pay: b.pay, done: !!r.bucket[b.id] })), all: !!r.bucket.all, bonus: BUCKET_ALL }, level: r.level, xp: r.xp, into: L.into, need: L.need, max: MAX, title: titleOf(r.level), nextTitle: next ? { lv: next[0], name: next[1] } : null, today: r.today, soft: SOFT, perks, nextGift: r.level < MAX ? gift(r.level + 1) : 0,
       ways: Object.keys(KINDS).filter((k) => k !== "visit").map((k) => ({ k, label: KINDS[k].label, xp: KINDS[k].xp, left: Math.max(0, KINDS[k].cap - (r.n[k] || 0)), first: KINDS[k].first && !r.firsts[k] ? KINDS[k].first : 0 })) }); }
   function push(uid, o) { for (const [, p] of peers) if (p.uid === uid && p.ws) send(p.ws, Object.assign({ t: "lvl", ev: "xp" }, o)); }
   function add(uid, amount, kind, social) { // add XP, pay for any levels reached, return what happened
@@ -84,6 +88,11 @@ module.exports = function (X) {
     if (!me.uid || !db.players[me.uid]) return reply({ ok: false, error: "Play a little first." }); if (!allow(me)) return reply({ ok: false, error: "Slow down a little." });
     const uid = me.uid;
     if (m.t === "lvl.state") return reply(view(uid));
+    if (m.t === "lvl.bucket") { // an item of the Island Checklist happened: pay it once
+      const b = BUCKET.find((q) => q.id === String(m.id || "")); if (!b) return reply({ ok: false, error: "No such item." }); const r = rec(uid); if (r.bucket[b.id]) return reply(Object.assign(view(uid), { ok: true, already: true }));
+      r.bucket[b.id] = Date.now(); if (mailTo) mailTo(uid, b.pay, "Island checklist: " + b.text, "Auntie Marie"); const out = add(uid, 15, "bucket"); let bonus = 0; if (!r.bucket.all && BUCKET.every((q) => r.bucket[q.id])) { r.bucket.all = Date.now(); bonus = BUCKET_ALL; if (mailTo) mailTo(uid, BUCKET_ALL, "Island checklist complete", "Auntie Marie"); } persist();
+      return reply(Object.assign(view(uid), { ok: true, paid: b.pay, bonus }, out));
+    }
     if (m.t === "lvl.board") { const b = board(uid, m.scope === "friends" || m.scope === "region" ? m.scope : "island", String(m.board || "level")); return reply(b || { ok: false, error: "No such board." }); }
     if (m.t === "lvl.card") { const c = card(uid, String(m.id || uid)); return reply(c || { ok: false, error: "No such player." }); }
     if (m.t === "lvl.friend") { const o = String(m.id || ""); if (!alive(o) || o === uid) return reply({ ok: false, error: "No such player." }); const r = rec(uid); if (m.remove) { r.fr = r.fr.filter((x) => x !== o); persist(); return reply({ ok: true, friend: false }); } if (r.fr.length >= 60) return reply({ ok: false, error: "Your friends list is full." }); if (!r.fr.includes(o)) { r.fr.push(o); persist(); } return reply({ ok: true, friend: true }); }

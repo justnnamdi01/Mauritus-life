@@ -57,6 +57,12 @@ const player = (PORT, name, money) => new Promise((resolve) => { const ws = new 
     r = await C.ask("lvl.card", { id: B.uid }); ok(r.ok && r.hidden && r.level === undefined, "and their card shows nothing else");
     r = await A.ask("lvl.friend", { id: C.uid, remove: true }); ok(r.ok && !r.friend, "friends can be removed");
     r = await A.ask("lvl.card", { id: "nobody" }); ok(!r.ok, "a card for nobody is refused");
+    // the Island Checklist: Auntie Marie pays each item once
+    const N = await player(PORT, "Newbie", 4000); let nb = await N.ask("lvl.state"); ok(nb.bucket && nb.bucket.items.length === 8 && nb.bucket.items.every((i) => !i.done), "a new player has a checklist of eight things, none done");
+    r = await N.ask("lvl.bucket", { id: "ride" }); ok(r.ok && r.paid === 500, "riding a vehicle pays Rs 500");
+    r = await N.ask("lvl.bucket", { id: "ride" }); ok(r.ok && r.already && !r.paid, "and only once");
+    r = await N.ask("lvl.bucket", { id: "nonsense" }); ok(!r.ok, "an item that is not on the list is refused");
+    for (const id of ["chat", "snack", "style", "enter", "phone", "work"]) await N.ask("lvl.bucket", { id }); r = await N.ask("lvl.bucket", { id: "fun" }); ok(r.ok && r.bonus === 400 && r.bucket.all, "finishing the list pays a Rs 400 bonus");
   } finally { srv.kill(); await new Promise((r) => srv.on("exit", r)); try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {} }
   console.log(fails ? fails + " FAILED" : "all passed"); process.exit(fails ? 1 : 0);
 })();

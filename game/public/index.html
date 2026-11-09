@@ -3834,10 +3834,12 @@ const HOWTO = [ // [icon, section, [[question, answer, optional app to open]]] (
     ["What does housekeeping do?", "In your home, tap the 🛠️ Flat upgrades board and choose Hire housekeeping. A cleaner works around your flat for a week and the comfort bonus from your flat levels is half as big again. It costs Rs 40 plus Rs 40 for each flat level. If it runs out nothing is taken away, you just lose the extra.", null],
     ["How do I ride a ferry or a boat?", "Walk to a pier and look for the ⛴️ Ferry, ⛵ Sailing tour or 🛶 Pirogue trip sign. Tap it, pick Board, and pay the fare (Rs 120 for the ferry, Rs 250 for a sailing tour, Rs 80 for a pirogue trip). The boat has to be at the pier with a little time left. Sit back, drag to look around, and you get off when it docks.", null],
     ["How do I use third-person view?", "Tap the 🎥 button at the right of the screen (or press V). Move with W A S D or the stick at the bottom left, drag anywhere to look around, and use Q and E to turn the camera. The round mini-map at the top left shows where you are: tap it to zoom in and out. Tap 🎥 again to go back to the overview.", null],
+    ["What is the Island checklist?", "A small pinned pill (Island checklist) with eight easy things to try, in any order: ride a vehicle, send a chat message, grab a snack, style your avatar, walk into a shop, open your phone, earn wages and try something fun. Each one pays Auntie Marie's cash once, and finishing them all pays a bonus. Tap the pill to see the list.", null],
+    ["When do I need a password?", "Not at the start. You can play as a guest. You are asked to save your game only when you have something to lose: after your first Rs 2,500, your first outfit or car, or when you are about to close the game. Add a username and password in Phone → Settings → Login any time.", null],
     ["How do I level up?", "Just play. Finishing shifts, side hustles, flat upgrades and visiting a new place all give XP, and the level chip under your cash fills up. Every new level gives a gift of cash (it arrives in your mail) and sometimes a new title. You can reach every level on your own; helping friends gives a quarter more XP. Open the Standing app to see what to do today.", "standing"],
     ["Why can't I start a later flat upgrade?", "The first four flat upgrades are open to everyone. Later ones open at a higher player level, up to the penthouse at level 20. Open the Standing app to see which level opens which upgrade.", "standing"],
     ["Can I help a friend build their flat?", "Visit their home (Phone → Contacts → Visit). If their builders are working you will see a 🔨 Help build board. Tap it and lend a hand: you take a few minutes off and they thank you with Rs 40. One help each per upgrade, up to five per upgrade."],
-    ["How do I make or change my character?", "When you start, the Character Studio opens: turn your character with your finger, pick tabs (Hair, Tops, Bottoms, Shoes, Colours, You), tap a card to try it on, and tap Start living. Later, open Phone → Wardrobe → Open the Character Studio to try on and buy more. Cards show a price and a rarity gem; a green tick means you have it. Cancel puts your look back."],
+    ["How do I make or change my character?", "You start with a random look so you can play at once. Walk to the mirror (Style Your Avatar) by where you land, or open Phone → Wardrobe → Open the Character Studio: turn your character with your finger, pick tabs (Hair, Tops, Bottoms, Shoes, Colours, You), tap a card to try it on and buy what you like. To try on and buy more. Cards show a price and a rarity gem; a green tick means you have it. Cancel puts your look back."],
     ["How does the Ferris wheel work?", "Walk to the wheel and choose Ride (Rs 120, or Rs 200 for two). Your character climbs into an open gondola and sits down, the camera settles beside you, and the wheel carries you once round, slowly (about a minute). Drag the screen to turn your view and look at the bay, the harbour and the town. Tap Get off to stop early, with no charge."],
     ["What is a side hustle?", "A small job you do for extra money, on top of your main job: sell gato piment on a round of Port Louis (stake Rs 120), fish off the quay (bait Rs 60), or busk at the stage from 17:00 (free). Open the Hustles app or tap the basket at the terminal, the fishing spot on the quay or the stage. A few rounds a day, about Rs 4,500 a day at most from all hustles."],
     ["Why do I only get half pay at some workplaces?", "You have one main job: your career, with full pay and promotions. Every other workplace gives an odd job at about half pay, three a day, with no promotion. Change career after 3 days from the Hustles app."],
@@ -11342,6 +11344,12 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.06", "9 Nov 2026", "Jump straight in", [
+    ["🏝️", "One name, one button", "New players type a name (or keep the one we suggest) and tap Jump In. No forms: you appear on the Caudan waterfront with a random look, ready to walk, ride and explore.", null],
+    ["🪞", "Style it in the world", "A mirror and clothes rack stand right by where you land. Walk up to Style Your Avatar whenever you like.", null],
+    ["🏝️", "Island checklist", "A small pinned checklist pays you Auntie Marie's cash as you do things in any order: ride a vehicle, send a chat, grab a snack and more.", null],
+    ["🔐", "Save your game when it matters", "You are asked for a username and password only when you have something to lose: your first Rs 2,500, your first outfit or car, or when you are about to leave.", null]
+  ]],
   ["2027.04.05", "9 Nov 2026", "Third-person view and a mini-map", [
     ["🎥", "Third-person view", "Tap 🎥 (or press V) and the camera glides down behind your shoulder. Move with W A S D or the on-screen stick, drag to look around, Q and E turn the camera. It works outdoors and inside every building. Tap 🎥 again to go back to the overview.", null],
     ["🧭", "Mini-map", "In third-person view a round map sits at the top left, turning with the camera. It shows roads, buildings, water, other players and you. Tap it to zoom.", null],
@@ -14016,6 +14024,7 @@ else start(window.claude?.hot?.data ?? {}); // otherwise boot directly
 <script src="life.js?v=1"></script>
 <script src="harbour.js?v=1"></script>
 <script src="tpv.js?v=1"></script>
+<script src="onboard.js?v=1"></script>
 
 </body>
 </html>
