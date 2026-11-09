@@ -175,7 +175,7 @@
   }
   function endRide(ok) { const r = HB.ride; if (!r) return; const was = busy && busy.a === r.act; HB.ride = null; panelOff(); if (was) { if (ok) { busy.from = [r.dest.T.x - r.dest.n.x * 0.9, r.dest.T.y - r.dest.n.y * 0.9]; const a = r.act; finish(a); } else busy = null; } }
   HB.camTick = function (now) {
-    const want = HB.ride ? 1 : 0; HB.k += (want - HB.k) * 0.07; if (!want && HB.k < 0.01) { HB.k = 0; return; } const e = HB.k * HB.k * (3 - 2 * HB.k), V = THREE.Vector3, v = HB.ride ? HB.ride.v : null;
+    const dt = Math.min(0.2, (now - (HB.lastT || now)) / 1000); HB.lastT = now; const want = HB.ride ? 1 : 0; HB.k += (want - HB.k) * (1 - Math.exp(-dt * 4)); if (!want && HB.k < 0.01) { HB.k = 0; return; } const e = HB.k * HB.k * (3 - 2 * HB.k), V = THREE.Vector3, v = HB.ride ? HB.ride.v : null;
     if (v) { const sp = seatPos(v); CAM.P = new V(sp.x, sp.h + 0.2, sp.y); CAM.ang = v.ang; } const P = CAM.P || new V(s.x, 1, s.y), ang = CAM.ang || 0, yaw = Math.atan2(-Math.cos(ang), -Math.sin(ang)) + 1.9 + HB.yawOff + Math.sin(now / 3200) * 0.05, pit = HB.pitch, rad = (v && v.kind === "ferry") ? 11 : 8.5;
     const des = new V(P.x + Math.sin(yaw) * Math.cos(pit) * rad, P.y + Math.sin(pit) * rad, P.z + Math.cos(yaw) * Math.cos(pit) * rad); R.camera.position.lerp(des, e); const la = R.tgt.clone().lerp(new V(P.x, P.y - 0.1, P.z), e); R.camera.lookAt(la);
   };
