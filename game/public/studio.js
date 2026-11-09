@@ -91,7 +91,7 @@
     for (const b of $s("stTabs").children) b.classList.toggle("on", b.dataset.k === ST.tab);
     $s("stFilters").style.display = ST.tab === "col" || ST.tab === "you" ? "none" : "flex";
     const own = $s("stOwn"); own.style.display = ST.mode === "wardrobe" ? "" : "none"; own.classList.toggle("on", ST.own);
-    $s("stSex").textContent = ST.mode === "create" ? (s.g === "f" ? "♀ Woman" : "♂ Man") : (g === "f" ? "♀ Woman" : "♂ Man"); $s("stSex").disabled = ST.mode !== "create";
+    $s("stSex").textContent = ST.mode === "create" ? (s.g === "f" ? "♀ Woman" : "♂ Man") : (g === "f" ? "♀ Woman" : "♂ Man"); $s("stSex").disabled = false;
     if (OUTFITS[g][ST.tab]) { let list = OUTFITS[g][ST.tab].slice(); if (ST.tab === "head" && ST.mode === "create") list = list.filter((q) => !HATS[g].includes(q[0]) || q[2] <= CAP_CREATE); if (ST.rar !== "all") list = list.filter((q) => rarityOf(q[2])[0] === ST.rar); if (ST.own) list = list.filter((q) => owned0(g, ST.tab, q[0])); if (ST.sort === "price") list.sort((a, b) => a[2] - b[2]); else if (ST.sort === "rarity") list.sort((a, b) => RAR.findIndex((r) => r[0] === rarityOf(b[2])[0]) - RAR.findIndex((r) => r[0] === rarityOf(a[2])[0]));
       if (!list.length) grid.append(el("p", "st-sec", "Nothing here with that filter.")); for (const q of list) grid.append(card(q, ST.tab, g)); }
     else if (ST.tab === "col") {
@@ -129,7 +129,7 @@
     document.body.append(root); root.querySelector(".st-title").textContent = ST.mode === "create" ? "Who are you in Mauritius?" : "Character Studio"; if (ST.mode === "create") $s("stCancel").style.display = "none";
     for (const [k, n, ic] of TABS) { if (ST.mode === "wardrobe" && k === "you") continue; const b = el("button", k === ST.tab ? "on" : "", ic + " " + n); b.type = "button"; b.dataset.k = k; b.onclick = () => { ST.tab = k; renderPanel(); $s("stGrid").scrollTop = 0; }; $s("stTabs").append(b); }
     const rs0 = $s("stRar"); rs0.innerHTML = '<option value="all">By rarity: all</option>' + RAR.map((r) => '<option value="' + r[0] + '">' + r[1] + "</option>").join(""); rs0.onchange = () => { ST.rar = rs0.value; renderPanel(); }; $s("stSort").onchange = () => { ST.sort = $s("stSort").value; renderPanel(); };
-    $s("stSex").onclick = () => { s.g = s.g === "f" ? "m" : "f"; s.head = s.top = s.legs = s.feet = ""; ST.thumbs = {}; renderPanel(); }; $s("stOwn").onclick = () => { ST.own = !ST.own; renderPanel(); };
+    $s("stSex").onclick = () => { s.g = s.g === "f" ? "m" : "f"; if (ST.mode === "create") s.head = s.top = s.legs = s.feet = ""; else { const g = s.g, hs = OUTFITS[g].head.filter((q) => !HATS[g].includes(q[0])).sort((a, b) => a[2] - b[2]), k = ROLE_LOOK[g].resident; s.head = hs.length ? hs[0][0] : ""; s.top = k[0]; s.legs = k[1]; s.feet = k[2]; } ST.thumbs = {}; renderPanel(); }; $s("stOwn").onclick = () => { ST.own = !ST.own; renderPanel(); };
     $s("stRand").onclick = () => { const g = worn().g, pick = (sl) => { const l = OUTFITS[g][sl].filter((q) => ST.mode === "create" ? q[2] <= CAP_CREATE && !(sl === "head" && HATS[g].includes(q[0])) : owned0(g, sl, q[0])); return l.length ? l[Math.floor(Math.random() * l.length)][0] : null; }; for (const sl of SLOTS) { const v = pick(sl); if (v) s[SLOT_FIELD[sl]] = v; } s.hs = ""; if (ST.mode === "create") s.hcol = HCOLS[Math.floor(Math.random() * HCOLS.length)][1]; renderPanel(true); };
     $s("stCancel").onclick = () => close(true); $s("stOk").onclick = () => (ST.mode === "create" ? finishCreate() : finishWardrobe());
     // the 3D preview
