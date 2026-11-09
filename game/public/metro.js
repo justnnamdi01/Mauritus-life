@@ -15,7 +15,7 @@
   const elev = (d) => { let h = 0; for (const s2 of STN) { const k = 1 - (Math.abs(d - s2.d) - 5.5) / 7; h = Math.max(h, 1.45 * smooth(k)); } return h; }; // the line climbs onto a viaduct at each station
   function init() {
     if (MET.ready) return true; const r = regionDef("portlouis"); if (!r || !r.M.railLine || r.M.railLine.length < 4 || typeof R === "undefined" || !R.world) return false;
-    const pts = r.M.railLine.map(([x, y]) => ({ x, y: r.y0 + y })).filter((p, i, a) => i === 0 || Math.hypot(p.x - a[i - 1].x, p.y - a[i - 1].y) > 0.05); // the real line, smoothed a little
+    const ext = (r.M.railExt || []).slice().reverse(), pts = ext.concat(r.M.railLine).map(([x, y]) => ({ x, y: r.y0 + y })).filter((p, i, a) => i === 0 || Math.hypot(p.x - a[i - 1].x, p.y - a[i - 1].y) > 0.05); // the real line, smoothed a little
     const sm = []; for (let i = 0; i < pts.length; i++) { const a = pts[Math.max(0, i - 1)], b = pts[i], c = pts[Math.min(pts.length - 1, i + 1)]; sm.push(i === 0 || i === pts.length - 1 ? b : { x: (a.x + 2 * b.x + c.x) / 4, y: (a.y + 2 * b.y + c.y) / 4 }); } P = mkPath(sm);
     STN = (r.M.railStations || []).map((q) => { const sx = q.x, sy = r.y0 + q.y; let best = 0, bd = 1e9; for (let d = 0; d <= P.L; d += 0.25) { const p = at(d), dd = Math.hypot(p.x - sx, p.y - sy); if (dd < bd) { bd = dd; best = d; } } return { name: q.name, d: best, x: at(best).x, y: at(best).y }; }).sort((a, b) => a.d - b.d);
     if (STN.length < 2) return false; buildTrack(); buildStations(); buildTimetable(); MET.line = P.pts; MET.ready = 1; return true; }
@@ -36,7 +36,7 @@
     const pil = []; for (let d = 0; d < P.L; d += 3.2) { const h = elev(d); if (h > 0.25) pil.push([d, h]); } const pill = new THREE.InstancedMesh(new THREE.BoxGeometry(0.55, 1, 0.55), mat(0xb8b6ae), Math.max(1, pil.length)); pil.forEach(([d, h], i) => { const a = at(d); m4.compose(new V(a.x, h / 2 - 0.02, a.y), new THREE.Quaternion(), new V(1, h, 1)); pill.setMatrixAt(i, m4); }); pill.frustumCulled = false; g.add(pill);
     const deck = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.22, 2.0), mat(0xc9c8c2), N); for (let k = 0; k < N; k++) { const { a, b } = seg(k), mid = a.clone().add(b).multiplyScalar(0.5), dir = b.clone().sub(a), len = dir.length(); dir.normalize(); const hh = (a.y + b.y) / 2; q.setFromUnitVectors(X, dir); m4.compose(new V(mid.x, hh - 0.12, mid.z), q, new V(len * 1.02, hh > 0.3 ? 1 : 0.001, 1)); deck.setMatrixAt(k, m4); } deck.frustumCulled = false; g.add(deck);
     // a tunnel mouth where the trains come out of the map
-    const a0 = at(0), tg = new THREE.Group(); tg.position.set(a0.x, 0, a0.y); tg.rotation.y = -Math.atan2(a0.hy, a0.hx); box(0.5, 2.6, 3.4, "#9a9890", 0.2, 1.3, 0, tg); box(0.52, 2.0, 2.2, "#0a0c0e", 0.22, 1.0, 0, tg); R.world.add(tg);
+    const a0 = at(0), tg = new THREE.Group(); tg.position.set(a0.x, 0, a0.y); tg.rotation.y = -Math.atan2(a0.hy, a0.hx); box(0.5, 2.6, 3.4, "#9a9890", 0.2, 1.3, 0, tg); box(0.52, 2.0, 2.2, "#0a0c0e", 0.22, 1.0, 0, tg); const hill = new THREE.Mesh(new THREE.ConeGeometry(4.6, 3.4, 8), new THREE.MeshLambertMaterial({ color: 0x5f9a52 })); hill.position.set(-2.3, 1.5, 0); hill.scale.set(1.4, 1, 1); tg.add(hill); const sg = sprite(textTex("🚇 To Rose Hill and Curepipe · opening soon", "rgba(17,24,40,0.9)", "#ffd166", 30), 0.8); sg.position.set(1.0, 3.7, 0); tg.add(sg); R.world.add(tg);
     R.world.add(g); MET.g = g; MET.poleN = np;
   }
   function buildStations() {
@@ -47,7 +47,7 @@
       const s2 = new THREE.Group(), dx = -a.hy, dz = a.hx; s2.position.set(a.x + dx * -2.4, 0, a.y + dz * -2.4); s2.rotation.y = ang; for (let i = 0; i < 5; i++) box(1.4, 0.3, 0.32, "#c9c8c2", 0, 0.15 + i * 0.3, i * 0.32, s2); box(1.4, 0.1, 0.5, "#c8202c", 0, 1.6, 1.9, s2); R.world.add(s2); } }
   // ---------------------------------------------------------------- the timetable (every train: arrive from the tunnel, Victoria, Place d'Armes, back, Victoria, out)
   function buildTimetable() {
-    const V0 = STN[0].d, P0 = STN[STN.length - 1].d, sp = 2.1, run = (d0, d1) => Math.abs(d1 - d0) / (0.64 * sp), legs = [{ k: "away", dur: 18 }, { k: "run", d0: 0, d1: V0, dur: run(0, V0) }, { k: "dock", d: V0, st: 0, dur: 12 }, { k: "run", d0: V0, d1: P0, dur: run(V0, P0) }, { k: "dock", d: P0, st: STN.length - 1, dur: 14, flip: 1 }, { k: "run", d0: P0, d1: V0, dur: run(P0, V0) }, { k: "dock", d: V0, st: 0, dur: 10 }, { k: "run", d0: V0, d1: 0, dur: run(V0, 0) }];
+    const V0 = STN[0].d, P0 = STN[STN.length - 1].d, sp = 2.1, run = (d0, d1) => 8 + Math.abs(d1 - d0) * 0.18, legs = [{ k: "away", dur: 18 }, { k: "run", d0: 0, d1: V0, dur: run(0, V0) }, { k: "dock", d: V0, st: 0, dur: 12 }, { k: "run", d0: V0, d1: P0, dur: run(V0, P0) }, { k: "dock", d: P0, st: STN.length - 1, dur: 14, flip: 1 }, { k: "run", d0: P0, d1: V0, dur: run(P0, V0) }, { k: "dock", d: V0, st: 0, dur: 10 }, { k: "run", d0: V0, d1: 0, dur: run(V0, 0) }];
     const c0 = legs.reduce((s2, l) => s2 + l.dur, 0), cyc = Math.max(120, Math.ceil(c0 / 60) * 60); legs[0].dur += cyc - c0; RUN = { legs, cyc };
     for (let i = 0; i < 2; i++) MET.train.push({ id: "mt" + i, off: i * (cyc / 2), cars: [], dest: "", d: 0, vis: false, dock: null });
   }
