@@ -31,6 +31,15 @@ Keep this file current. Claude reads it at the start of every session and update
 ## Rule added (6 Nov 2026): every action must be visible
 Owner's rule, now in `CLAUDE.md`: actions are acted out by the character in the world, with people around, never just a menu line and a toast.
 
+## Done, session 41 (9 Nov 2026): the Metro Express, with real tracks
+- **`metro.js`:** the real railway line of Port Louis (OpenStreetMap) is now built in 3D: gravel bed, sleepers, two rails, overhead wire with poles, and a raised viaduct (concrete pillars, grey deck) climbing to each station platform, with a tunnel mouth where trains enter the map. Stations have a canopy, yellow platform edge line, glass back, a red sign, stairs, and people waiting on the platform.
+- **Trains:** red-and-black three-car articulated light rail with bellows, a pantograph and a glowing amber destination sign (PORT LOUIS / CUREPIPE EXPRESS), replacing the old white trams. The timetable comes from the shared clock (same for everyone): a train arrives at Victoria, runs to Place d'Armes, reverses, calls at Victoria again and leaves through the tunnel; two trains, one every 60 seconds.
+- **Ride:** Board at a platform while the doors are open (Rs 35, "tap-in" toast), sit in the carriage (seen in the world), look out of the window (drag to turn your head) at the city and its night lights, and get off at the other station. Skip ride arrives at once. The line and trains are drawn on the third-person mini-map.
+- **Station list vs the map:** Rose Hill Central, Ébène Cybercity, Quatre Bornes / Trianon, Vacoas and Curepipe Central are named on the Metro map card as opening later. They are not built because those towns are not in the world yet.
+- Tested in the browser: tracks and trains seen, the ride boards, charges Rs 35, rides and arrives at Place d'Armes; no page errors. The boat and metro ride cameras now blend independently of the frame rate.
+- **Not done / not tested:** a real phone; more stations; chatting in the carriage uses the normal town chat; the old Rs 20 tram ticket was replaced by Rs 35.
+- **Next step:** build Rose Hill Central (as a region, or a scenery strip the metro can run towards).
+
 ## Done, session 40 (9 Nov 2026): wider harbours, more boats
 - **`tools/widen-water.mjs`:** run after `build-region.mjs` (`node widen-water.mjs grandbaie portlouis west --by=3`). Beach and grass tiles within 3 tiles of the water become shallow lagoon, but never within 2-3 tiles of roads, paving, buildings, houses, props, lots, bus stops or exits. Already applied: Grand Baie 67 tiles, Port Louis 443, Flic en Flac 126. If a region map is rebuilt, run the tool again.
 - **Berth approach redesigned:** boats leave and arrive on short diagonal legs towards open water, instead of hugging the beach. A hull may touch the shore with a single corner sample (the real hulls are pointed). Sailing tours try up to eight waypoint pairs.
