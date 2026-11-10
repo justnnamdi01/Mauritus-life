@@ -8984,38 +8984,49 @@ function richStatueTick(now) { // each frame: the coin turns, sparkles drift, th
   const t = now / 1000, night = hour() >= 18.5 || hour() < 5.5; for (const g of R.statues || []) { const P = g.userData.P, near = !s.inside && Math.hypot(s.x - P.x, s.y - P.y) < 60; g.visible = !s.inside; if (!near) continue;
     g.userData.coin.rotation.y = t * 1.4; g.userData.coin.position.y = 3.75 + Math.sin(t * 2) * 0.08; g.userData.fig.rotation.y = Math.sin(t * 0.3) * 0.08;
     for (const sp of g.userData.sparks) { const u = sp.userData, a = u.a + t * u.s; sp.position.set(Math.cos(a) * u.r, u.h + Math.sin(t * 2 + u.a * 3) * 0.3, Math.sin(a) * u.r); sp.scale.setScalar(0.7 + Math.sin(t * 5 + u.a * 7) * 0.4); }
-    g.userData.light.intensity = night ? 1.6 : 0.25; for (const b of g.userData.beams) b.visible = night;
+    g.userData.light.intensity = night ? 1.6 : 0.25; for (const l of g.userData.lamps || []) l.material.color.setHex(night ? 0xfff1c0 : 0xb8b09a); for (const b of g.userData.beams) b.visible = night;
     if (Math.floor(t) !== g.userData.sec) { g.userData.sec = Math.floor(t); richStatueUpdate(false); } } // pick up a change in worth
   for (const d of R.dodos || []) { d.visible = !s.inside; if (!s.inside && Math.hypot(s.x - d.position.x, s.y - d.position.z) < 60) { d.userData.fig.rotation.y = Math.sin(t * 0.4) * 0.12; d.userData.head.rotation.z = Math.sin(t * 0.9) * 0.06; } }
 }
 const PLAZAS = []; // a rich-list statue and a dodo statue in every town: filled in by buildTownPlazas
-function findPlazaSpot(reg, hw, avoid) { // the free square patch (no buildings, road, rails or water) nearest the middle of a town, at least 9 tiles from `avoid`
-  const ok = (x, y) => { const i = y * W + x, t = terr[i]; return !solid[i] && (t === 3 || t === 5 || t === 22 || t === 9 || t === 10 || t === 2 || t === 11); }, cx = Math.floor(reg.M.w / 2), cy = reg.y0 + Math.floor(reg.M.h / 2); let best = null, bd = 1e9;
-  for (let y = reg.y0 + hw + 2; y < reg.y0 + reg.M.h - hw - 2; y++) for (let x = hw + 2; x < reg.M.w - hw - 2; x++) { const d = Math.hypot(x - cx, y - cy); if (d >= bd) continue; if (avoid && Math.hypot(x - avoid.x, y - avoid.y) < 9) continue; let free = true; for (let yy = y - hw; yy <= y + hw && free; yy++) for (let xx = x - hw; xx <= x + hw; xx++) if (!ok(xx, yy)) { free = false; break; } if (free) { bd = d; best = { x, y }; } }
+function townHub(reg) { // where people gather: the bus stop, or on the Caudan paving in Port Louis
+  if (reg.id === "portlouis") { const z = (reg.M.zones || []).find((q) => q.k === "caudan"); if (z) return { x: z.x - 2, y: reg.y0 + z.y + 4 }; } return reg.stop ? { x: reg.stop.x, y: reg.stop.y } : { x: reg.M.w / 2, y: reg.y0 + reg.M.h / 2 };
+}
+function findPlazaSpot(reg, hw, avoid) { // the free square patch (no buildings, road, rails or water) nearest the town hub, at least 9 tiles from `avoid`
+  const ok = (x, y) => { const i = y * W + x, t = terr[i]; return !solid[i] && !near[i] && (t === 3 || t === 5 || t === 22 || t === 9 || t === 10 || t === 2 || t === 11); }, hub = townHub(reg), near = new Uint8Array(W * H); let best = null, bd = 1e9;
+  for (let y = reg.y0; y < reg.y0 + reg.M.h; y++) for (let x = 0; x < reg.M.w; x++) if (terr[y * W + x] === 23) for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) { const j = (y + dy) * W + x + dx; if (j >= 0 && j < near.length) near[j] = 1; } // stay clear of the metro line
+  for (let y = reg.y0 + hw + 2; y < reg.y0 + reg.M.h - hw - 2; y++) for (let x = hw + 2; x < reg.M.w - hw - 2; x++) { const d = Math.hypot(x - hub.x, y - hub.y); if (d >= bd) continue; if (avoid && Math.hypot(x - avoid.x, y - avoid.y) < 8) continue; let free = true; for (let yy = y - hw; yy <= y + hw && free; yy++) for (let xx = x - hw; xx <= x + hw; xx++) if (!ok(xx, yy)) { free = false; break; } if (free) { bd = d; best = { x, y, d }; } }
   return best;
 }
-function buildTownPlazas() { // the richest player and the dodo are honoured in every town
-  for (const reg of WREG) { if (reg.kind === "road") continue; let sp = null, k = 1; for (const [hw, kk] of [[6, 1], [4, 0.75], [3, 0.6]]) { sp = findPlazaSpot(reg, hw); if (sp) { k = kk; break; } } if (!sp) { console.warn("no room for a rich plaza in", reg.id); continue; }
-    const P = { x: sp.x, y: sp.y, r: 3.9, k, reg: reg.id, name: reg.name }; PLAZAS.push(P); buildRichStatue(P);
+function plazaDeco(g, r) { // benches, flower beds and lamps so a plaza feels like somewhere to sit
+  const WOOD = new THREE.MeshLambertMaterial({ color: 0x8a5a33 }), IRON = new THREE.MeshLambertMaterial({ color: 0x2a2d33 }), BED = new THREE.MeshLambertMaterial({ color: 0x6b4a2f }), FL = ["#ff6fa5", "#ffd34d", "#ff8a3d", "#ffffff"];
+  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2, x = Math.cos(a) * (r + 1.0), z = Math.sin(a) * (r + 1.0), bn = new THREE.Group(); bn.position.set(x, 0, z); bn.rotation.y = -a + Math.PI / 2; g.add(bn); box(1.5, 0.08, 0.5, WOOD, 0, 0.45, 0, bn); box(1.5, 0.45, 0.07, WOOD, 0, 0.75, -0.22, bn); for (const sx of [-0.65, 0.65]) box(0.07, 0.45, 0.45, IRON, sx, 0.22, 0, bn); } // four benches facing the statue
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, x = Math.cos(a) * (r + 1.1), z = Math.sin(a) * (r + 1.1); box(1.3, 0.35, 0.8, BED, x, 0.18, z, g); for (let j = 0; j < 7; j++) sph(0.14, FL[(i + j) % 4], x + (j % 4 - 1.5) * 0.28, 0.45 + (j % 2) * 0.06, z + (j < 4 ? -0.18 : 0.18), g, 6); } // flower beds
+  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2 + 0.5, x = Math.cos(a) * (r + 1.6), z = Math.sin(a) * (r + 1.6); cyl(0.05, 0.07, 2.6, IRON, x, 1.3, z, g, 8); const lamp = sph(0.22, new THREE.MeshBasicMaterial({ color: 0xfff1c0 }), x, 2.75, z, g, 10); g.userData.lamps = (g.userData.lamps || []).concat(lamp); } // lamp posts
+}
+function buildTownPlazas() { // the richest player and the dodo are honoured in every town, at its hub where people pass
+  for (const reg of WREG) { if (reg.kind === "road") continue; const cand = [[6, 1], [4, 0.75], [3, 0.6], [2, 0.55]].map(([hw, k]) => { const sp = findPlazaSpot(reg, hw); return sp && { sp, k }; }).filter(Boolean); if (!cand.length) { console.warn("no room for a rich plaza in", reg.id); continue; }
+    const dmin = Math.min(...cand.map((c) => c.sp.d)), pick = cand.find((c) => c.sp.d <= dmin + 26) || cand[0], sp = pick.sp, k = pick.k;
+    const P = { x: sp.x, y: sp.y, r: 3.9, k, reg: reg.id, name: reg.name }; PLAZAS.push(P); buildRichStatue(P); plazaDeco(R.statues[R.statues.length - 1], P.r);
     for (let y = P.y - 1; y <= P.y; y++) for (let x = P.x - 1; x <= P.x; x++) solid[y * W + x] = 1; // the plinth blocks four tiles
     for (let y = P.y - 4; y <= P.y + 4; y++) for (let x = P.x - 4; x <= P.x + 4; x++) if (terr[y * W + x] === 11) terr[y * W + x] = 3; // no cane on the plaza
-    const dsp = findPlazaSpot(reg, 3, P) || findPlazaSpot(reg, 2, P); if (dsp) { const D = { x: dsp.x, y: dsp.y, reg: reg.id, name: reg.name }; buildDodoStatue(D); for (let y = D.y - 1; y <= D.y; y++) for (let x = D.x - 1; x <= D.x; x++) solid[y * W + x] = 1; OBJ.push({ id: "dodo_" + reg.id, x: D.x, y: D.y + 2.4, tap: { x: D.x, y: D.y, r: 3.2 }, icon: "🦤", name: "The Dodo of Mauritius", acts: dodoActs }); } else console.warn("no room for a dodo in", reg.id);
+    const dsp = findPlazaSpot(reg, 3, P) || findPlazaSpot(reg, 2, P); if (dsp) { const D = { x: dsp.x, y: dsp.y, reg: reg.id, name: reg.name, k: findPlazaSpot(reg, 3, P) ? 1 : 0.8 }; buildDodoStatue(D); for (let y = D.y - 1; y <= D.y; y++) for (let x = D.x - 1; x <= D.x; x++) solid[y * W + x] = 1; OBJ.push({ id: "dodo_" + reg.id, x: D.x, y: D.y + 1.4 + 1.2 * D.k, tap: { x: D.x, y: D.y, r: 3.2 }, icon: "🦤", name: "The Dodo of Mauritius", acts: dodoActs }); } else console.warn("no room for a dodo in", reg.id);
     OBJ.push({ id: "statue_" + reg.id, x: P.x, y: P.y + 2 + 1.1 * P.k, tap: { x: P.x, y: P.y, r: 3 + 2 * P.k }, icon: "👑", name: "The richest player", acts: richActs }); }
 }
 function dodoActs() { return [{ label: "🦤 The Dodo", info: "Gone since the 1600s, but never forgotten. It is the heart of the Mauritius coat of arms.", go: () => closeMenu() }, { label: "📸 Take a photo", info: "A memory with the dodo", go: () => { closeMenu(); toast("📸 Click! A lovely photo with the Dodo."); } }]; }
 function buildDodoStatue(D) { // a bronze dodo on a stone plinth, with a name plate
-  const g = new THREE.Group(); g.position.set(D.x, 0, D.y); R.world.add(g); (R.dodos = R.dodos || []).push(g);
+  const g = new THREE.Group(); g.position.set(D.x, 0, D.y); g.scale.setScalar(D.k || 1); R.world.add(g); (R.dodos = R.dodos || []).push(g);
   const BR = new THREE.MeshPhongMaterial({ color: 0x8a5a2b, specular: 0xe8c98a, shininess: 70 }), BR2 = new THREE.MeshPhongMaterial({ color: 0xa8743a, specular: 0xffe0a0, shininess: 80 }), ST = new THREE.MeshLambertMaterial({ color: 0xcfc8b8 }), DK = new THREE.MeshLambertMaterial({ color: 0x4a4540 });
-  cyl(2.6, 2.7, 0.1, DK, 0, 0.05, 0, g, 40); cyl(2.45, 2.45, 0.14, ST, 0, 0.09, 0, g, 40); cyl(1.5, 1.7, 0.25, ST, 0, 0.3, 0, g, 28); box(1.5, 0.9, 1.5, ST, 0, 0.9, 0, g); box(1.7, 0.1, 1.7, DK, 0, 1.4, 0, g);
+  cyl(3.1, 3.2, 0.1, DK, 0, 0.05, 0, g, 40); cyl(2.95, 2.95, 0.3, ST, 0, 0.15, 0, g, 40); const wat = cyl(2.7, 2.7, 0.05, new THREE.MeshPhongMaterial({ color: 0x3aa6d6, specular: 0xffffff, shininess: 90, transparent: true, opacity: 0.85 }), 0, 0.31, 0, g, 40); g.userData.water = wat; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; sph(0.16, ["#ff6fa5", "#ffd34d", "#ff8a3d"][i % 3], Math.cos(a) * 3.25, 0.2, Math.sin(a) * 3.25, g, 6); sph(0.22, "#5fae55", Math.cos(a + 0.15) * 3.3, 0.15, Math.sin(a + 0.15) * 3.3, g, 6); } cyl(1.5, 1.7, 0.25, ST, 0, 0.3, 0, g, 28); box(1.5, 0.9, 1.5, ST, 0, 0.9, 0, g); box(1.7, 0.1, 1.7, DK, 0, 1.4, 0, g);
   const plate = mesh(geo("plane", () => new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: textTex("THE DODO · " + D.name.toUpperCase(), "#2b2218", "#f2d89a", 44) }), 0, 0.9, 0.77, g, false); plate.scale.set(1.35, 0.5, 1);
-  const fig = new THREE.Group(); fig.position.y = 1.45; g.add(fig); g.userData.fig = fig;
+  const fig = new THREE.Group(); fig.position.y = 1.45; fig.scale.setScalar(1.35); g.add(fig); g.userData.fig = fig;
   const body = sph(0.62, BR, 0, 0.78, 0, fig, 16); body.scale.set(1.1, 0.95, 0.95); sph(0.4, BR2, -0.5, 0.78, 0, fig, 12).scale.set(1, 0.9, 0.9); // round body and tail tuft
   for (const x of [-0.2, 0.2]) { cyl(0.07, 0.09, 0.4, BR2, x, 0.2, 0.05, fig, 8); box(0.22, 0.06, 0.3, BR2, x, 0.02, 0.12, fig); } // legs, feet
   const head = new THREE.Group(); head.position.set(0.5, 1.35, 0); fig.add(head); g.userData.head = head; cyl(0.12, 0.2, 0.55, BR, -0.08, -0.25, 0, head, 10); sph(0.27, BR2, 0.05, 0.05, 0, head, 14); // neck and head
   const beak = mesh(geo("dodobeak", () => new THREE.ConeGeometry(0.15, 0.55, 8)), BR, 0.45, -0.02, 0, head); beak.rotation.z = -Math.PI / 2 + 0.25; sph(0.1, BR, 0.62, -0.12, 0, head, 8); // the big hooked beak
   for (const z of [-0.18, 0.18]) sph(0.05, DK, 0.2, 0.1, z, head, 8); // eyes
   for (let i = 0; i < 3; i++) { const f = mesh(geo("dodoplume", () => new THREE.ConeGeometry(0.06, 0.4, 6)), BR2, -0.78, 1.0 + i * 0.05, (i - 1) * 0.12, fig); f.rotation.z = Math.PI / 2 + 0.5; } // tail plumes
-  const tag = nameTag("The Dodo", "🦤", "#6b4a1e", 40, 0); tag.position.set(0, 4.2, 0); g.add(tag);
+  const tag = nameTag("The Dodo", "🦤", "#6b4a1e", 40, 0); tag.position.set(0, 4.8, 0); g.add(tag);
 }
 function buildBambousLife() { // Bambous looks lived-in and neglected: rubbish, puddles, tin shacks, burning barrels and graffiti
   const g = new THREE.Group(); R.world.add(g); const X0 = GATE + 3, X1 = BZS_X1, ok = (x, z) => { const tx = Math.floor(x), tz = Math.floor(z); return tx >= X0 && tx < X1 && tz >= 2 && tz < BZ_Y1 - 1 && !solid[tz * W + tx]; }; R.bzFires = [];
@@ -10230,7 +10241,8 @@ function tamAnim(now) { // dolphins at sunrise, surfers in the day, only when Ta
 } // end tamAnim
 const TAMC = { on: false, t0: 0 }; // the "Welcome to Tamarin" arrival: the camera sweeps over the bay at golden hour
 const TAM_SHOTS = [[-18, 13, 112, 6, 0, 132], [-9, 10, 129, 8, 0, 143], [16, 14, 158, 7, 0, 141], [27, 11, 140, 12, 0, 137]]; // camera flight: [from x, y, z, look at x, y, z]
-function tamArrive(force) { // play the arrival
+function tamArrive(force) { // the Tamarin arrival sweep was removed on request
+  return;
   if (TAMC.on) return; try { musInit(); } catch (e) {} if (!R.ok) { if (force) toast("Welcome to Tamarin."); return; }
   TAMC.on = true; TAMC.t0 = 0; path = []; pending = null; keys = {}; document.querySelector(".game").classList.add("cineOn"); const tt = $("tamTitle"); tt.hidden = false; tt.classList.remove("on"); setTimeout(() => tt.classList.add("on"), 900); setTimeout(() => tt.classList.remove("on"), 5200);
 } // end tamArrive
@@ -11385,6 +11397,7 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
   ["2027.04.12", "10 Nov 2026", "Statues in every town", [
+    ["🌿", "Plazas with benches and flowers", "The statues now stand at the heart of each town with benches, flower beds and lamps that light up at night. The Dodo has its own pond.", null],
     ["👑", "The richest player, in every town", "Grand Baie, Port Louis, Flic en Flac and Bambous each have a golden statue of whoever is richest right now.", null],
     ["🦤", "The Dodo statue", "A bronze dodo stands in every town. Tap it for a photo.", null],
     ["🐦", "Smaller, free birds", "Birds now live in their own corner of each town and fly about by themselves instead of following you.", null]

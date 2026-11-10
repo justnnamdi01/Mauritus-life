@@ -482,3 +482,8 @@ Real-phone check of the new start (flat door, Ferris wheel, stage at 17:00), the
 - Tested: headless page loads with no errors, 4 plazas + 4 dodos built, screenshot of Port Louis plaza and dodo; five server tests pass.
 - Not tested: real phone; plaza look in Grand Baie/Flic en Flac/Bambous; the Port Louis dodo sits beside the museum and is partly hidden from some angles.
 - Next: Bambous guns/cartel (needs the two design answers), M2 materials.
+
+## Session 44b: plazas at the town hub, nicer look, Tamarin intro removed
+- Done: the "Welcome to Tamarin" arrival sweep is off (`tamArrive` returns at once). Statue plazas now sit at each town's hub (bus stop; Caudan in Port Louis), away from the metro line, with benches, flower beds, night lamps; the Dodo has a pond ring and flowers.
+- Tested: headless load, no errors, Port Louis screenshot; five server tests pass.
+- Not tested: real phone; other three plazas by eye. Port Louis, Flic en Flac and Bambous plazas are scaled down (0.55-0.6) because there is little free ground; making room (reclaimed waterfront) would allow full size.
