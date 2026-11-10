@@ -487,3 +487,9 @@ Real-phone check of the new start (flat door, Ferris wheel, stage at 17:00), the
 - Done: the "Welcome to Tamarin" arrival sweep is off (`tamArrive` returns at once). Statue plazas now sit at each town's hub (bus stop; Caudan in Port Louis), away from the metro line, with benches, flower beds, night lamps; the Dodo has a pond ring and flowers.
 - Tested: headless load, no errors, Port Louis screenshot; five server tests pass.
 - Not tested: real phone; other three plazas by eye. Port Louis, Flic en Flac and Bambous plazas are scaled down (0.55-0.6) because there is little free ground; making room (reclaimed waterfront) would allow full size.
+
+## Session 44c: rich statue on an island, wider Port Louis waterfront
+- Done: `islets.js` builds, before the ground is painted, a small island with a paved causeway out in the sea for Grand Baie, Port Louis and Flic en Flac; the richest-player plaza stands on it at full size. Bambous has no sea tiles, so its plaza stays on land. The dodo statues stay on land near each hub. Port Louis waterfront widened by about 380 tiles of paving over the shallows.
+- Boats: the causeways and wider waterfront make 2 more small boats drop out of their routes (6 dropped in total, was 4). West islet is kept 55 tiles from the hub so Flic en Flac boats still sail.
+- Tested: headless load, no errors, Port Louis island and causeway screenshot; five server tests pass. Not tested by eye: Grand Baie and Flic en Flac islands; real phone.
+- Idea: let boats pass under the causeways as bridges to get the dropped boats back.

@@ -102,6 +102,7 @@ body.wmOn .hud, body.wmOn .dock { display: none !important; }
 <script src="bambous-map.js"></script>
 <script src="road-grandbaie-portlouis-map.js"></script>
 <script src="road-portlouis-west-map.js"></script>
+<script src="islets.js?v=2"></script>
 <script src="net-adapter.js?v=8"></script>
 </head>
 <body>
@@ -8496,7 +8497,7 @@ function init3d() { // build the 3D world; returns false if this device cannot d
   R.lampMat = new THREE.MeshLambertMaterial({ color: 0xfff3c4, emissive: 0xffd77a, emissiveIntensity: 0 }); // street lamp bulbs
   R.ray = new THREE.Raycaster(); R.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // for turning taps into ground positions
   R.party = [0xff3b8d, 0x35c4bb, 0xffd23c].map((c) => { const l = new THREE.PointLight(c, 0, 14); R.scene.add(l); return l; }); // three coloured party lights
-  for (const step of [buildGround, buildTown, buildBambous, buildEstateSigns, buildRichStatue, buildTownPlazas, buildTrees, buildFlowers, buildApts, buildVenues, buildCasino, buildSugarResort, buildBambousLife, buildBambousSouth, buildBambousHuts, buildTrianon, buildCyber, buildTriAirport, buildHeartWall, buildScooterStands, buildRunway, buildLandmark, buildTamarin, buildAirport, buildTamAirport, buildSugar, buildMonuments, buildMarkers, buildSports]) { try { step(); } catch (e) { console.error(e); } } try { liftTamarin(); } catch (e) { console.error(e); } try { vfxBuild(); } catch (e) { console.error(e); } // build each part; one failing part does not stop the rest
+  for (const step of [() => { if (window.ISL_APPLY) ISL_APPLY(); }, buildGround, buildTown, buildBambous, buildEstateSigns, buildRichStatue, buildTownPlazas, buildTrees, buildFlowers, buildApts, buildVenues, buildCasino, buildSugarResort, buildBambousLife, buildBambousSouth, buildBambousHuts, buildTrianon, buildCyber, buildTriAirport, buildHeartWall, buildScooterStands, buildRunway, buildLandmark, buildTamarin, buildAirport, buildTamAirport, buildSugar, buildMonuments, buildMarkers, buildSports]) { try { step(); } catch (e) { console.error(e); } } try { liftTamarin(); } catch (e) { console.error(e); } try { vfxBuild(); } catch (e) { console.error(e); } // build each part; one failing part does not stop the rest
   return true; // 3D is ready
 } // end init3d
 
@@ -9005,12 +9006,12 @@ function plazaDeco(g, r) { // benches, flower beds and lamps so a plaza feels li
   for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2 + 0.5, x = Math.cos(a) * (r + 1.6), z = Math.sin(a) * (r + 1.6); cyl(0.05, 0.07, 2.6, IRON, x, 1.3, z, g, 8); const lamp = sph(0.22, new THREE.MeshBasicMaterial({ color: 0xfff1c0 }), x, 2.75, z, g, 10); g.userData.lamps = (g.userData.lamps || []).concat(lamp); } // lamp posts
 }
 function buildTownPlazas() { // the richest player and the dodo are honoured in every town, at its hub where people pass
-  for (const reg of WREG) { if (reg.kind === "road") continue; const cand = [[6, 1], [4, 0.75], [3, 0.6], [2, 0.55]].map(([hw, k]) => { const sp = findPlazaSpot(reg, hw); return sp && { sp, k }; }).filter(Boolean); if (!cand.length) { console.warn("no room for a rich plaza in", reg.id); continue; }
-    const dmin = Math.min(...cand.map((c) => c.sp.d)), pick = cand.find((c) => c.sp.d <= dmin + 26) || cand[0], sp = pick.sp, k = pick.k;
+  for (const reg of WREG) { if (reg.kind === "road") continue; const cand = [[6, 1], [4, 0.75], [3, 0.6], [2, 0.55]].map(([hw, k]) => { const sp = findPlazaSpot(reg, hw); return sp && { sp, k }; }).filter(Boolean); if (!cand.length && !(window.ISLETS || []).some((q) => q.reg === reg.id)) { console.warn("no room for a rich plaza in", reg.id); continue; }
+    const isl = (window.ISLETS || []).find((q) => q.reg === reg.id), dmin = Math.min(...cand.map((c) => c.sp.d)), pick = cand.find((c) => c.sp.d <= dmin + 26) || cand[0], sp = isl ? { x: isl.x, y: isl.y } : pick.sp, k = isl ? 1 : pick.k;
     const P = { x: sp.x, y: sp.y, r: 3.9, k, reg: reg.id, name: reg.name }; PLAZAS.push(P); buildRichStatue(P); plazaDeco(R.statues[R.statues.length - 1], P.r);
     for (let y = P.y - 1; y <= P.y; y++) for (let x = P.x - 1; x <= P.x; x++) solid[y * W + x] = 1; // the plinth blocks four tiles
     for (let y = P.y - 4; y <= P.y + 4; y++) for (let x = P.x - 4; x <= P.x + 4; x++) if (terr[y * W + x] === 11) terr[y * W + x] = 3; // no cane on the plaza
-    const dsp = findPlazaSpot(reg, 3, P) || findPlazaSpot(reg, 2, P); if (dsp) { const D = { x: dsp.x, y: dsp.y, reg: reg.id, name: reg.name, k: findPlazaSpot(reg, 3, P) ? 1 : 0.8 }; buildDodoStatue(D); for (let y = D.y - 1; y <= D.y; y++) for (let x = D.x - 1; x <= D.x; x++) solid[y * W + x] = 1; OBJ.push({ id: "dodo_" + reg.id, x: D.x, y: D.y + 1.4 + 1.2 * D.k, tap: { x: D.x, y: D.y, r: 3.2 }, icon: "🦤", name: "The Dodo of Mauritius", acts: dodoActs }); } else console.warn("no room for a dodo in", reg.id);
+    const hubP = townHub(reg), dsp = findPlazaSpot(reg, 3, hubP) || findPlazaSpot(reg, 2, hubP); if (dsp) { const D = { x: dsp.x, y: dsp.y, reg: reg.id, name: reg.name, k: findPlazaSpot(reg, 3, hubP) ? 1 : 0.8 }; buildDodoStatue(D); for (let y = D.y - 1; y <= D.y; y++) for (let x = D.x - 1; x <= D.x; x++) solid[y * W + x] = 1; OBJ.push({ id: "dodo_" + reg.id, x: D.x, y: D.y + 1.4 + 1.2 * D.k, tap: { x: D.x, y: D.y, r: 3.2 }, icon: "🦤", name: "The Dodo of Mauritius", acts: dodoActs }); } else console.warn("no room for a dodo in", reg.id);
     OBJ.push({ id: "statue_" + reg.id, x: P.x, y: P.y + 2 + 1.1 * P.k, tap: { x: P.x, y: P.y, r: 3 + 2 * P.k }, icon: "👑", name: "The richest player", acts: richActs }); }
 }
 function dodoActs() { return [{ label: "🦤 The Dodo", info: "Gone since the 1600s, but never forgotten. It is the heart of the Mauritius coat of arms.", go: () => closeMenu() }, { label: "📸 Take a photo", info: "A memory with the dodo", go: () => { closeMenu(); toast("📸 Click! A lovely photo with the Dodo."); } }]; }
@@ -11397,6 +11398,8 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
   ["2027.04.12", "10 Nov 2026", "Statues in every town", [
+    ["🏝️", "The richest player's island", "In Grand Baie, Port Louis and Flic en Flac the golden statue stands on its own little island out in the sea, with a paved causeway leading to it.", null],
+    ["🏙️", "A wider Port Louis waterfront", "The Caudan waterfront reaches further out over the water, with more room to walk.", null],
     ["🌿", "Plazas with benches and flowers", "The statues now stand at the heart of each town with benches, flower beds and lamps that light up at night. The Dodo has its own pond.", null],
     ["👑", "The richest player, in every town", "Grand Baie, Port Louis, Flic en Flac and Bambous each have a golden statue of whoever is richest right now.", null],
     ["🦤", "The Dodo statue", "A bronze dodo stands in every town. Tap it for a photo.", null],
