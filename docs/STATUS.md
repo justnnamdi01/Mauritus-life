@@ -475,3 +475,10 @@ Real-phone check of the new start (flat door, Ferris wheel, stage at 17:00), the
 4. Build the next region (Pamplemousses or Flacq) with `tools/build-region.mjs`; banks, police and clinics; a university for Students.
 4. Remove the dead old-world code and split `index.html` into modules.
 5. Phase 2 graphics on one Grand Baie street; Phase 3 driving.
+
+## Session 44: free birds, statues in every town
+- Done: birds are smaller (x1.3) and each lives at a fixed home in a real town (grandbaie, portlouis, west, bambous) and roams around it; they never follow the player or get recycled. 72 birds, drawn only within 62 tiles.
+- Done: a rich-list statue plaza and a bronze dodo statue in every town, placed on the free ground nearest each town's middle (scaled to fit; Port Louis, Flic en Flac and Bambous use smaller plazas). Tapping gives the story; the dodo offers a photo. "Visit the statue" guides to the nearest plaza.
+- Tested: headless page loads with no errors, 4 plazas + 4 dodos built, screenshot of Port Louis plaza and dodo; five server tests pass.
+- Not tested: real phone; plaza look in Grand Baie/Flic en Flac/Bambous; the Port Louis dodo sits beside the museum and is partly hidden from some angles.
+- Next: Bambous guns/cartel (needs the two design answers), M2 materials.

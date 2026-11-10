@@ -6857,7 +6857,7 @@ function phoneRender0() { // draw the current phone screen
   if (pv.app === "rich") { // the richest players in the country
     const list = richList(), short = (n, p) => p && p.pf && p.pf.hide ? "🔒 Private" : "Rs " + (n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + "M" : n >= 1e4 ? Math.round(n / 1e3) + "k" : n.toLocaleString("en")); // top 20, and money written short
     const open = (p) => () => { if (p.id === uid) return; openPhone("peek", p.id); }; // tap someone: their profile, or a chat
-    if (RICH.uid) { const sr = el("button", "prow"), sl = el("span", "", "👑 Visit the statue of " + RICH.name); sl.append(el("small", "", "By the Grand Casino · a beam and an arrow guide you")); sr.type = "button"; sr.append(sl, el("b", "", "›")); sr.onclick = () => navTo(STATUE.x, STATUE.y + 4.4, "The richest player's statue"); box.append(sr); } // see the statue
+    if (RICH.uid) { const sr = el("button", "prow"), sl = el("span", "", "👑 Visit the statue of " + RICH.name); sl.append(el("small", "", "By the Grand Casino · a beam and an arrow guide you")); sr.type = "button"; sr.append(sl, el("b", "", "›")); sr.onclick = () => { const all = [{ x: STATUE.x, y: STATUE.y }, ...PLAZAS], near = all.reduce((a, b) => Math.hypot(a.x - s.x, a.y - s.y) < Math.hypot(b.x - s.x, b.y - s.y) ? a : b); navTo(near.x, near.y + 4.4, "The richest player's statue"); }; box.append(sr); } // see the statue
     box.append(el("p", "pnote", "Ranked by net worth: cash, jet, businesses and investments together. Your own row is always live.")); // what the list counts
     if (list.length) { const pod = el("div", "podium"); // the trophy stands: 2nd, 1st, 3rd
       for (const i of [1, 0, 2]) { const p = list[i], col = el("button", "pcol p" + (i + 1)); col.type = "button"; if (!p) { col.disabled = true; col.classList.add("empty"); col.append(el("div", "pstand", String(i + 1))); pod.append(col); continue; }
@@ -8496,7 +8496,7 @@ function init3d() { // build the 3D world; returns false if this device cannot d
   R.lampMat = new THREE.MeshLambertMaterial({ color: 0xfff3c4, emissive: 0xffd77a, emissiveIntensity: 0 }); // street lamp bulbs
   R.ray = new THREE.Raycaster(); R.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // for turning taps into ground positions
   R.party = [0xff3b8d, 0x35c4bb, 0xffd23c].map((c) => { const l = new THREE.PointLight(c, 0, 14); R.scene.add(l); return l; }); // three coloured party lights
-  for (const step of [buildGround, buildTown, buildBambous, buildEstateSigns, buildRichStatue, buildTrees, buildFlowers, buildApts, buildVenues, buildCasino, buildSugarResort, buildBambousLife, buildBambousSouth, buildBambousHuts, buildTrianon, buildCyber, buildTriAirport, buildHeartWall, buildScooterStands, buildRunway, buildLandmark, buildTamarin, buildAirport, buildTamAirport, buildSugar, buildMonuments, buildMarkers, buildSports]) { try { step(); } catch (e) { console.error(e); } } try { liftTamarin(); } catch (e) { console.error(e); } try { vfxBuild(); } catch (e) { console.error(e); } // build each part; one failing part does not stop the rest
+  for (const step of [buildGround, buildTown, buildBambous, buildEstateSigns, buildRichStatue, buildTownPlazas, buildTrees, buildFlowers, buildApts, buildVenues, buildCasino, buildSugarResort, buildBambousLife, buildBambousSouth, buildBambousHuts, buildTrianon, buildCyber, buildTriAirport, buildHeartWall, buildScooterStands, buildRunway, buildLandmark, buildTamarin, buildAirport, buildTamAirport, buildSugar, buildMonuments, buildMarkers, buildSports]) { try { step(); } catch (e) { console.error(e); } } try { liftTamarin(); } catch (e) { console.error(e); } try { vfxBuild(); } catch (e) { console.error(e); } // build each part; one failing part does not stop the rest
   return true; // 3D is ready
 } // end init3d
 
@@ -8951,12 +8951,12 @@ function richPlaque() { // the gold plate on the plinth, redrawn when the riches
   g2.font = "700 34px Figtree, system-ui, sans-serif"; g2.fillStyle = "#5a3d08"; g2.fillText(RICH.uid ? "Net worth " + rsShort(RICH.worth) : "Earn a fortune", 256, 200);
   if (!_richTex) { _richTex = new THREE.CanvasTexture(c); _richTex.encoding = THREE.sRGBEncoding; } else _richTex.needsUpdate = true; return _richTex;
 }
-function buildRichStatue() { // a golden statue on a marble plaza, with a crown, a coin and lights
-  const g = new THREE.Group(); g.position.set(STATUE.x, 0, STATUE.y); R.world.add(g); R.statue = g;
+function buildRichStatue(P0) { // a golden statue on a marble plaza, with a crown, a coin and lights
+  const P = P0 || STATUE, g = new THREE.Group(); g.position.set(P.x, 0, P.y); R.world.add(g); if (!P0) R.statue = g; (R.statues = R.statues || []).push(g); g.userData.P = P; g.scale.setScalar(P.k || 1);
   const GOLD = new THREE.MeshPhongMaterial({ color: 0xf0b400, specular: 0xfff1a8, shininess: 110, emissive: 0x3a2500 }), GOLD2 = new THREE.MeshPhongMaterial({ color: 0xffd34d, specular: 0xffffff, shininess: 120, emissive: 0x4a3200 }), MARB = new THREE.MeshLambertMaterial({ color: 0xf2eee6 }), GRAN = new THREE.MeshPhongMaterial({ color: 0x15171c, specular: 0x666666, shininess: 60 });
-  cyl(STATUE.r + 0.25, STATUE.r + 0.3, 0.1, GRAN, 0, 0.05, 0, g, 56); cyl(STATUE.r, STATUE.r, 0.14, MARB, 0, 0.09, 0, g, 56); // plaza: dark rim, marble floor
-  { const ring = new THREE.Mesh(new THREE.RingGeometry(STATUE.r - 0.55, STATUE.r - 0.4, 56), GOLD); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.17; g.add(ring); const r2 = new THREE.Mesh(new THREE.RingGeometry(1.9, 2.0, 40), GOLD); r2.rotation.x = -Math.PI / 2; r2.position.y = 0.17; g.add(r2); } // gold inlay rings in the floor
-  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, bx = Math.cos(a) * (STATUE.r - 0.15), bz = Math.sin(a) * (STATUE.r - 0.15); cyl(0.07, 0.09, 0.62, GOLD, bx, 0.45, bz, g, 8); sph(0.1, GOLD2, bx, 0.82, bz, g, 8); } // gold bollards all round
+  cyl(P.r + 0.25, P.r + 0.3, 0.1, GRAN, 0, 0.05, 0, g, 56); cyl(P.r, P.r, 0.14, MARB, 0, 0.09, 0, g, 56); // plaza: dark rim, marble floor
+  { const ring = new THREE.Mesh(new THREE.RingGeometry(P.r - 0.55, P.r - 0.4, 56), GOLD); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.17; g.add(ring); const r2 = new THREE.Mesh(new THREE.RingGeometry(1.9, 2.0, 40), GOLD); r2.rotation.x = -Math.PI / 2; r2.position.y = 0.17; g.add(r2); } // gold inlay rings in the floor
+  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, bx = Math.cos(a) * (P.r - 0.15), bz = Math.sin(a) * (P.r - 0.15); cyl(0.07, 0.09, 0.62, GOLD, bx, 0.45, bz, g, 8); sph(0.1, GOLD2, bx, 0.82, bz, g, 8); } // gold bollards all round
   cyl(2.0, 2.2, 0.2, MARB, 0, 0.27, 0, g, 40); cyl(1.6, 1.8, 0.2, MARB, 0, 0.47, 0, g, 40); cyl(1.25, 1.4, 0.2, GRAN, 0, 0.67, 0, g, 32); // three steps up
   box(1.7, 0.12, 1.7, GOLD, 0, 0.83, 0, g); box(1.5, 1.05, 1.5, GRAN, 0, 1.4, 0, g); box(1.7, 0.12, 1.7, GOLD, 0, 2.0, 0, g); // the plinth, with gold bands
   const plate = mesh(geo("plane", () => new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: richPlaque() }), 0, 1.4, 0.77, g, false); plate.scale.set(1.32, 0.66, 1); g.userData.plate = plate; // the gold name plate, facing the street
@@ -8970,22 +8970,52 @@ function buildRichStatue() { // a golden statue on a marble plaza, with a crown,
   const armR = new THREE.Group(); armR.position.set(0.5, 2.25, 0); fig.add(armR); cyl(0.09, 0.1, 0.9, GOLD2, 0.35, 0.3, 0, armR, 10).rotation.z = -0.65; sph(0.11, GOLD, 0.62, 0.68, 0, armR, 8); // the right arm reaches up
   const coin = new THREE.Group(); coin.position.set(0.86, 3.75, 0); fig.add(coin); g.userData.coin = coin; { const c1 = cyl(0.5, 0.5, 0.1, GOLD2, 0, 0, 0, coin, 40); c1.rotation.x = Math.PI / 2; const c2 = cyl(0.38, 0.38, 0.14, GOLD, 0, 0, 0, coin, 40); c2.rotation.x = Math.PI / 2; for (const z of [-1, 1]) { const r3 = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.36, 24), GOLD2); r3.position.z = z * 0.075; r3.rotation.y = z > 0 ? 0 : Math.PI; coin.add(r3); } } // a big gold coin held up high
   g.userData.sparks = []; for (let i = 0; i < 16; i++) { const sp = sph(0.05 + (i % 3) * 0.015, new THREE.MeshBasicMaterial({ color: 0xfff0a0 }), 0, 0, 0, g, 6); sp.userData = { a: i / 16 * Math.PI * 2, r: 1.2 + (i % 4) * 0.35, h: 2.4 + (i % 5) * 0.55, s: 0.4 + (i % 3) * 0.15 }; g.userData.sparks.push(sp); } // sparkles drifting round it
-  for (const sx of [-1, 1]) { const px = sx * (STATUE.r + 0.9), pz = 0.4; cyl(0.05, 0.06, 4.2, "#d4af37", px, 2.1, pz, g, 8); sph(0.1, GOLD2, px, 4.25, pz, g, 8); const fl = mesh(geo("plane", () => new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: textTex("👑 RICH LIST", "#14081f", "#ffd34d", 54), side: THREE.DoubleSide }), px + sx * 0.0, 3.5, pz + 0.55, g, false); fl.scale.set(1.5, 0.5, 1); fl.rotation.y = 0; } // two flagpoles with banners
-  R.richLight = new THREE.PointLight(0xffd36b, 0, 14); R.richLight.position.set(0, 4.5, 1.8); g.add(R.richLight); R.richBeams = []; for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + 0.4, b = new THREE.Mesh(new THREE.ConeGeometry(0.55, 5.5, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd36b, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })); b.position.set(Math.cos(a) * 2.5, 2.9, Math.sin(a) * 2.5); b.rotation.set(Math.sin(a) * 0.28, 0, -Math.cos(a) * 0.28); g.add(b); R.richBeams.push(b); } // uplights at night
+  for (const sx of [-1, 1]) { const px = sx * (P.r + 0.9), pz = 0.4; cyl(0.05, 0.06, 4.2, "#d4af37", px, 2.1, pz, g, 8); sph(0.1, GOLD2, px, 4.25, pz, g, 8); const fl = mesh(geo("plane", () => new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: textTex("👑 RICH LIST", "#14081f", "#ffd34d", 54), side: THREE.DoubleSide }), px + sx * 0.0, 3.5, pz + 0.55, g, false); fl.scale.set(1.5, 0.5, 1); fl.rotation.y = 0; } // two flagpoles with banners
+  const rl = new THREE.PointLight(0xffd36b, 0, 14); rl.position.set(0, 4.5, 1.8); g.add(rl); g.userData.light = rl; const rbeams = g.userData.beams = []; for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + 0.4, b = new THREE.Mesh(new THREE.ConeGeometry(0.55, 5.5, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd36b, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })); b.position.set(Math.cos(a) * 2.5, 2.9, Math.sin(a) * 2.5); b.rotation.set(Math.sin(a) * 0.28, 0, -Math.cos(a) * 0.28); g.add(b); rbeams.push(b); } // uplights at night
   const tag = nameTag("The richest player", "👑", "#b8860b", 40, 0); tag.userData.always = true; tag.position.set(0, 7.0, 0); g.add(tag); g.userData.tag = tag; // always visible from far away
   richStatueUpdate(true);
 } // end buildRichStatue
-function richStatueUpdate(force) { // the plate, name and hair follow whoever is richest
-  const g = R.statue; if (!g) return; const key = RICH.uid + "|" + RICH.name + "|" + RICH.worth; if (!force && g.userData.key === key) return; g.userData.key = key; richPlaque();
-  const lk = lookViews[RICH.uid] || (others && Object.values(others).find((o) => o.p.uid === RICH.uid) ? Object.values(others).find((o) => o.p.uid === RICH.uid).p : null); g.userData.hair.visible = !!(lk && lk.g === "f"); // a woman gets long hair
-  setSpriteText(g.userData.tag, RICH.uid ? "👑 " + RICH.name + " · " + rsShort(RICH.worth) : "👑 The richest player", "rgba(40,28,0,0.9)", "#ffe28a", 0.4);
+function richStatueUpdate(force) { // the plates, names and hair of every statue follow whoever is richest
+  const key = RICH.uid + "|" + RICH.name + "|" + RICH.worth; for (const g of R.statues || []) { if (!force && g.userData.key === key) continue; g.userData.key = key; richPlaque();
+    const lk = lookViews[RICH.uid] || (others && Object.values(others).find((o) => o.p.uid === RICH.uid) ? Object.values(others).find((o) => o.p.uid === RICH.uid).p : null); g.userData.hair.visible = !!(lk && lk.g === "f"); // a woman gets long hair
+    setSpriteText(g.userData.tag, RICH.uid ? "👑 " + RICH.name + " · " + rsShort(RICH.worth) : "👑 The richest player", "rgba(40,28,0,0.9)", "#ffe28a", 0.4); }
 }
 function richStatueTick(now) { // each frame: the coin turns, sparkles drift, the lights come on at night
-  const g = R.statue; if (!g) return; const t = now / 1000, night = hour() >= 18.5 || hour() < 5.5, near = !s.inside && Math.hypot(s.x - STATUE.x, s.y - STATUE.y) < 60; g.visible = !s.inside; if (!near) return;
-  g.userData.coin.rotation.y = t * 1.4; g.userData.coin.position.y = 3.75 + Math.sin(t * 2) * 0.08; g.userData.fig.rotation.y = Math.sin(t * 0.3) * 0.08;
-  for (const sp of g.userData.sparks) { const u = sp.userData, a = u.a + t * u.s; sp.position.set(Math.cos(a) * u.r, u.h + Math.sin(t * 2 + u.a * 3) * 0.3, Math.sin(a) * u.r); sp.scale.setScalar(0.7 + Math.sin(t * 5 + u.a * 7) * 0.4); }
-  if (R.richLight) R.richLight.intensity = night ? 1.6 : 0.25; for (const b of R.richBeams) b.visible = night;
-  if (Math.floor(t) !== g.userData.sec) { g.userData.sec = Math.floor(t); richStatueUpdate(false); } // pick up a change in worth
+  const t = now / 1000, night = hour() >= 18.5 || hour() < 5.5; for (const g of R.statues || []) { const P = g.userData.P, near = !s.inside && Math.hypot(s.x - P.x, s.y - P.y) < 60; g.visible = !s.inside; if (!near) continue;
+    g.userData.coin.rotation.y = t * 1.4; g.userData.coin.position.y = 3.75 + Math.sin(t * 2) * 0.08; g.userData.fig.rotation.y = Math.sin(t * 0.3) * 0.08;
+    for (const sp of g.userData.sparks) { const u = sp.userData, a = u.a + t * u.s; sp.position.set(Math.cos(a) * u.r, u.h + Math.sin(t * 2 + u.a * 3) * 0.3, Math.sin(a) * u.r); sp.scale.setScalar(0.7 + Math.sin(t * 5 + u.a * 7) * 0.4); }
+    g.userData.light.intensity = night ? 1.6 : 0.25; for (const b of g.userData.beams) b.visible = night;
+    if (Math.floor(t) !== g.userData.sec) { g.userData.sec = Math.floor(t); richStatueUpdate(false); } } // pick up a change in worth
+  for (const d of R.dodos || []) { d.visible = !s.inside; if (!s.inside && Math.hypot(s.x - d.position.x, s.y - d.position.z) < 60) { d.userData.fig.rotation.y = Math.sin(t * 0.4) * 0.12; d.userData.head.rotation.z = Math.sin(t * 0.9) * 0.06; } }
+}
+const PLAZAS = []; // a rich-list statue and a dodo statue in every town: filled in by buildTownPlazas
+function findPlazaSpot(reg, hw, avoid) { // the free square patch (no buildings, road, rails or water) nearest the middle of a town, at least 9 tiles from `avoid`
+  const ok = (x, y) => { const i = y * W + x, t = terr[i]; return !solid[i] && (t === 3 || t === 5 || t === 22 || t === 9 || t === 10 || t === 2 || t === 11); }, cx = Math.floor(reg.M.w / 2), cy = reg.y0 + Math.floor(reg.M.h / 2); let best = null, bd = 1e9;
+  for (let y = reg.y0 + hw + 2; y < reg.y0 + reg.M.h - hw - 2; y++) for (let x = hw + 2; x < reg.M.w - hw - 2; x++) { const d = Math.hypot(x - cx, y - cy); if (d >= bd) continue; if (avoid && Math.hypot(x - avoid.x, y - avoid.y) < 9) continue; let free = true; for (let yy = y - hw; yy <= y + hw && free; yy++) for (let xx = x - hw; xx <= x + hw; xx++) if (!ok(xx, yy)) { free = false; break; } if (free) { bd = d; best = { x, y }; } }
+  return best;
+}
+function buildTownPlazas() { // the richest player and the dodo are honoured in every town
+  for (const reg of WREG) { if (reg.kind === "road") continue; let sp = null, k = 1; for (const [hw, kk] of [[6, 1], [4, 0.75], [3, 0.6]]) { sp = findPlazaSpot(reg, hw); if (sp) { k = kk; break; } } if (!sp) { console.warn("no room for a rich plaza in", reg.id); continue; }
+    const P = { x: sp.x, y: sp.y, r: 3.9, k, reg: reg.id, name: reg.name }; PLAZAS.push(P); buildRichStatue(P);
+    for (let y = P.y - 1; y <= P.y; y++) for (let x = P.x - 1; x <= P.x; x++) solid[y * W + x] = 1; // the plinth blocks four tiles
+    for (let y = P.y - 4; y <= P.y + 4; y++) for (let x = P.x - 4; x <= P.x + 4; x++) if (terr[y * W + x] === 11) terr[y * W + x] = 3; // no cane on the plaza
+    const dsp = findPlazaSpot(reg, 3, P) || findPlazaSpot(reg, 2, P); if (dsp) { const D = { x: dsp.x, y: dsp.y, reg: reg.id, name: reg.name }; buildDodoStatue(D); for (let y = D.y - 1; y <= D.y; y++) for (let x = D.x - 1; x <= D.x; x++) solid[y * W + x] = 1; OBJ.push({ id: "dodo_" + reg.id, x: D.x, y: D.y + 2.4, tap: { x: D.x, y: D.y, r: 3.2 }, icon: "🦤", name: "The Dodo of Mauritius", acts: dodoActs }); } else console.warn("no room for a dodo in", reg.id);
+    OBJ.push({ id: "statue_" + reg.id, x: P.x, y: P.y + 2 + 1.1 * P.k, tap: { x: P.x, y: P.y, r: 3 + 2 * P.k }, icon: "👑", name: "The richest player", acts: richActs }); }
+}
+function dodoActs() { return [{ label: "🦤 The Dodo", info: "Gone since the 1600s, but never forgotten. It is the heart of the Mauritius coat of arms.", go: () => closeMenu() }, { label: "📸 Take a photo", info: "A memory with the dodo", go: () => { closeMenu(); toast("📸 Click! A lovely photo with the Dodo."); } }]; }
+function buildDodoStatue(D) { // a bronze dodo on a stone plinth, with a name plate
+  const g = new THREE.Group(); g.position.set(D.x, 0, D.y); R.world.add(g); (R.dodos = R.dodos || []).push(g);
+  const BR = new THREE.MeshPhongMaterial({ color: 0x8a5a2b, specular: 0xe8c98a, shininess: 70 }), BR2 = new THREE.MeshPhongMaterial({ color: 0xa8743a, specular: 0xffe0a0, shininess: 80 }), ST = new THREE.MeshLambertMaterial({ color: 0xcfc8b8 }), DK = new THREE.MeshLambertMaterial({ color: 0x4a4540 });
+  cyl(2.6, 2.7, 0.1, DK, 0, 0.05, 0, g, 40); cyl(2.45, 2.45, 0.14, ST, 0, 0.09, 0, g, 40); cyl(1.5, 1.7, 0.25, ST, 0, 0.3, 0, g, 28); box(1.5, 0.9, 1.5, ST, 0, 0.9, 0, g); box(1.7, 0.1, 1.7, DK, 0, 1.4, 0, g);
+  const plate = mesh(geo("plane", () => new THREE.PlaneGeometry(1, 1)), new THREE.MeshBasicMaterial({ map: textTex("THE DODO · " + D.name.toUpperCase(), "#2b2218", "#f2d89a", 44) }), 0, 0.9, 0.77, g, false); plate.scale.set(1.35, 0.5, 1);
+  const fig = new THREE.Group(); fig.position.y = 1.45; g.add(fig); g.userData.fig = fig;
+  const body = sph(0.62, BR, 0, 0.78, 0, fig, 16); body.scale.set(1.1, 0.95, 0.95); sph(0.4, BR2, -0.5, 0.78, 0, fig, 12).scale.set(1, 0.9, 0.9); // round body and tail tuft
+  for (const x of [-0.2, 0.2]) { cyl(0.07, 0.09, 0.4, BR2, x, 0.2, 0.05, fig, 8); box(0.22, 0.06, 0.3, BR2, x, 0.02, 0.12, fig); } // legs, feet
+  const head = new THREE.Group(); head.position.set(0.5, 1.35, 0); fig.add(head); g.userData.head = head; cyl(0.12, 0.2, 0.55, BR, -0.08, -0.25, 0, head, 10); sph(0.27, BR2, 0.05, 0.05, 0, head, 14); // neck and head
+  const beak = mesh(geo("dodobeak", () => new THREE.ConeGeometry(0.15, 0.55, 8)), BR, 0.45, -0.02, 0, head); beak.rotation.z = -Math.PI / 2 + 0.25; sph(0.1, BR, 0.62, -0.12, 0, head, 8); // the big hooked beak
+  for (const z of [-0.18, 0.18]) sph(0.05, DK, 0.2, 0.1, z, head, 8); // eyes
+  for (let i = 0; i < 3; i++) { const f = mesh(geo("dodoplume", () => new THREE.ConeGeometry(0.06, 0.4, 6)), BR2, -0.78, 1.0 + i * 0.05, (i - 1) * 0.12, fig); f.rotation.z = Math.PI / 2 + 0.5; } // tail plumes
+  const tag = nameTag("The Dodo", "🦤", "#6b4a1e", 40, 0); tag.position.set(0, 4.2, 0); g.add(tag);
 }
 function buildBambousLife() { // Bambous looks lived-in and neglected: rubbish, puddles, tin shacks, burning barrels and graffiti
   const g = new THREE.Group(); R.world.add(g); const X0 = GATE + 3, X1 = BZS_X1, ok = (x, z) => { const tx = Math.floor(x), tz = Math.floor(z); return tx >= X0 && tx < X1 && tz >= 2 && tz < BZ_Y1 - 1 && !solid[tz * W + tx]; }; R.bzFires = [];
@@ -11354,6 +11384,11 @@ function loansSection(box) { // in the Wallet: what you owe and what you're owed
 }
 
 const UPDATES = [ // [version, date, headline, [[icon, title, what it is, optional try-it action]]]
+  ["2027.04.12", "10 Nov 2026", "Statues in every town", [
+    ["👑", "The richest player, in every town", "Grand Baie, Port Louis, Flic en Flac and Bambous each have a golden statue of whoever is richest right now.", null],
+    ["🦤", "The Dodo statue", "A bronze dodo stands in every town. Tap it for a photo.", null],
+    ["🐦", "Smaller, free birds", "Birds now live in their own corner of each town and fly about by themselves instead of following you.", null]
+  ]],
   ["2027.04.11", "10 Nov 2026", "The game speaks to you", [
     ["🗣️", "Words that fit you", "People now call you madame or monsieur, and a Bambous local says sœur or frer, depending on your character.", null],
     ["🧍", "Pushy strangers for everyone", "A salesman, someone asking for help or a brush against your bag can now happen to any player, rarely, and you can always walk away or report it. The old street event is gone.", null],
@@ -11924,7 +11959,7 @@ const UPDATES = [ // [version, date, headline, [[icon, title, what it is, option
     ["🔐", "Remember me", "Logging in or saving your progress now has a Remember me tick, on by default. You stay logged in on that phone or computer and just carry on next time. Untick it on a shared device and you are logged out when the browser closes.", null],
     ["🚪", "Log out of this device", "Settings has a Log out button once you have a username. Your character stays saved, and your username is filled in for next time.", () => openPhone("settings")]]],
   ["2026.10.29", "29 Oct 2026", "The Richest statue", [
-    ["👑", "A golden statue of the richest player", "A golden statue with a crown and a coin stands in a marble plaza beside the Grand Casino, with the richest player's name and net worth on the plate. It lights up at night.", () => navTo(STATUE.x, STATUE.y + 4.4, "The richest player's statue")],
+    ["👑", "A golden statue of the richest player", "A golden statue with a crown and a coin stands in a marble plaza beside the Grand Casino, and in every town (a bronze dodo statue is there too), with the richest player's name and net worth on the plate. It lights up at night.", () => navTo(STATUE.x, STATUE.y + 4.4, "The richest player's statue")],
     ["🔔", "Everyone hears when the crown moves", "When someone new becomes the richest, the statue changes and everybody gets a notification and a line in town chat.", null]]],
   ["2026.10.28", "28 Oct 2026", "Snack shop jobs, bets with friends and family life", [
     ["🥪", "Own a snack shop and hire students", "Buy the Snack shop in the Business app, then hire real student players. They work shifts at Dholl Puri Corner for Rs 1,100, and you earn Rs 700 from every shift.", () => openPhone("biz")],
