@@ -39,3 +39,9 @@ game/
    ├─ admin.html    admin page
    └─ models/       3D characters (Quaternius, CC0, see the LICENSE file there)
 ```
+
+## Map data
+The island map (`game/public/island.json`) is built from OpenStreetMap by `tools/build-island.mjs` (run `cd tools && npm install && npm run island`). Map data © OpenStreetMap contributors, available under the Open Database Licence: https://www.openstreetmap.org/copyright. The game shows this credit under the island map.
+
+## Regions
+`game/regions.json` lists the island's regions. The server (`game/regions.js`) refuses any position inside a locked region. Open, close or schedule regions from the admin page (Game tab, Island regions). Test the locks with `cd game && node test/regions.test.js`.
